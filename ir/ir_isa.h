@@ -35,6 +35,7 @@
     _(RETURN_VOID, FixedInputOp0 /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                   \
     _(PHI, PhiOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                                   \
     _(IF, IfOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                                     \
+    _(IF_IMM, IfImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                              \
     _(JMP_IND, FixedInputOp1 /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)
 
 #define INSTRUCTION_TYPES(_)                                                                                          \
@@ -49,4 +50,5 @@
     _(FixedInputOp0)                                                                                                  \
     _(FixedInputOp1)                                                                                                  \
     _(PhiOp)                                                                                                          \
+    _(IfImmOp)                                                                                                        \
     _(IfOp)

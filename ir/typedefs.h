@@ -3,5 +3,8 @@
 
 typedef int IdType;
 typedef int ImmType;
-typedef int ArgNumType;
+typedef uint ArgNumType;
+typedef int Reg;
+typedef uint RegNumType;
+
 #endif

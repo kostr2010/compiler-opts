@@ -40,7 +40,7 @@ class GraphBuilder
     template <typename... Args>
     IdType NewInst(Args&&... args)
     {
-        auto inst = graph_->NewInst(args...);
+        auto inst = graph_->NewInst(std::forward<Args>(args)...);
         auto id = inst->GetId();
 
         cur_inst_ = inst;
@@ -69,7 +69,7 @@ class GraphBuilder
     template <typename T>
     IdType NewConst(T value)
     {
-        auto inst = graph_->NewInst(value);
+        auto inst = graph_->NewConst(value);
         auto id = inst->GetId();
 
         cur_inst_ = inst;
@@ -125,7 +125,29 @@ class GraphBuilder
     {
         auto inst = inst_map_[id];
         assert(inst != nullptr);
-        inst->SetImm(imm);
+
+        switch (inst->GetOpcode()) {
+        case Opcode::ADDI:
+        case Opcode::SUBI:
+        case Opcode::MULI:
+        case Opcode::DIVI:
+        case Opcode::MODI:
+        case Opcode::MINI:
+        case Opcode::MAXI:
+        case Opcode::SHLI:
+        case Opcode::SHRI:
+        case Opcode::ASHRI:
+        case Opcode::ANDI:
+        case Opcode::ORI:
+        case Opcode::XORI:
+            static_cast<BinaryImmOp*>(inst)->SetImm(imm);
+            break;
+        case Opcode::IF_IMM:
+            static_cast<IfImmOp*>(inst)->SetImm(imm);
+            break;
+        default:
+            assert(false);
+        }
     }
 
     bool ConstructCFG();
@@ -138,10 +160,10 @@ class GraphBuilder
     }
 
     template <typename T, typename... Args>
-    void AddInput(IdType i_id, T id, Args... args)
+    void AddInput(IdType i_id, T id, Args&&... args)
     {
         inst_inputs_map_[i_id].push_back(id);
-        AddInput(i_id, args...);
+        AddInput(i_id, std::forward<Args>(args)...);
     }
 
     bool is_empty = true;

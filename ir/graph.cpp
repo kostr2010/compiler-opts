@@ -29,3 +29,11 @@ BasicBlock* Graph::NewBasicBlock()
 
     return bb;
 }
+
+Inst* Graph::NewParam(ArgNumType arg_num)
+{
+    ParamOp* inst = Inst::NewInst<ParamOp>(Opcode::PARAM, arg_num);
+    inst->SetId(inst_id_counter_++);
+    GetStartBasicBlock()->PushBackInst(inst);
+    return inst;
+}

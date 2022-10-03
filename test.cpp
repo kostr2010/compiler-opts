@@ -33,15 +33,15 @@ int main()
     Graph g;
     GraphBuilder builder(&g);
 
-    auto p0 = builder.NewInst(Opcode::PARAM, 0);
-    auto p1 = builder.NewInst(Opcode::PARAM, 1);
+    auto p0 = builder.NewParameter(0);
+    auto p1 = builder.NewParameter(1);
 
-    auto c0 = builder.NewInst(Opcode::CONST, 10);
-    auto c1 = builder.NewInst(Opcode::CONST, 100);
+    auto c0 = builder.NewConst(10);
+    auto c1 = builder.NewConst(100);
 
-    auto bb0 = builder.NewBlock();
+    builder.NewBlock();
     auto i0 = builder.NewInst(Opcode::ADD);
-    auto i1 = builder.NewInst(Opcode::SUB);
+    auto i1 = builder.NewInst(Opcode::SUBI, 1);
     auto i2 = builder.NewInst(Opcode::MUL);
 
     builder.SetInstInputs(i1, p0, c0);

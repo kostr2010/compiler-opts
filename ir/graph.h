@@ -66,7 +66,7 @@ class Graph
     BasicBlock* NewBasicBlock();
 
     template <typename... Args>
-    Inst* NewInst(Opcode op, Args&&... args)
+    [[nodiscard]] Inst* NewInst(Opcode op, Args&&... args) const
     {
         assert(op != Opcode::CONST);
         assert(op != Opcode::PARAM);
@@ -75,7 +75,7 @@ class Graph
         switch (op) {
 #define CREATE(OPCODE, TYPE)                                                                                          \
     case Opcode::OPCODE: {                                                                                            \
-        auto inst = Inst::NewInst<TYPE>(op, args...);                                                                 \
+        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...);                                 \
         inst->SetId(inst_id_counter_++);                                                                              \
         return inst;                                                                                                  \
     }
@@ -86,26 +86,52 @@ class Graph
         }
     }
 
+    //     template <typename... Args>
+    //     [[nodiscard]] Inst* NewInst(Opcode op, Args&&... args) const
+    //     {
+    //         assert(op != Opcode::CONST);
+    //         assert(op != Opcode::PARAM);
+    //         assert(op != Opcode::PHI);
+
+    //         switch (op) {
+    // #define CREATE(OPCODE, TYPE)
+    //     case Opcode::OPCODE: {
+    //         auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...);
+    //         inst->SetId(inst_id_counter_++);
+    //         return inst;
+    //     }
+    //             INSTRUCTION_LIST(CREATE)
+    // #undef CREATE
+    //         default:
+    //             assert(false);
+    //         }
+    //     }
+
+#define CREATE_INST(OPCODE, TYPE)                                                                                     \
+    template <typename... Args>                                                                                       \
+    TYPE* CreateInst##OPCODE(Args&&... args) const                                                                    \
+    {                                                                                                                 \
+        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...);                                 \
+        inst->SetId(inst_id_counter_++);                                                                              \
+        return inst;                                                                                                  \
+    }
+    INSTRUCTION_LIST(CREATE_INST)
+#undef CREATE_INST
+
     template <typename T>
     Inst* NewConst(T val)
     {
-        ConstantOp* inst = Inst::NewInst<InstType::ConstantOp>(Opcode::CONST, val);
+        ConstantOp* inst = Inst::NewInst<ConstantOp>(Opcode::CONST, val);
         inst->SetId(inst_id_counter_);
         const_map_[inst_id_counter_++] = inst;
         return inst;
     }
 
-    Inst* NewParam(ArgNumType arg_num)
-    {
-        ParamOp* inst = Inst::NewInst<InstType::ParamOp>(Opcode::PARAM, arg_num);
-        inst->SetId(inst_id_counter_++);
-        GetStartBasicBlock()->PushBackInst(inst);
-        return inst;
-    }
+    Inst* NewParam(ArgNumType arg_num);
 
-    Inst* NewPhi()
-    {
-    }
+    // Inst* NewPhi()
+    // {
+    // }
 
   private:
     void InitStartBlock();
@@ -119,7 +145,7 @@ class Graph
 
     std::unordered_map<IdType, ConstantOp*> const_map_;
 
-    uint64_t inst_id_counter_{};
+    mutable uint64_t inst_id_counter_{};
     uint64_t bb_id_counter_{};
 
     // Metadata metadata;
