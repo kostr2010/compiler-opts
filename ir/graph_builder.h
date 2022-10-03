@@ -37,10 +37,9 @@ class GraphBuilder
         graph_ = g;
     }
 
-    template <typename... Args>
-    IdType NewInst(Args&&... args)
+    IdType NewInst(Opcode op)
     {
-        auto inst = graph_->NewInst(std::forward<Args>(args)...);
+        auto inst = graph_->NewInst(op);
         auto id = inst->GetId();
 
         cur_inst_ = inst;
@@ -100,7 +99,7 @@ class GraphBuilder
         return id;
     }
 
-    void SetSuccessors(IdType bb_id, std::vector<IdType>& succs)
+    void SetSuccessors(IdType bb_id, std::vector<IdType>&& succs)
     {
         bb_succ_map_[bb_id] = succs;
     }
@@ -150,8 +149,29 @@ class GraphBuilder
         }
     }
 
-    bool ConstructCFG();
-    bool ConstructDFG();
+    void ConstructCFG()
+    {
+        for (auto& [bb_id, succs] : bb_succ_map_) {
+            assert(succs.size() <= 2);
+            auto bb = bb_map_.at(bb_id);
+            for (auto succ : succs) {
+                bb->AddSucc(bb_map_.at(succ));
+            }
+        }
+    }
+
+    // bool ConstructDFG()
+    // {
+    //     for (auto& [inst_id, inputs] : inst_inputs_map_) {
+    //         auto inst = inst_map_.at(inst_id);
+    //         std::vector<Reg> vregs{};
+    //         assert(succs.size() <= 2);
+    //         auto bb = bb_map_.at(bb_id);
+    //         for (auto succ : succs) {
+    //             bb->AddSucc(bb_map_.at(succ));
+    //         }
+    //     }
+    // }
 
   private:
     void AddInput(IdType i_id, IdType id)

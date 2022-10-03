@@ -65,8 +65,7 @@ class Graph
 
     BasicBlock* NewBasicBlock();
 
-    template <typename... Args>
-    [[nodiscard]] Inst* NewInst(Opcode op, Args&&... args) const
+    [[nodiscard]] Inst* NewInst(Opcode op) const
     {
         assert(op != Opcode::CONST);
         assert(op != Opcode::PARAM);
@@ -75,7 +74,7 @@ class Graph
         switch (op) {
 #define CREATE(OPCODE, TYPE)                                                                                          \
     case Opcode::OPCODE: {                                                                                            \
-        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...);                                 \
+        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE);                                                              \
         inst->SetId(inst_id_counter_++);                                                                              \
         return inst;                                                                                                  \
     }
