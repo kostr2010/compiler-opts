@@ -173,11 +173,16 @@ class BasicBlock
         }
         std::cout << "\n";
 
-        std::cout << "# INSTRUCTIONS:\n";
-        for (auto inst = ((first_phi_ == nullptr) ? first_inst_ : first_phi_); inst != nullptr;
-             inst = inst->GetNext()) {
+        std::cout << "# PHI:\n";
+        for (auto inst = first_phi_; inst != nullptr; inst = inst->GetPrev()) {
             inst->Dump();
         }
+        std::cout << "# INSTRUCTIONS:\n";
+
+        for (auto inst = first_inst_; inst != nullptr; inst = inst->GetNext()) {
+            inst->Dump();
+        }
+
         std::cout << "\n";
     }
 
