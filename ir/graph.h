@@ -1,6 +1,7 @@
 #ifndef ___GRAPH_H_INCLUDED___
 #define ___GRAPH_H_INCLUDED___
 
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -69,14 +70,13 @@ class Graph
     {
         assert(op != Opcode::CONST);
         assert(op != Opcode::PARAM);
-        assert(op != Opcode::PHI);
 
         switch (op) {
-#define CREATE(OPCODE, TYPE)                                                                                          \
-    case Opcode::OPCODE: {                                                                                            \
-        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE);                                                              \
-        inst->SetId(inst_id_counter_++);                                                                              \
-        return inst;                                                                                                  \
+#define CREATE(OPCODE, TYPE)                                                                      \
+    case Opcode::OPCODE: {                                                                        \
+        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE);                                          \
+        inst->SetId(inst_id_counter_++);                                                          \
+        return inst;                                                                              \
     }
             INSTRUCTION_LIST(CREATE)
 #undef CREATE
@@ -85,34 +85,13 @@ class Graph
         }
     }
 
-    //     template <typename... Args>
-    //     [[nodiscard]] Inst* NewInst(Opcode op, Args&&... args) const
-    //     {
-    //         assert(op != Opcode::CONST);
-    //         assert(op != Opcode::PARAM);
-    //         assert(op != Opcode::PHI);
-
-    //         switch (op) {
-    // #define CREATE(OPCODE, TYPE)
-    //     case Opcode::OPCODE: {
-    //         auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...);
-    //         inst->SetId(inst_id_counter_++);
-    //         return inst;
-    //     }
-    //             INSTRUCTION_LIST(CREATE)
-    // #undef CREATE
-    //         default:
-    //             assert(false);
-    //         }
-    //     }
-
-#define CREATE_INST(OPCODE, TYPE)                                                                                     \
-    template <typename... Args>                                                                                       \
-    TYPE* CreateInst##OPCODE(Args&&... args) const                                                                    \
-    {                                                                                                                 \
-        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...);                                 \
-        inst->SetId(inst_id_counter_++);                                                                              \
-        return inst;                                                                                                  \
+#define CREATE_INST(OPCODE, TYPE)                                                                 \
+    template <typename... Args>                                                                   \
+    TYPE* CreateInst##OPCODE(Args&&... args) const                                                \
+    {                                                                                             \
+        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...);             \
+        inst->SetId(inst_id_counter_++);                                                          \
+        return inst;                                                                              \
     }
     INSTRUCTION_LIST(CREATE_INST)
 #undef CREATE_INST
@@ -128,9 +107,7 @@ class Graph
 
     Inst* NewParam(ArgNumType arg_num);
 
-    // Inst* NewPhi()
-    // {
-    // }
+    void Dump();
 
   private:
     void InitStartBlock();

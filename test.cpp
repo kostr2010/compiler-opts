@@ -5,62 +5,51 @@
 
 #include <iostream>
 
-class Base
-{
-  public:
-    virtual void kek()
-    {
-        std::cout << "base\n";
-    }
-};
-
-class Derived : public Base
-{
-  public:
-    void kek()
-    {
-        std::cout << "derived\n";
-    }
-};
-
-void foo(Base* b)
-{
-    b->kek();
-}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 int main()
 {
     Graph g;
-    GraphBuilder builder(&g);
+    GraphBuilder b(&g);
 
-    auto p0 = builder.NewParameter(0);
-    auto p1 = builder.NewParameter(1);
+    auto p0 = b.NewParameter(0);
 
-    auto c0 = builder.NewConst(10);
-    auto c1 = builder.NewConst(100);
+    // FIXME: type specifiers. For now, there are nesessary fields, but there isn't needed
+    // functionality to work with it
+    auto c0 = b.NewConst(1U); // res{1U}
+    auto c1 = b.NewConst(2U); // i{2U}
 
-    auto b0 = builder.NewBlock();
-    auto i0 = builder.NewInst(Opcode::ADD);
-    auto i1 = builder.NewInst(Opcode::SUBI);
-    builder.SetInstImm(i1, 10);
-    auto i2 = builder.NewInst(Opcode::MUL);
+    auto b0 = b.NewBlock();
+    auto i0 = b.NewInst(Opcode::PHI); // i
+    auto i1 = b.NewInst(Opcode::IF);
 
-    builder.SetInstInputs(i1, p0, c0);
-    builder.SetInstInputs(i2, p1, c1);
-    builder.SetInstInputs(i0, i1, i2);
+    auto b1 = b.NewBlock();
+    auto i2 = b.NewInst(Opcode::PHI); // res
+    auto i3 = b.NewInst(Opcode::MUL);
+    auto i4 = b.NewInst(Opcode::ADDI);
 
-    auto b1 = builder.NewBlock();
-    builder.SetSuccessors(b0, { b1 });
-    // auto i3 = builder.NewInst(Opcode::MULI);
+    auto b2 = b.NewBlock();
+    auto i5 = b.NewInst(Opcode::RETURN);
 
-    auto b2 = builder.NewBlock();
-    builder.SetSuccessors(b2, { b1, b0 });
-    // auto i4 = builder.NewInst(Opcode::RETURN);
+    b.SetInstInputs(i0, c1, i4);
+    b.SetInstInputs(i1, i0, p0);
+    b.SetInstInputs(i2, c0, i3);
+    b.SetInstInputs(i3, i2, i0);
+    b.SetInstInputs(i4, i0);
+    b.SetInstImm(i4, 1);
+    b.SetInstInputs(i5, i2);
 
-    builder.ConstructCFG();
+    b.SetSuccessors(b0, { b1, b2 });
+    b.SetSuccessors(b1, { b0 });
+    b.SetSuccessors(b2, {});
 
-    Derived d;
+    b.ConstructCFG();
+    b.ConstructDFG();
 
-    foo(&d);
+    g.Dump();
+
     return 0;
 }
+
+#pragma GCC diagnostic pop

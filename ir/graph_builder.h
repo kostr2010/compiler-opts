@@ -2,6 +2,7 @@
 #define ___GRAPH_BUILDER_H_INCLUDED___
 
 #include <cassert>
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -47,7 +48,11 @@ class GraphBuilder
 
         inst_map_[id] = inst;
 
-        cur_bb_->PushBackInst(inst);
+        if (inst->IsPhi()) {
+            cur_bb_->PushBackPhi(inst);
+        } else {
+            cur_bb_->PushBackInst(inst);
+        }
 
         return id;
     }
@@ -104,7 +109,6 @@ class GraphBuilder
         bb_succ_map_[bb_id] = succs;
     }
 
-    // void NewInst(InstOpcode op);
     template <typename... Args>
     void SetInstInputs(IdType id, Args... inputs_id)
     {
@@ -149,6 +153,27 @@ class GraphBuilder
         }
     }
 
+    void InstSetCond(IdType id, CondType c)
+    {
+        auto inst = inst_map_[id];
+        assert(inst != nullptr);
+        assert(inst->IsCond());
+
+        switch (inst->GetOpcode()) {
+        case Opcode::IF:
+            static_cast<IfOp*>(inst)->SetCond(c);
+            break;
+        case Opcode::IF_IMM:
+            static_cast<IfImmOp*>(inst)->SetCond(c);
+            break;
+        case Opcode::CMP:
+            static_cast<CompareOp*>(inst)->SetCond(c);
+            break;
+        default:
+            assert(false);
+        }
+    }
+
     void ConstructCFG()
     {
         for (auto& [bb_id, succs] : bb_succ_map_) {
@@ -160,18 +185,31 @@ class GraphBuilder
         }
     }
 
-    // bool ConstructDFG()
-    // {
-    //     for (auto& [inst_id, inputs] : inst_inputs_map_) {
-    //         auto inst = inst_map_.at(inst_id);
-    //         std::vector<Reg> vregs{};
-    //         assert(succs.size() <= 2);
-    //         auto bb = bb_map_.at(bb_id);
-    //         for (auto succ : succs) {
-    //             bb->AddSucc(bb_map_.at(succ));
-    //         }
-    //     }
-    // }
+    void ConstructDFG()
+    {
+        for (auto& [inst_id, inputs] : inst_inputs_map_) {
+            assert(inst_map_.find(inst_id) != inst_map_.end());
+            auto inst = inst_map_.at(inst_id);
+
+            std::vector<Reg> vregs{};
+
+            // phi ?
+            if (inst->IsPhi()) {
+                for (auto input_id : inputs) {
+                    assert(inst_map_.find(input_id) != inst_map_.end());
+                    inst->AddInput(inst_map_.at(input_id));
+                }
+            } else {
+                size_t input_idx = 0;
+
+                for (auto input_id : inputs) {
+                    assert(inst_map_.find(input_id) != inst_map_.end());
+
+                    inst->SetInput(input_idx++, inst_map_.at(input_id));
+                }
+            }
+        }
+    }
 
   private:
     void AddInput(IdType i_id, IdType id)

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -87,12 +88,13 @@ class BasicBlock
         assert(inst != nullptr);
 
         inst->SetBasicBlock(this);
-        if (is_empty) {
+        if (first_inst_ == nullptr) {
             SetFirstInst(inst);
         } else {
             inst->SetNext(nullptr);
             inst->SetPrev(last_inst_);
             last_inst_->SetNext(inst);
+            last_inst_ = inst;
         }
     }
 
@@ -101,13 +103,47 @@ class BasicBlock
         assert(inst != nullptr);
 
         inst->SetBasicBlock(this);
-        if (is_empty) {
+        if (first_inst_ == nullptr) {
             SetFirstInst(inst);
         } else {
             inst->SetNext(first_inst_);
-            inst->SetPrev(nullptr);
+            inst->SetPrev(first_inst_->GetPrev());
             first_inst_->SetPrev(inst);
+            if (first_phi_ != nullptr) {
+                first_phi_->SetNext(inst);
+            }
             first_inst_ = inst;
+        }
+    }
+
+    void PushBackPhi(Inst* inst)
+    {
+        assert(inst != nullptr);
+        assert(inst->IsPhi());
+
+        inst->SetBasicBlock(this);
+        if (first_phi_ == nullptr) {
+            // all phi's go in front of actual instructions
+            inst->SetNext(first_inst_);
+            if (first_inst_ != nullptr) {
+                first_inst_->SetPrev(inst);
+            }
+            first_phi_ = inst;
+        } else {
+            if (first_inst_ != nullptr) {
+                auto prev = first_inst_->GetPrev();
+                assert(prev != nullptr);
+                assert(prev->IsPhi());
+                assert(prev == first_phi_);
+
+                inst->SetPrev(prev);
+                inst->SetNext(first_inst_);
+                prev->SetNext(inst);
+                first_inst_->SetPrev(inst);
+            } else {
+                inst->SetPrev(first_phi_);
+                first_phi_->SetNext(inst);
+            }
         }
     }
 
@@ -121,21 +157,47 @@ class BasicBlock
         return last_inst_;
     }
 
+    void Dump()
+    {
+        std::cout << "# BB id: " << id_ << "\n";
+
+        std::cout << "# PREDS: ";
+        for (auto bb : preds_) {
+            std::cout << bb->GetId() << " ";
+        }
+        std::cout << "\n";
+
+        std::cout << "# SUCCS: ";
+        for (auto bb : succs_) {
+            std::cout << bb->GetId() << " ";
+        }
+        std::cout << "\n";
+
+        std::cout << "# INSTRUCTIONS:\n";
+        for (auto inst = ((first_phi_ == nullptr) ? first_inst_ : first_phi_); inst != nullptr;
+             inst = inst->GetNext()) {
+            inst->Dump();
+        }
+        std::cout << "\n";
+    }
+
   private:
     void SetFirstInst(Inst* inst)
     {
+
         assert(inst != nullptr);
 
         inst->SetNext(nullptr);
         inst->SetPrev(nullptr);
 
+        if (first_phi_ != nullptr) {
+            first_phi_->SetNext(inst);
+            inst->SetPrev(first_phi_);
+        }
+
         first_inst_ = inst;
         last_inst_ = inst;
-
-        is_empty = false;
     }
-
-    bool is_empty = true;
 
     Graph* graph_; // access to metadata
 
@@ -146,9 +208,9 @@ class BasicBlock
 
     IdType id_;
 
-    std::vector<Inst*> inst_vector_{};
     Inst* first_inst_{ nullptr };
     Inst* last_inst_{ nullptr };
+    Inst* first_phi_{ nullptr };
 };
 
 #endif

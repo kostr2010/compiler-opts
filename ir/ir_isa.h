@@ -26,7 +26,7 @@
     _(ORI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                             \
     _(XORI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                            \
     _(CMP, CompareOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                               \
-    /*_(CAST, CAST )*/                                                                                                \
+    /*_(CAST, CastOp )*/                                                                                              \
     /*_(CHECK, CHECK )*/                                                                                              \
     /*_(CALL, CALL )*/                                                                                                \
     _(CONST, ConstantOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                            \

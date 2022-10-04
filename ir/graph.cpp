@@ -37,3 +37,10 @@ Inst* Graph::NewParam(ArgNumType arg_num)
     GetStartBasicBlock()->PushBackInst(inst);
     return inst;
 }
+
+void Graph::Dump()
+{
+    for (auto bb : bb_vector_) {
+        bb->Dump();
+    }
+}

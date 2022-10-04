@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <limits>
 #include <map>
 #include <numeric>
@@ -49,6 +50,10 @@ enum class CondType : uint8_t
     COND_INVALID,
     COND_EQ,
     COND_NEQ,
+    COND_LEQ,
+    COND_GEQ,
+    COND_L,
+    CONSD_G
     // ...
 };
 
@@ -68,22 +73,24 @@ class BasicBlock;
 class Inst
 {
   public:
-    Inst(Opcode op, InstType t) : opcode_(op), inst_type_(t){};
-    Inst(Opcode op, InstType t, DataType d_t) : opcode_(op), inst_type_(t), data_type_(d_t){};
+    Inst(Opcode op, InstType t, size_t n_inp = 0) : opcode_(op), inst_type_(t), n_inputs_(n_inp)
+    {
+        inputs_.reserve(n_inputs_);
+    };
     Inst() = default;
     ~Inst() = default;
 
-    static constexpr int N_INPUTS = -1;
     static constexpr Reg INVALID_REG = -1;
+    static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
 
     Inst* GetPrev() const
     {
-        return next_;
+        return prev_;
     }
 
     Inst* GetNext() const
     {
-        return prev_;
+        return next_;
     }
 
     void SetPrev(Inst* inst)
@@ -176,12 +183,76 @@ class Inst
         output_reg_ = reg;
     }
 
+    size_t GetNInputs() const
+    {
+        return n_inputs_;
+    }
+
+    bool IsPhi() const
+    {
+        return opcode_ == Opcode::PHI;
+    }
+
+    bool IsConst() const
+    {
+        return opcode_ == Opcode::CONST;
+    }
+
+    bool IsParam() const
+    {
+        return opcode_ == Opcode::PARAM;
+    }
+
+    bool IsCond() const
+    {
+        return opcode_ == Opcode::IF || opcode_ == Opcode::IF_IMM || opcode_ == Opcode::CMP;
+    }
+
+    // used for fixed number of arguments
+    void SetInput(size_t idx, Inst* inst)
+    {
+        assert(inst != nullptr);
+        assert(idx < n_inputs_);
+
+        inst->users_.insert(this);
+        inputs_[idx] = inst;
+    }
+
+    // used for unfixed number of arguments
+    void AddInput(Inst* inst)
+    {
+        assert(inst != nullptr);
+        assert(inputs_.size() + 1 < MAX_INPUTS);
+
+        inst->users_.insert(this);
+        inputs_.push_back(inst);
+    }
+
     template <typename IType, typename... Args>
     static IType* NewInst(Args&&... args);
 
+    void Dump()
+    {
+        std::cout << "\tinst_id:....." << id_ << "\n";
+        std::cout << "\tinst_opcode:." << (int)opcode_ << "\n";
+        std::cout << "\tinst_type:..." << (int)inst_type_ << "\n";
+        std::cout << "\tinst users:\n\t\t";
+
+        for (auto i : users_) {
+            std::cout << i->GetId() << " ";
+        }
+        std::cout << "\n";
+
+        std::cout << "\tinst inputs:\n\t\t";
+        for (auto i : inputs_) {
+            std::cout << i->GetId() << " ";
+        }
+        std::cout << "\n";
+    }
+
   private:
-    Inst* prev_;
-    Inst* next_;
+    Inst* prev_{ nullptr };
+    Inst* next_{ nullptr };
 
     IdType id_;
 
@@ -191,9 +262,10 @@ class Inst
     BasicBlock* bb_ = nullptr;
 
     Reg output_reg_;
+    size_t n_inputs_;
 
-    // users
-    // inputs
+    std::set<Inst*> users_;
+    std::vector<Inst*> inputs_;
 };
 
 class HasImm
@@ -242,19 +314,30 @@ class HasCond
     CondType cc_{ CondType::COND_INVALID };
 };
 
+// FIXME: now implemented as checking max arg number
+// class HasVariableInputs
+// {
+//   public:
+//     explicit HasVariableInputs(CondType cc)
+//     {
+//     }
+//     HasVariableInputs() = default;
+//     ~HasVariableInputs() = default;
+
+//   private:
+// };
+
 // proxy for fixed input instructions
 template <size_t N>
 class FixedInputOp : public Inst
 {
   public:
-    FixedInputOp(Opcode op, InstType t) : Inst(op, t)
+    FixedInputOp(Opcode op, InstType t) : Inst(op, t, N)
     {
         input_regs_.fill(INVALID_REG);
     }
     FixedInputOp() = default;
     ~FixedInputOp() = default;
-
-    static constexpr int N_INPUTS = N;
 
     void SetInputReg(RegNumType idx, Reg reg) override
     {
@@ -289,15 +372,6 @@ class FixedInputOp1 : public FixedInputOp<1>
     }
     ~FixedInputOp1() = default;
 };
-
-// class FixedInputOp2 : public FixedInputOp<0>
-// {
-//   public:
-//     FixedInputOp1(Opcode op) : FixedInputOp(op, InstType::FixedInputOp1)
-//     {
-//     }
-//     ~FixedInputOp2() = default;
-// };
 
 class BinaryOp : public FixedInputOp<2>
 {
@@ -360,8 +434,6 @@ class ConstantOp : public Inst
     ConstantOp() = default;
     ~ConstantOp() = default;
 
-    static constexpr int N_INPUTS = 0;
-
     uint64_t GetValRaw() const
     {
         return val_;
@@ -400,7 +472,6 @@ class ParamOp : public Inst
     }
     ParamOp() = default;
     ~ParamOp() = default;
-    static constexpr int N_INPUTS = 0;
 
     ArgNumType GetArgNumber() const
     {
@@ -416,22 +487,22 @@ class ParamOp : public Inst
     ArgNumType arg_n_{ ARG_N_INVALID };
 };
 
-// FIXME:
+// FIXME: ???
 class PhiOp : public Inst
 {
   public:
-    PhiOp(Opcode op) : Inst(op, InstType::PhiOp)
+    PhiOp(Opcode op) : Inst(op, InstType::PhiOp, 0)
     {
     }
     PhiOp() = default;
     ~PhiOp() = default;
-    static constexpr int N_INPUTS = 0;
 };
 
 class IfOp : public FixedInputOp<2>, public HasCond
 {
   public:
-    IfOp(Opcode, CondType cc = CondType::COND_INVALID) : FixedInputOp(Opcode::IF, InstType::IfOp), HasCond(cc)
+    IfOp(Opcode, CondType cc = CondType::COND_INVALID)
+        : FixedInputOp(Opcode::IF, InstType::IfOp), HasCond(cc)
     {
     }
     IfOp() = default;
@@ -447,14 +518,11 @@ class IfImmOp : public FixedInputOp<1>, public HasCond, public HasImm
     }
     IfImmOp() = default;
     ~IfImmOp() = default;
-    static constexpr int N_INPUTS = 0;
 };
 
 template <typename IType, typename... Args>
 IType* Inst::NewInst(Args&&... args)
 {
-    static_assert(IType::N_INPUTS >= 0);
-
     return new IType(std::forward<Args>(args)...);
 
     // switch (IType::N_INPUTS) {
@@ -462,7 +530,8 @@ IType* Inst::NewInst(Args&&... args)
 
     // default:
     //     auto data = new Data<IType::N_INPUTS>;
-    //     return new ((void*)(data + sizeof(Data<IType::N_INPUTS>))) IType(std::forward<Args>(args)...);
+    //     return new ((void*)(data + sizeof(Data<IType::N_INPUTS>)))
+    //     IType(std::forward<Args>(args)...);
     // }
 }
 
