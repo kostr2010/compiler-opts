@@ -5,5 +5,4 @@ add_library(ir SHARED
     graph_builder.cpp
     graph.cpp
     inst.cpp
-    metadata.cpp
 )
