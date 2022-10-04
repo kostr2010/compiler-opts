@@ -113,8 +113,6 @@ class Graph
     void InitStartBlock();
     void InitEndBlock();
 
-    Graph* parent;
-
     std::vector<BasicBlock*> bb_vector_;
     BasicBlock* bb_start_{ nullptr };
     BasicBlock* bb_end_{ nullptr };
