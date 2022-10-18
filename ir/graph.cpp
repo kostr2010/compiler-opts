@@ -4,20 +4,10 @@
 void Graph::InitStartBlock()
 {
     BasicBlock* bb = new BasicBlock(this);
+    assert(bb_vector_.empty());
     bb->SetId(BB_START_ID);
-
-    bb_vector_.at(BB_START_ID) = bb;
+    bb_vector_.push_back(bb);
     bb_start_ = bb;
-    ++bb_id_counter_;
-}
-
-void Graph::InitEndBlock()
-{
-    BasicBlock* bb = new BasicBlock(this);
-    bb->SetId(BB_END_ID);
-
-    bb_vector_.at(BB_END_ID) = bb;
-    bb_end_ = bb;
     ++bb_id_counter_;
 }
 

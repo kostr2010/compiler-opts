@@ -56,7 +56,6 @@ enum class CondType : uint8_t
     COND_GEQ,
     COND_L,
     CONSD_G
-    // ...
 };
 
 class BasicBlock;
@@ -113,8 +112,9 @@ class Inst
     }
 
     void SetInput(size_t idx, Inst* inst);
-
     size_t AddInput(Inst* inst);
+    GETTER(Inputs, inputs_);
+    GETTER(Users, users_);
 
     template <typename IType, typename... Args>
     static IType* NewInst(Args&&... args);
@@ -139,8 +139,6 @@ class Inst
     InstType inst_type_ = InstType::INVALID_TYPE;
     DataType data_type_ = DataType::NO_TYPE;
     BasicBlock* bb_ = nullptr;
-
-    Reg output_reg_;
 
     std::vector<User> users_;
     std::vector<Input> inputs_;

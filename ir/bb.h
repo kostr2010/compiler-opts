@@ -38,6 +38,13 @@ class BasicBlock
     GETTER(LastInst, last_inst_);
     GETTER_SETTER(Id, IdType, id_);
 
+    bool Dominates(BasicBlock* bb)
+    {
+        assert(bb != nullptr);
+        // FIXME:
+        return true;
+    }
+
     bool IsStartBlock() const
     {
         return id_ == graph_->GetStartBasicBlockId();
@@ -45,7 +52,7 @@ class BasicBlock
 
     bool IsEndBlock() const
     {
-        return id_ == graph_->GetEndBasicBlockId();
+        return succs_.empty();
     }
 
     void AddSucc(BasicBlock* bb)

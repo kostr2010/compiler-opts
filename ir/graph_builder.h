@@ -37,7 +37,6 @@ class GraphBuilder
         graph_ = g;
 
         bb_map_[g->BB_START_ID] = g->GetStartBasicBlock();
-        bb_map_[g->BB_END_ID] = g->GetEndBasicBlock();
 
         cur_bb_ = g->GetStartBasicBlock();
         cur_bb_id_ = g->BB_START_ID;
@@ -269,14 +268,35 @@ class GraphBuilder
         dfg_constructed = true;
     }
 
+    // FIXME:
     bool RunChecks()
     {
-        assert(cfg_constructed);
-        assert(dfg_constructed);
+        if (!(cfg_constructed || dfg_constructed)) {
+            LOG_ERROR("can't check graph without CFG or DFG!");
+        }
 
         // check inputs of variable length
-        // PHI: inst->bb->Dominates(source_bb);
-        //      inputs.size() == preds.size()
+        auto rpo = graph_->RPOPass();
+        for (auto bb : rpo) {
+            for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetPrev()) {
+                if (phi->GetInputs().size() > bb->GetPredecesors().size()) {
+                    LOG_ERROR("BB: " << bb->GetId() << ", INST_ID: " << phi->GetId()
+                                     << ", number of phi inputs > number of BB predecessors");
+                    LOG(phi->GetInputs().size() << " " << bb->GetPredecesors().size() << "\n");
+                    return false;
+                }
+
+                for (auto input : phi->GetInputs()) {
+                    if (!input.GetInst()->GetBasicBlock()->Dominates(input.GetSourceBB())) {
+                        LOG_ERROR(
+                            "BB: "
+                            << bb->GetId() << ", INST_ID: " << phi->GetId()
+                            << ", phi input's source BB must be dominated by input's original BB");
+                        return false;
+                    }
+                }
+            }
+        }
 
         // check types
 

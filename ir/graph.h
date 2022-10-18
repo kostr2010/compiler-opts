@@ -32,12 +32,9 @@ class Graph
 {
   public:
     static constexpr IdType BB_START_ID = 0;
-    static constexpr IdType BB_END_ID = 1;
     Graph()
     {
-        bb_vector_.resize(2);
         InitStartBlock();
-        InitEndBlock();
     }
 
     ~Graph()
@@ -49,19 +46,9 @@ class Graph
         return BB_START_ID;
     }
 
-    static inline IdType GetEndBasicBlockId()
-    {
-        return BB_START_ID;
-    }
-
     BasicBlock* GetStartBasicBlock() const
     {
         return bb_start_;
-    }
-
-    BasicBlock* GetEndBasicBlock() const
-    {
-        return bb_end_;
     }
 
     BasicBlock* NewBasicBlock();
@@ -118,14 +105,12 @@ class Graph
 
   private:
     void InitStartBlock();
-    void InitEndBlock();
 
     void RPOPass_(std::vector<BasicBlock*>* rpo_bb, std::unordered_set<IdType>* rpo_visited,
                   BasicBlock* cur_bb) const;
 
     std::vector<BasicBlock*> bb_vector_;
     BasicBlock* bb_start_{ nullptr };
-    BasicBlock* bb_end_{ nullptr };
 
     std::unordered_map<IdType, ConstantOp*> const_map_;
 

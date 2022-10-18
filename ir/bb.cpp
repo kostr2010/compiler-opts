@@ -69,17 +69,17 @@ void BasicBlock::Dump() const
     std::cout << "#########################\n";
     std::cout << "# BB id: " << id_ << "\n";
 
-    std::cout << "# PREDS: ";
+    std::cout << "# PREDS: [";
     for (auto bb : preds_) {
         std::cout << bb->GetId() << " ";
     }
-    std::cout << "\n";
+    std::cout << "]\n";
 
-    std::cout << "# SUCCS: ";
+    std::cout << "# SUCCS: [";
     for (auto bb : succs_) {
         std::cout << bb->GetId() << " ";
     }
-    std::cout << "\n";
+    std::cout << "]\n";
 
     std::cout << "# PHI:\n";
     for (auto inst = first_phi_; inst != nullptr; inst = inst->GetPrev()) {
