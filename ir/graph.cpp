@@ -44,3 +44,19 @@ void Graph::Dump()
         bb->Dump();
     }
 }
+
+void Graph::RPOPass_(std::vector<BasicBlock*>* rpo_bb, std::unordered_set<IdType>* rpo_visited,
+                     BasicBlock* cur_bb) const
+{
+    auto bb_id = cur_bb->GetId();
+    if (rpo_visited->find(bb_id) != rpo_visited->end()) {
+        return;
+    }
+
+    rpo_visited->emplace(bb_id);
+    rpo_bb->push_back(cur_bb);
+
+    for (const auto succ : cur_bb->GetSuccessors()) {
+        RPOPass_(rpo_bb, rpo_visited, succ);
+    }
+}

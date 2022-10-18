@@ -1,13 +1,22 @@
 # disadvantages
 
+- types are implemented, but not checked, as I am unsure of when checks should be pefrormed
 - for now, no cast instruction (uint32_t == uint64_t). it will be added shortly, and painlessly, as there is all needed functionalty for it
-- not sure about phi instructions
 - ISA might need to be reworked, as i am very unsure in my design
 
 # structure
 
 - `ir/` - source dir for IR (1st assignment)
 - `test.cpp` - example file with 1st assignment done
+- `tests/` - tests folder
+
+# clone
+
+```
+git clone git@github.com:kostr2010/compiler-opts.git
+cd compiler_course
+git submodule update --init --recursive
+```
 
 # build
 
@@ -18,6 +27,11 @@ cmake <path_to_project> && make
 ```
 
 running `test` executable will dump CFG & DFG of 1st assignment
+
+# targets
+
+- `gtests` - google tests for each assignment
+- `test` - executable with example benchmark
 
 # Graph (`graph.h`, `graph.cpp`)
 

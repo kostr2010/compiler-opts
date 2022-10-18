@@ -44,7 +44,6 @@ class GraphBuilder
 
         cfg_constructed = false;
         dfg_constructed = false;
-        graph_checked = false;
         is_empty = true;
     }
 
@@ -270,15 +269,6 @@ class GraphBuilder
         dfg_constructed = true;
     }
 
-    std::vector<BasicBlock*> RPOPass()
-    {
-        if (!graph_checked) {
-            LOG_ERROR("RPO can only be constructed after graph validation");
-        }
-
-        return {};
-    }
-
     bool RunChecks()
     {
         assert(cfg_constructed);
@@ -290,7 +280,6 @@ class GraphBuilder
 
         // check types
 
-        graph_checked = true;
         return true;
     }
 
@@ -309,7 +298,6 @@ class GraphBuilder
 
     bool cfg_constructed = false;
     bool dfg_constructed = false;
-    bool graph_checked = false;
 
     bool is_empty = true;
     Graph* graph_{ nullptr };

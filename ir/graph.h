@@ -106,9 +106,22 @@ class Graph
 
     void Dump();
 
+    std::vector<BasicBlock*> RPOPass() const
+    {
+        std::vector<BasicBlock*> rpo_bb{};
+        std::unordered_set<IdType> rpo_visited{};
+
+        RPOPass_(&rpo_bb, &rpo_visited, GetStartBasicBlock());
+
+        return rpo_bb;
+    }
+
   private:
     void InitStartBlock();
     void InitEndBlock();
+
+    void RPOPass_(std::vector<BasicBlock*>* rpo_bb, std::unordered_set<IdType>* rpo_visited,
+                  BasicBlock* cur_bb) const;
 
     std::vector<BasicBlock*> bb_vector_;
     BasicBlock* bb_start_{ nullptr };
