@@ -6,3 +6,5 @@ add_library(ir SHARED
     graph.cpp
     inst.cpp
 )
+
+target_include_directories(ir PUBLIC ${CMAKE_SOURCE_DIR}/utils)

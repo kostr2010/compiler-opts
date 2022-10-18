@@ -5,13 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(compiler_course CXX)
 
-# find_package(GTest REQUIRED)
-# include_directories(${GTEST_INCLUDE_DIRS})
-
 add_subdirectory(ir)
+add_subdirectory(tests)
+add_subdirectory(third-party)
 
 add_executable(test test.cpp)
-
 target_include_directories(test PRIVATE ${PROJECT_SOURCE_DIR})
-
 target_link_libraries(test ir)

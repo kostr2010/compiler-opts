@@ -31,8 +31,8 @@ class BasicBlock;
 class Graph
 {
   public:
-    static const IdType BB_START_ID = 0;
-    static const IdType BB_END_ID = 1;
+    static constexpr IdType BB_START_ID = 0;
+    static constexpr IdType BB_END_ID = 1;
     Graph()
     {
         bb_vector_.resize(2);
@@ -66,23 +66,20 @@ class Graph
 
     BasicBlock* NewBasicBlock();
 
-    [[nodiscard]] Inst* NewInst(Opcode op) const
+    template <Opcode op, typename... Args>
+    Inst* NewInst(Args&&... args) const
     {
         assert(op != Opcode::CONST);
         assert(op != Opcode::PARAM);
 
-        switch (op) {
 #define CREATE(OPCODE, TYPE)                                                                      \
-    case Opcode::OPCODE: {                                                                        \
-        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE);                                          \
+    if constexpr (op == Opcode::OPCODE) {                                                         \
+        auto inst = Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...);             \
         inst->SetId(inst_id_counter_++);                                                          \
         return inst;                                                                              \
     }
-            INSTRUCTION_LIST(CREATE)
+        INSTRUCTION_LIST(CREATE)
 #undef CREATE
-        default:
-            assert(false);
-        }
     }
 
 #define CREATE_INST(OPCODE, TYPE)                                                                 \

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "bb.h"
+#include "macros.h"
 #include "typedefs.h"
 
 class Graph;
@@ -24,8 +25,6 @@ class GraphBuilder
     GraphBuilder(Graph* g)
     {
         SetGraph(g);
-        cur_bb_ = g->GetStartBasicBlock();
-        cur_bb_id_ = g->BB_START_ID;
     }
 
     ~GraphBuilder()
@@ -36,11 +35,29 @@ class GraphBuilder
     {
         assert(g != nullptr);
         graph_ = g;
+
+        bb_map_[g->BB_START_ID] = g->GetStartBasicBlock();
+        bb_map_[g->BB_END_ID] = g->GetEndBasicBlock();
+
+        cur_bb_ = g->GetStartBasicBlock();
+        cur_bb_id_ = g->BB_START_ID;
+
+        cfg_constructed = false;
+        dfg_constructed = false;
+        graph_checked = false;
+        is_empty = true;
     }
 
-    IdType NewInst(Opcode op)
+    template <Opcode op, typename... Args>
+    IdType NewInst(Args&&... args)
     {
-        auto inst = graph_->NewInst(op);
+        assert(graph_ != nullptr);
+        assert(cur_bb_ != nullptr);
+
+        static_assert(op != Opcode::CONST);
+
+        auto inst = graph_->NewInst<op>(std::forward<Args>(args)...);
+        assert(inst != nullptr);
         auto id = inst->GetId();
 
         cur_inst_ = inst;
@@ -59,13 +76,19 @@ class GraphBuilder
 
     IdType NewParameter(ArgNumType arg_num)
     {
+        assert(graph_ != nullptr);
+        assert(graph_->GetStartBasicBlock() != nullptr);
+
         auto inst = graph_->NewParam(arg_num);
+        assert(inst != nullptr);
         auto id = inst->GetId();
 
         cur_inst_ = inst;
         cur_inst_id_ = id;
 
         inst_map_[id] = inst;
+
+        graph_->GetStartBasicBlock()->PushBackInst(inst);
 
         return id;
     }
@@ -73,7 +96,11 @@ class GraphBuilder
     template <typename T>
     IdType NewConst(T value)
     {
+        assert(graph_ != nullptr);
+        assert(graph_->GetStartBasicBlock() != nullptr);
+
         auto inst = graph_->NewConst(value);
+        assert(inst != nullptr);
         auto id = inst->GetId();
 
         cur_inst_ = inst;
@@ -81,13 +108,15 @@ class GraphBuilder
 
         inst_map_[id] = inst;
 
-        cur_bb_->PushBackInst(inst);
+        graph_->GetStartBasicBlock()->PushBackInst(inst);
 
         return id;
     }
 
     IdType NewBlock()
     {
+        assert(graph_ != nullptr);
+
         auto bb = graph_->NewBasicBlock();
         auto id = bb->GetId();
 
@@ -110,21 +139,33 @@ class GraphBuilder
     }
 
     template <typename... Args>
-    void SetInstInputs(IdType id, Args... inputs_id)
+    void SetInputs(IdType id, Args... inputs_id)
     {
+        assert(inst_map_.find(id) != inst_map_.end());
+        // assert(!inst_map_.at(id)->IsPhi());
+
         if constexpr (sizeof...(inputs_id)) {
             AddInput(id, inputs_id...);
         }
     }
 
-    void SetInstType(IdType id, DataType t)
+    void SetInputs(IdType id, std::vector<std::pair<IdType, IdType> >&& inputs)
+    {
+        assert(inst_map_.find(id) != inst_map_.end());
+        assert(inst_map_.at(id)->IsPhi());
+
+        phi_inputs_map_[id].reserve(inputs.size());
+        phi_inputs_map_.at(id) = std::move(inputs);
+    }
+
+    void SetType(IdType id, DataType t)
     {
         auto inst = inst_map_[id];
         assert(inst != nullptr);
         inst->SetDataType(t);
     }
 
-    void SetInstImm(IdType id, ImmType imm)
+    void SetImm(IdType id, ImmType imm)
     {
         auto inst = inst_map_[id];
         assert(inst != nullptr);
@@ -153,7 +194,7 @@ class GraphBuilder
         }
     }
 
-    void InstSetCond(IdType id, CondType c)
+    void SetCond(IdType id, CondType c)
     {
         auto inst = inst_map_[id];
         assert(inst != nullptr);
@@ -183,6 +224,8 @@ class GraphBuilder
                 bb->AddSucc(bb_map_.at(succ));
             }
         }
+
+        cfg_constructed = true;
     }
 
     void ConstructDFG()
@@ -190,25 +233,65 @@ class GraphBuilder
         for (auto& [inst_id, inputs] : inst_inputs_map_) {
             assert(inst_map_.find(inst_id) != inst_map_.end());
             auto inst = inst_map_.at(inst_id);
+            assert(!inst->IsPhi());
 
-            std::vector<Reg> vregs{};
+            size_t input_idx = 0;
 
-            // phi ?
-            if (inst->IsPhi()) {
-                for (auto input_id : inputs) {
-                    assert(inst_map_.find(input_id) != inst_map_.end());
-                    inst->AddInput(inst_map_.at(input_id));
-                }
-            } else {
-                size_t input_idx = 0;
+            for (auto input_id : inputs) {
+                assert(inst_map_.find(input_id) != inst_map_.end());
 
-                for (auto input_id : inputs) {
-                    assert(inst_map_.find(input_id) != inst_map_.end());
+                inst->SetInput(input_idx, inst_map_.at(input_id));
+                ++input_idx;
+            }
 
-                    inst->SetInput(input_idx++, inst_map_.at(input_id));
-                }
+            if (inst->IsTypeSensitive()) {
+                inst->CheckInputType();
             }
         }
+
+        for (auto& [inst_id, inputs] : phi_inputs_map_) {
+            assert(inst_map_.find(inst_id) != inst_map_.end());
+            auto inst = inst_map_.at(inst_id);
+            assert(inst->IsPhi());
+
+            for (auto& input : inputs) {
+                auto input_inst_id = input.first;
+                auto input_inst_bb = input.second;
+
+                assert(inst_map_.find(input_inst_id) != inst_map_.end());
+                auto input_inst = inst_map_.at(input_inst_id);
+                auto input_bb = bb_map_.at(input_inst_bb);
+
+                auto idx = inst->AddInput(input_inst);
+                static_cast<PhiOp*>(inst)->SetInputBB(idx, input_bb);
+            }
+        }
+
+        dfg_constructed = true;
+    }
+
+    std::vector<BasicBlock*> RPOPass()
+    {
+        if (!graph_checked) {
+            LOG_ERROR("RPO can only be constructed after graph validation");
+        }
+
+        return {};
+    }
+
+    bool RunChecks()
+    {
+        assert(cfg_constructed);
+        assert(dfg_constructed);
+
+        // check inputs of variable length
+        // PHI: inst->bb->Dominates(source_bb);
+        //      inputs.size() == preds.size()
+
+        // check types
+
+        graph_checked = true;
+        return true;
     }
 
   private:
@@ -224,6 +307,10 @@ class GraphBuilder
         AddInput(i_id, std::forward<Args>(args)...);
     }
 
+    bool cfg_constructed = false;
+    bool dfg_constructed = false;
+    bool graph_checked = false;
+
     bool is_empty = true;
     Graph* graph_{ nullptr };
     BasicBlock* cur_bb_{ nullptr };
@@ -235,6 +322,7 @@ class GraphBuilder
     std::unordered_map<IdType, std::vector<IdType> > bb_succ_map_;
     std::unordered_map<IdType, Inst*> inst_map_;
     std::unordered_map<IdType, std::vector<IdType> > inst_inputs_map_;
+    std::unordered_map<IdType, std::vector<std::pair<IdType, IdType> > > phi_inputs_map_;
 };
 
 #endif

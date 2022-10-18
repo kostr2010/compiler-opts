@@ -13,6 +13,7 @@
 
 #include "graph.h"
 #include "inst.h"
+#include "macros.h"
 
 #include "typedefs.h"
 
@@ -26,6 +27,16 @@ class BasicBlock
         assert(graph != nullptr);
         graph_ = graph;
     }
+    DEFAULT_DESTRUCTOR(BasicBlock);
+
+    GETTER(Predecesors, preds_);
+    GETTER(Successors, succs_);
+    GETTER(Dominated, dom_);
+    GETTER(Dominator, dominator_);
+    GETTER(FirstPhi, first_phi_);
+    GETTER(FirstInst, first_inst_);
+    GETTER(LastInst, last_inst_);
+    GETTER_SETTER(Id, IdType, id_);
 
     bool IsStartBlock() const
     {
@@ -35,16 +46,6 @@ class BasicBlock
     bool IsEndBlock() const
     {
         return id_ == graph_->GetEndBasicBlockId();
-    }
-
-    void SetId(IdType id)
-    {
-        id_ = id;
-    }
-
-    IdType GetId() const
-    {
-        return id_;
     }
 
     void AddSucc(BasicBlock* bb)
@@ -83,114 +84,18 @@ class BasicBlock
         return std::find(preds_.begin(), preds_.end(), bb) != preds_.end();
     }
 
-    void PushBackInst(Inst* inst)
-    {
-        assert(inst != nullptr);
+    void PushBackInst(Inst* inst);
+    void PushFrontInst(Inst* inst);
+    void PushBackPhi(Inst* inst);
 
-        inst->SetBasicBlock(this);
-        if (first_inst_ == nullptr) {
-            SetFirstInst(inst);
-        } else {
-            inst->SetNext(nullptr);
-            inst->SetPrev(last_inst_);
-            last_inst_->SetNext(inst);
-            last_inst_ = inst;
-        }
-    }
-
-    void PushFrontInst(Inst* inst)
-    {
-        assert(inst != nullptr);
-
-        inst->SetBasicBlock(this);
-        if (first_inst_ == nullptr) {
-            SetFirstInst(inst);
-        } else {
-            inst->SetNext(first_inst_);
-            inst->SetPrev(first_inst_->GetPrev());
-            first_inst_->SetPrev(inst);
-            if (first_phi_ != nullptr) {
-                first_phi_->SetNext(inst);
-            }
-            first_inst_ = inst;
-        }
-    }
-
-    void PushBackPhi(Inst* inst)
-    {
-        assert(inst != nullptr);
-        assert(inst->IsPhi());
-
-        inst->SetBasicBlock(this);
-        if (first_phi_ == nullptr) {
-            // all phi's go in front of actual instructions
-            inst->SetNext(first_inst_);
-            if (first_inst_ != nullptr) {
-                first_inst_->SetPrev(inst);
-            }
-            first_phi_ = inst;
-        } else {
-            if (first_inst_ != nullptr) {
-                auto prev = first_inst_->GetPrev();
-                assert(prev != nullptr);
-                assert(prev->IsPhi());
-                assert(prev == first_phi_);
-
-                inst->SetPrev(prev);
-                inst->SetNext(first_inst_);
-                prev->SetNext(inst);
-                first_inst_->SetPrev(inst);
-            } else {
-                inst->SetPrev(first_phi_);
-                first_phi_->SetNext(inst);
-            }
-        }
-    }
-
-    Inst* GetFirstInst() const
-    {
-        return first_inst_;
-    }
-
-    Inst* GetLastInst() const
-    {
-        return last_inst_;
-    }
-
-    void Dump()
-    {
-        std::cout << "# BB id: " << id_ << "\n";
-
-        std::cout << "# PREDS: ";
-        for (auto bb : preds_) {
-            std::cout << bb->GetId() << " ";
-        }
-        std::cout << "\n";
-
-        std::cout << "# SUCCS: ";
-        for (auto bb : succs_) {
-            std::cout << bb->GetId() << " ";
-        }
-        std::cout << "\n";
-
-        std::cout << "# PHI:\n";
-        for (auto inst = first_phi_; inst != nullptr; inst = inst->GetPrev()) {
-            inst->Dump();
-        }
-        std::cout << "# INSTRUCTIONS:\n";
-
-        for (auto inst = first_inst_; inst != nullptr; inst = inst->GetNext()) {
-            inst->Dump();
-        }
-
-        std::cout << "\n";
-    }
+    void Dump() const;
 
   private:
     void SetFirstInst(Inst* inst)
     {
-
         assert(inst != nullptr);
+        assert(first_inst_ == nullptr);
+        assert(last_inst_ == nullptr);
 
         inst->SetNext(nullptr);
         inst->SetPrev(nullptr);

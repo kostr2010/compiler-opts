@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "ir_isa.h"
-
+#include "macros.h"
 #include "typedefs.h"
 
 enum class Opcode : uint8_t
@@ -42,7 +42,9 @@ enum class DataType : uint8_t
     NO_TYPE,
     INT,
     FLOAT,
-    DOUBLE
+    DOUBLE,
+    VOID,
+    ANY
 };
 
 enum class CondType : uint8_t
@@ -57,136 +59,27 @@ enum class CondType : uint8_t
     // ...
 };
 
-class Input
-{
-    uint64_t id;
-};
-
-template <size_t N_INPUTS>
-struct Data
-{
-    std::array<Input, N_INPUTS> inp;
-};
-
 class BasicBlock;
+class User;
+class Input;
 
 class Inst
 {
   public:
-    Inst(Opcode op, InstType t, size_t n_inp = 0) : opcode_(op), inst_type_(t), n_inputs_(n_inp)
-    {
-        inputs_.reserve(n_inputs_);
-    };
-    Inst() = default;
-    ~Inst() = default;
+    NO_DEFAULT_CONSTRUCTOR(Inst);
+    DEFAULT_DESTRUCTOR(Inst);
 
     static constexpr Reg INVALID_REG = -1;
     static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
+    static constexpr size_t N_INPUTS = 0;
 
-    Inst* GetPrev() const
-    {
-        return prev_;
-    }
-
-    Inst* GetNext() const
-    {
-        return next_;
-    }
-
-    void SetPrev(Inst* inst)
-    {
-        prev_ = inst;
-    }
-
-    void SetNext(Inst* inst)
-    {
-        next_ = inst;
-    }
-
-    void SetBasicBlock(BasicBlock* bb)
-    {
-        bb_ = bb;
-    }
-
-    BasicBlock* GetBasicBlock()
-    {
-        return bb_;
-    }
-
-    void SetId(IdType id)
-    {
-        id_ = id;
-    }
-
-    IdType GetId() const
-    {
-        return id_;
-    }
-
-    Opcode GetOpcode() const
-    {
-        return opcode_;
-    }
-
-    void SetOpcode(Opcode op)
-    {
-        opcode_ = op;
-    }
-
-    InstType GetInstType() const
-    {
-        return inst_type_;
-    }
-
-    void SetInstType(InstType i)
-    {
-        inst_type_ = i;
-    }
-
-    DataType GetDataType() const
-    {
-        return data_type_;
-    }
-
-    void SetDataType(DataType d)
-    {
-        data_type_ = d;
-    }
-
-    virtual Reg GetInputReg(RegNumType)
-    {
-        return INVALID_REG;
-    }
-
-    virtual void SetInputReg(RegNumType, Reg)
-    {
-        return;
-    }
-
-    virtual Reg GetOutputReg(RegNumType)
-    {
-        return GetOutputReg();
-    }
-
-    virtual void SetOutputReg(RegNumType, Reg reg)
-    {
-        SetOutputReg(reg);
-    }
-
-    Reg GetOutputReg()
-    {
-        return output_reg_;
-    }
-
-    void SetOutputReg(Reg reg)
-    {
-        output_reg_ = reg;
-    }
-
-    size_t GetNInputs() const
-    {
-        return n_inputs_;
-    }
+    GETTER_SETTER(Prev, Inst*, prev_);
+    GETTER_SETTER(Next, Inst*, next_);
+    GETTER_SETTER(BasicBlock, BasicBlock*, bb_);
+    GETTER_SETTER(Id, IdType, id_);
+    GETTER_SETTER(Opcode, Opcode, opcode_);
+    GETTER_SETTER(InstType, InstType, inst_type_);
+    GETTER_SETTER(DataType, DataType, data_type_);
 
     bool IsPhi() const
     {
@@ -208,49 +101,35 @@ class Inst
         return opcode_ == Opcode::IF || opcode_ == Opcode::IF_IMM || opcode_ == Opcode::CMP;
     }
 
-    // used for fixed number of arguments
-    void SetInput(size_t idx, Inst* inst)
+    bool IsTypeSensitive() const
     {
-        assert(inst != nullptr);
-        assert(idx < n_inputs_);
-
-        inst->users_.insert(this);
-        inputs_[idx] = inst;
+        return !IsNotTypeSensitive();
     }
 
-    // used for unfixed number of arguments
-    void AddInput(Inst* inst)
+    bool CheckInputType()
     {
-        assert(inst != nullptr);
-        assert(inputs_.size() + 1 < MAX_INPUTS);
-
-        inst->users_.insert(this);
-        inputs_.push_back(inst);
+        // FIXME:
+        return true;
     }
+
+    void SetInput(size_t idx, Inst* inst);
+
+    size_t AddInput(Inst* inst);
 
     template <typename IType, typename... Args>
     static IType* NewInst(Args&&... args);
 
-    void Dump()
+    virtual void Dump() const;
+
+  protected:
+    explicit Inst(Opcode op, InstType t) : opcode_(op), inst_type_(t){};
+
+    bool IsNotTypeSensitive() const
     {
-        std::cout << "\tinst_id:....." << id_ << "\n";
-        std::cout << "\tinst_opcode:." << (int)opcode_ << "\n";
-        std::cout << "\tinst_type:..." << (int)inst_type_ << "\n";
-        std::cout << "\tinst users:\n\t\t";
-
-        for (auto i : users_) {
-            std::cout << i->GetId() << " ";
-        }
-        std::cout << "\n";
-
-        std::cout << "\tinst inputs:\n\t\t";
-        for (auto i : inputs_) {
-            std::cout << i->GetId() << " ";
-        }
-        std::cout << "\n";
+        return opcode_ == Opcode::RETURN || opcode_ == Opcode::RETURN_VOID ||
+               opcode_ == Opcode::PARAM || opcode_ == Opcode::CONST;
     }
 
-  private:
     Inst* prev_{ nullptr };
     Inst* next_{ nullptr };
 
@@ -262,10 +141,43 @@ class Inst
     BasicBlock* bb_ = nullptr;
 
     Reg output_reg_;
-    size_t n_inputs_;
 
-    std::set<Inst*> users_;
-    std::vector<Inst*> inputs_;
+    std::vector<User> users_;
+    std::vector<Input> inputs_;
+};
+
+class Input
+{
+  public:
+    explicit Input(Inst* inst) : inst_(inst)
+    {
+    }
+    DEFAULT_CONSTRUCTOR(Input);
+    DEFAULT_DESTRUCTOR(Input);
+
+    GETTER_SETTER(Inst, Inst*, inst_);
+    GETTER_SETTER(SourceBB, BasicBlock*, bb_);
+
+  private:
+    Inst* inst_{ nullptr };
+    BasicBlock* bb_{ nullptr };
+};
+
+class User
+{
+  public:
+    explicit User(Inst* inst, size_t idx) : inst_(inst), idx_(idx)
+    {
+    }
+    DEFAULT_CONSTRUCTOR(User);
+    DEFAULT_DESTRUCTOR(User);
+
+    GETTER_SETTER(Inst, Inst*, inst_);
+    GETTER_SETTER(Idx, size_t, idx_);
+
+  private:
+    Inst* inst_{ nullptr };
+    size_t idx_;
 };
 
 class HasImm
@@ -274,17 +186,14 @@ class HasImm
     explicit HasImm(ImmType imm) : imm_(imm)
     {
     }
-    HasImm() = default;
-    ~HasImm() = default;
+    DEFAULT_CONSTRUCTOR(HasImm);
+    DEFAULT_DESTRUCTOR(HasImm);
 
-    void SetImm(ImmType imm)
-    {
-        imm_ = imm;
-    }
+    GETTER_SETTER(Imm, ImmType, imm_);
 
-    ImmType GetImm() const
+    void Dump() const
     {
-        return imm_;
+        std::cout << "\timmediate: " << imm_ << "\n";
     }
 
   private:
@@ -297,62 +206,42 @@ class HasCond
     explicit HasCond(CondType cc) : cc_(cc)
     {
     }
-    HasCond() = default;
-    ~HasCond() = default;
+    DEFAULT_CONSTRUCTOR(HasCond);
+    DEFAULT_DESTRUCTOR(HasCond);
 
-    void SetCond(CondType cc)
-    {
-        cc_ = cc;
-    }
+    GETTER_SETTER(Cond, CondType, cc_);
 
-    CondType GetCond() const
+    void Dump() const
     {
-        return cc_;
+        static const std::unordered_map<CondType, std::string> cond_to_str = {
+            { CondType::COND_INVALID, "invalid" },
+            { CondType::COND_EQ, "==" },
+            { CondType::COND_NEQ, "!=" },
+            { CondType::COND_LEQ, "<=" },
+            { CondType::COND_GEQ, ">=" },
+            { CondType::COND_L, "<" },
+            { CondType::CONSD_G, ">" }
+        };
+        std::cout << "\tcondition type: " << cond_to_str.at(cc_) << "\n";
     }
 
   private:
     CondType cc_{ CondType::COND_INVALID };
 };
-
-// FIXME: now implemented as checking max arg number
-// class HasVariableInputs
-// {
-//   public:
-//     explicit HasVariableInputs(CondType cc)
-//     {
-//     }
-//     HasVariableInputs() = default;
-//     ~HasVariableInputs() = default;
-
-//   private:
-// };
-
-// proxy for fixed input instructions
 template <size_t N>
 class FixedInputOp : public Inst
 {
   public:
-    FixedInputOp(Opcode op, InstType t) : Inst(op, t, N)
+    FixedInputOp(Opcode op, InstType t) : Inst(op, t)
     {
-        input_regs_.fill(INVALID_REG);
+        inputs_.resize(N);
     }
-    FixedInputOp() = default;
-    ~FixedInputOp() = default;
+    DEFAULT_CONSTRUCTOR(FixedInputOp);
+    DEFAULT_DESTRUCTOR(FixedInputOp);
 
-    void SetInputReg(RegNumType idx, Reg reg) override
-    {
-        assert(idx < N);
-        input_regs_[idx] = reg;
-    }
-
-    Reg GetInputReg(RegNumType idx) override
-    {
-        assert(idx < N);
-        return input_regs_[idx];
-    }
+    static constexpr size_t N_INPUTS = N;
 
   private:
-    std::array<Reg, N> input_regs_;
 };
 
 class FixedInputOp0 : public FixedInputOp<0>
@@ -361,7 +250,7 @@ class FixedInputOp0 : public FixedInputOp<0>
     FixedInputOp0(Opcode op) : FixedInputOp(op, InstType::FixedInputOp0)
     {
     }
-    ~FixedInputOp0() = default;
+    DEFAULT_DESTRUCTOR(FixedInputOp0);
 };
 
 class FixedInputOp1 : public FixedInputOp<1>
@@ -370,7 +259,7 @@ class FixedInputOp1 : public FixedInputOp<1>
     FixedInputOp1(Opcode op) : FixedInputOp(op, InstType::FixedInputOp1)
     {
     }
-    ~FixedInputOp1() = default;
+    DEFAULT_DESTRUCTOR(FixedInputOp1);
 };
 
 class BinaryOp : public FixedInputOp<2>
@@ -379,10 +268,8 @@ class BinaryOp : public FixedInputOp<2>
     BinaryOp(const Opcode op) : FixedInputOp(op, InstType::BinaryOp)
     {
     }
-    BinaryOp() = default;
-    ~BinaryOp() = default;
-
-    // type ?
+    DEFAULT_CONSTRUCTOR(BinaryOp);
+    DEFAULT_DESTRUCTOR(BinaryOp);
 };
 
 class BinaryImmOp : public FixedInputOp<1>, public HasImm
@@ -391,10 +278,14 @@ class BinaryImmOp : public FixedInputOp<1>, public HasImm
     BinaryImmOp(Opcode op, ImmType imm = 0) : FixedInputOp(op, InstType::BinaryImmOp), HasImm(imm)
     {
     }
-    BinaryImmOp() = default;
-    ~BinaryImmOp() = default;
+    DEFAULT_CONSTRUCTOR(BinaryImmOp);
+    DEFAULT_DESTRUCTOR(BinaryImmOp);
 
-    // type ?
+    void Dump() const override
+    {
+        Inst::Dump();
+        HasImm::Dump();
+    }
 };
 
 class CompareOp : public FixedInputOp<2>, public HasCond
@@ -404,8 +295,14 @@ class CompareOp : public FixedInputOp<2>, public HasCond
         : FixedInputOp(Opcode::CMP, InstType::CompareOp), HasCond(cc)
     {
     }
-    CompareOp() = default;
-    ~CompareOp() = default;
+    DEFAULT_CONSTRUCTOR(CompareOp);
+    DEFAULT_DESTRUCTOR(CompareOp);
+
+    void Dump() const override
+    {
+        Inst::Dump();
+        HasCond::Dump();
+    }
 };
 
 class ConstantOp : public Inst
@@ -431,8 +328,8 @@ class ConstantOp : public Inst
             assert(false);
         }
     }
-    ConstantOp() = default;
-    ~ConstantOp() = default;
+    DEFAULT_CONSTRUCTOR(ConstantOp);
+    DEFAULT_DESTRUCTOR(ConstantOp);
 
     uint64_t GetValRaw() const
     {
@@ -457,6 +354,12 @@ class ConstantOp : public Inst
         return std::bit_cast<double, uint64_t>(val_);
     }
 
+    void Dump() const override
+    {
+        Inst::Dump();
+        std::cout << "\tconst value: " << GetValRaw() << "\n";
+    }
+
   private:
     uint64_t val_{ 0 };
 };
@@ -470,32 +373,46 @@ class ParamOp : public Inst
     {
         arg_n_ = arg_n;
     }
-    ParamOp() = default;
-    ~ParamOp() = default;
+    DEFAULT_CONSTRUCTOR(ParamOp);
+    DEFAULT_DESTRUCTOR(ParamOp);
 
-    ArgNumType GetArgNumber() const
-    {
-        return arg_n_;
-    }
+    GETTER_SETTER(ArgNumber, ArgNumType, arg_n_);
 
-    void SetArgNumber(ArgNumType arg_n)
+    void Dump() const override
     {
-        arg_n_ = arg_n;
+        Inst::Dump();
+        std::cout << "\tparam number: " << arg_n_ << "\n";
     }
 
   private:
     ArgNumType arg_n_{ ARG_N_INVALID };
 };
 
-// FIXME: ???
 class PhiOp : public Inst
 {
   public:
-    PhiOp(Opcode op) : Inst(op, InstType::PhiOp, 0)
+    PhiOp(Opcode op) : Inst(op, InstType::PhiOp)
     {
     }
-    PhiOp() = default;
-    ~PhiOp() = default;
+    DEFAULT_CONSTRUCTOR(PhiOp);
+    DEFAULT_DESTRUCTOR(PhiOp);
+
+    void Dump() const override
+    {
+        Inst::Dump();
+    }
+
+    void SetInputBB(size_t idx, BasicBlock* bb)
+    {
+        assert(idx < inputs_.size());
+        inputs_.at(idx).SetSourceBB(bb);
+    }
+
+    BasicBlock* GetInputBB(size_t idx)
+    {
+        assert(idx < inputs_.size());
+        return inputs_.at(idx).GetSourceBB();
+    }
 };
 
 class IfOp : public FixedInputOp<2>, public HasCond
@@ -505,8 +422,14 @@ class IfOp : public FixedInputOp<2>, public HasCond
         : FixedInputOp(Opcode::IF, InstType::IfOp), HasCond(cc)
     {
     }
-    IfOp() = default;
-    ~IfOp() = default;
+    DEFAULT_CONSTRUCTOR(IfOp);
+    DEFAULT_DESTRUCTOR(IfOp);
+
+    void Dump() const override
+    {
+        Inst::Dump();
+        HasCond::Dump();
+    }
 };
 
 class IfImmOp : public FixedInputOp<1>, public HasCond, public HasImm
@@ -516,23 +439,14 @@ class IfImmOp : public FixedInputOp<1>, public HasCond, public HasImm
         : FixedInputOp(Opcode::IF_IMM, InstType::IfImmOp), HasCond(cc), HasImm(imm)
     {
     }
-    IfImmOp() = default;
-    ~IfImmOp() = default;
+    DEFAULT_CONSTRUCTOR(IfImmOp);
+    DEFAULT_DESTRUCTOR(IfImmOp);
 };
 
 template <typename IType, typename... Args>
 IType* Inst::NewInst(Args&&... args)
 {
     return new IType(std::forward<Args>(args)...);
-
-    // switch (IType::N_INPUTS) {
-    // case 0:
-
-    // default:
-    //     auto data = new Data<IType::N_INPUTS>;
-    //     return new ((void*)(data + sizeof(Data<IType::N_INPUTS>)))
-    //     IType(std::forward<Args>(args)...);
-    // }
 }
 
 #endif
