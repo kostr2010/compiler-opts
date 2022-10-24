@@ -9,22 +9,10 @@
 #include <unordered_set>
 #include <vector>
 
+#include "analyser.h"
 #include "inst.h"
 #include "ir_isa.h"
 #include "typedefs.h"
-
-// class RuntimeInfo;
-// class MethodInfo;
-// class OptInfo;
-// class ArchInfo;
-
-// class Metadata
-// {
-//     RuntimeInfo inf_runtime;
-//     MethodInfo inf_method;
-//     OptInfo inf_opt;
-//     ArchInfo inf_arch;
-// };
 
 class BasicBlock;
 
@@ -32,7 +20,7 @@ class Graph
 {
   public:
     static constexpr IdType BB_START_ID = 0;
-    Graph()
+    Graph() : analyser_{ this }
     {
         InitStartBlock();
     }
@@ -93,13 +81,23 @@ class Graph
 
     void Dump();
 
+    template <typename T>
+    T* GetPass()
+    {
+        return analyser_.GetPass<T>();
+    }
+
+    template <typename T>
+    bool RunPass()
+    {
+        return analyser_.RunPass<T>();
+    }
+
     std::vector<BasicBlock*> RPOPass() const
     {
         std::vector<BasicBlock*> rpo_bb{};
         std::unordered_set<IdType> rpo_visited{};
-
         RPOPass_(&rpo_bb, &rpo_visited, GetStartBasicBlock());
-
         return rpo_bb;
     }
 
@@ -116,6 +114,8 @@ class Graph
 
     mutable uint64_t inst_id_counter_{};
     uint64_t bb_id_counter_{};
+
+    Analyser analyser_;
 
     // Metadata metadata;
 };

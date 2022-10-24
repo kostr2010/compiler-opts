@@ -27,7 +27,8 @@ class BasicBlock
         assert(graph != nullptr);
         graph_ = graph;
     }
-    DEFAULT_DESTRUCTOR(BasicBlock);
+
+    DEFAULT_DTOR(BasicBlock);
 
     GETTER(Predecesors, preds_);
     GETTER(Successors, succs_);
@@ -97,6 +98,16 @@ class BasicBlock
 
     void Dump() const;
 
+    uint64_t* GetBits()
+    {
+        return &bits;
+    }
+
+    void ResetBits()
+    {
+        bits &= 0;
+    }
+
   private:
     void SetFirstInst(Inst* inst)
     {
@@ -128,6 +139,8 @@ class BasicBlock
     Inst* first_inst_{ nullptr };
     Inst* last_inst_{ nullptr };
     Inst* first_phi_{ nullptr };
+
+    uint64_t bits{ 0 };
 };
 
 #endif

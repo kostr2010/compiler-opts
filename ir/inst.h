@@ -65,10 +65,9 @@ class Input;
 class Inst
 {
   public:
-    NO_DEFAULT_CONSTRUCTOR(Inst);
-    DEFAULT_DESTRUCTOR(Inst);
+    NO_DEFAULT_CTOR(Inst);
+    DEFAULT_DTOR(Inst);
 
-    static constexpr Reg INVALID_REG = -1;
     static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
     static constexpr size_t N_INPUTS = 0;
 
@@ -150,8 +149,8 @@ class Input
     explicit Input(Inst* inst) : inst_(inst)
     {
     }
-    DEFAULT_CONSTRUCTOR(Input);
-    DEFAULT_DESTRUCTOR(Input);
+    DEFAULT_CTOR(Input);
+    DEFAULT_DTOR(Input);
 
     GETTER_SETTER(Inst, Inst*, inst_);
     GETTER_SETTER(SourceBB, BasicBlock*, bb_);
@@ -167,8 +166,8 @@ class User
     explicit User(Inst* inst, size_t idx) : inst_(inst), idx_(idx)
     {
     }
-    DEFAULT_CONSTRUCTOR(User);
-    DEFAULT_DESTRUCTOR(User);
+    DEFAULT_CTOR(User);
+    DEFAULT_DTOR(User);
 
     GETTER_SETTER(Inst, Inst*, inst_);
     GETTER_SETTER(Idx, size_t, idx_);
@@ -184,8 +183,8 @@ class HasImm
     explicit HasImm(ImmType imm) : imm_(imm)
     {
     }
-    DEFAULT_CONSTRUCTOR(HasImm);
-    DEFAULT_DESTRUCTOR(HasImm);
+    DEFAULT_CTOR(HasImm);
+    DEFAULT_DTOR(HasImm);
 
     GETTER_SETTER(Imm, ImmType, imm_);
 
@@ -204,8 +203,8 @@ class HasCond
     explicit HasCond(CondType cc) : cc_(cc)
     {
     }
-    DEFAULT_CONSTRUCTOR(HasCond);
-    DEFAULT_DESTRUCTOR(HasCond);
+    DEFAULT_CTOR(HasCond);
+    DEFAULT_DTOR(HasCond);
 
     GETTER_SETTER(Cond, CondType, cc_);
 
@@ -234,8 +233,8 @@ class FixedInputOp : public Inst
     {
         inputs_.resize(N);
     }
-    DEFAULT_CONSTRUCTOR(FixedInputOp);
-    DEFAULT_DESTRUCTOR(FixedInputOp);
+    DEFAULT_CTOR(FixedInputOp);
+    DEFAULT_DTOR(FixedInputOp);
 
     static constexpr size_t N_INPUTS = N;
 
@@ -248,7 +247,7 @@ class FixedInputOp0 : public FixedInputOp<0>
     FixedInputOp0(Opcode op) : FixedInputOp(op, InstType::FixedInputOp0)
     {
     }
-    DEFAULT_DESTRUCTOR(FixedInputOp0);
+    DEFAULT_DTOR(FixedInputOp0);
 };
 
 class FixedInputOp1 : public FixedInputOp<1>
@@ -257,7 +256,7 @@ class FixedInputOp1 : public FixedInputOp<1>
     FixedInputOp1(Opcode op) : FixedInputOp(op, InstType::FixedInputOp1)
     {
     }
-    DEFAULT_DESTRUCTOR(FixedInputOp1);
+    DEFAULT_DTOR(FixedInputOp1);
 };
 
 class BinaryOp : public FixedInputOp<2>
@@ -266,8 +265,8 @@ class BinaryOp : public FixedInputOp<2>
     BinaryOp(const Opcode op) : FixedInputOp(op, InstType::BinaryOp)
     {
     }
-    DEFAULT_CONSTRUCTOR(BinaryOp);
-    DEFAULT_DESTRUCTOR(BinaryOp);
+    DEFAULT_CTOR(BinaryOp);
+    DEFAULT_DTOR(BinaryOp);
 };
 
 class BinaryImmOp : public FixedInputOp<1>, public HasImm
@@ -276,8 +275,8 @@ class BinaryImmOp : public FixedInputOp<1>, public HasImm
     BinaryImmOp(Opcode op, ImmType imm = 0) : FixedInputOp(op, InstType::BinaryImmOp), HasImm(imm)
     {
     }
-    DEFAULT_CONSTRUCTOR(BinaryImmOp);
-    DEFAULT_DESTRUCTOR(BinaryImmOp);
+    DEFAULT_CTOR(BinaryImmOp);
+    DEFAULT_DTOR(BinaryImmOp);
 
     void Dump() const override
     {
@@ -293,8 +292,8 @@ class CompareOp : public FixedInputOp<2>, public HasCond
         : FixedInputOp(Opcode::CMP, InstType::CompareOp), HasCond(cc)
     {
     }
-    DEFAULT_CONSTRUCTOR(CompareOp);
-    DEFAULT_DESTRUCTOR(CompareOp);
+    DEFAULT_CTOR(CompareOp);
+    DEFAULT_DTOR(CompareOp);
 
     void Dump() const override
     {
@@ -326,8 +325,8 @@ class ConstantOp : public Inst
             assert(false);
         }
     }
-    DEFAULT_CONSTRUCTOR(ConstantOp);
-    DEFAULT_DESTRUCTOR(ConstantOp);
+    DEFAULT_CTOR(ConstantOp);
+    DEFAULT_DTOR(ConstantOp);
 
     uint64_t GetValRaw() const
     {
@@ -371,8 +370,8 @@ class ParamOp : public Inst
     {
         arg_n_ = arg_n;
     }
-    DEFAULT_CONSTRUCTOR(ParamOp);
-    DEFAULT_DESTRUCTOR(ParamOp);
+    DEFAULT_CTOR(ParamOp);
+    DEFAULT_DTOR(ParamOp);
 
     GETTER_SETTER(ArgNumber, ArgNumType, arg_n_);
 
@@ -392,8 +391,8 @@ class PhiOp : public Inst
     PhiOp(Opcode op) : Inst(op, InstType::PhiOp)
     {
     }
-    DEFAULT_CONSTRUCTOR(PhiOp);
-    DEFAULT_DESTRUCTOR(PhiOp);
+    DEFAULT_CTOR(PhiOp);
+    DEFAULT_DTOR(PhiOp);
 
     void Dump() const override
     {
@@ -420,8 +419,8 @@ class IfOp : public FixedInputOp<2>, public HasCond
         : FixedInputOp(Opcode::IF, InstType::IfOp), HasCond(cc)
     {
     }
-    DEFAULT_CONSTRUCTOR(IfOp);
-    DEFAULT_DESTRUCTOR(IfOp);
+    DEFAULT_CTOR(IfOp);
+    DEFAULT_DTOR(IfOp);
 
     void Dump() const override
     {
@@ -437,8 +436,8 @@ class IfImmOp : public FixedInputOp<1>, public HasCond, public HasImm
         : FixedInputOp(Opcode::IF_IMM, InstType::IfImmOp), HasCond(cc), HasImm(imm)
     {
     }
-    DEFAULT_CONSTRUCTOR(IfImmOp);
-    DEFAULT_DESTRUCTOR(IfImmOp);
+    DEFAULT_CTOR(IfImmOp);
+    DEFAULT_DTOR(IfImmOp);
 };
 
 template <typename IType, typename... Args>
