@@ -2,8 +2,6 @@
 #include "bb.h"
 #include "graph.h"
 
-#include <iostream>
-
 bool RPO::RunPass()
 {
     rpo_bb_.clear();

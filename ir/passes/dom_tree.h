@@ -1,16 +1,27 @@
-#ifndef __DOMINATOR_TREE_H_INCLUDED__
-#define __DOMINATOR_TREE_H_INCLUDED__
+#ifndef __PASS_DOM_TREE_INCLUDED__
+#define __PASS_DOM_TREE_INCLUDED__
 
-#include "macros.h"
+#include "mark.h"
+#include "pass.h"
 
-class DominatorTree
+#include <vector>
+
+class BasicBlock;
+
+// FIXME:
+class DomTree : public Pass
 {
-  public:
-    SINGLETON_GET_INSTANCE_IMPLEMENT(DominatorTree);
-    DEFAULT_DTOR(DominatorTree);
+    using BbVisited = Mark<>;
 
-    private:
-    DEFAULT_CTOR(DominatorTree);
+  public:
+    DomTree(Graph* graph) : Pass(graph)
+    {
+    }
+    DEFAULT_DTOR(DomTree);
+
+    bool RunPass() override;
+
+  private:
 };
 
 #endif

@@ -9,21 +9,6 @@
 
 #define NO_COPY_CTOR(class_name) class_name(const class_name&) = delete;
 
-#define SINGLETON_GET_INSTANCE GetInstance
-
-#define SINGLETON_GET_INSTANCE_IMPLEMENT(class_name)                                              \
-    static class_name* SINGLETON_GET_INSTANCE(Graph* graph = nullptr)                             \
-    {                                                                                             \
-        static class_name inst{ graph };                                                          \
-        return &inst;                                                                             \
-    }
-
-#define SINGLETON_CTOR(class_name)                                                                \
-    class_name(Graph* graph) : Pass(graph)                                                        \
-    {                                                                                             \
-        std::cout << "ctor\n";                                                                    \
-    }
-
 #define LOG_ERROR(msg) std::cerr << "ERROR/[" << __FUNCTION__ << "] " << msg << "\n";
 
 #define LOG(msg) std::cerr << "LOG/[" << __FUNCTION__ << "] " << msg << "\n";

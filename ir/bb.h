@@ -58,7 +58,7 @@ class BasicBlock
 
     void AddDominator(BasicBlock* bb)
     {
-        if (IsInDominators(bb)) {
+        if (HasDominator(bb)) {
             return;
         }
 
@@ -67,34 +67,34 @@ class BasicBlock
 
     void AddDominated(BasicBlock* bb)
     {
-        if (IsInDominated(bb)) {
+        if (HasDominated(bb)) {
             return;
         }
 
         dominated_.push_back(bb);
     }
 
-    bool IsInDominated(IdType bb_id)
+    bool HasDominated(IdType bb_id)
     {
         return std::find_if(dominated_.begin(), dominated_.end(), [bb_id](BasicBlock* bb) {
                    return bb->GetId() == bb_id;
                }) != dominated_.end();
     }
 
-    bool IsInDominated(BasicBlock* bb)
+    bool HasDominated(BasicBlock* bb)
     {
         assert(bb != nullptr);
         return std::find(dominated_.begin(), dominated_.end(), bb) != dominated_.end();
     }
 
-    bool IsInDominators(IdType bb_id)
+    bool HasDominator(IdType bb_id)
     {
         return std::find_if(dominators_.begin(), dominators_.end(), [bb_id](BasicBlock* bb) {
                    return bb->GetId() == bb_id;
                }) != dominators_.end();
     }
 
-    bool IsInDominators(BasicBlock* bb)
+    bool HasDominator(BasicBlock* bb)
     {
         assert(bb != nullptr);
         return std::find(dominators_.begin(), dominators_.end(), bb) != dominators_.end();
