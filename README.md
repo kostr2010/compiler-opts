@@ -7,7 +7,6 @@
 # structure
 
 - `ir/` - source dir for IR (1st assignment)
-- `test.cpp` - example file with 1st assignment done
 - `tests/` - tests folder
 
 # clone
@@ -26,12 +25,9 @@ cd $_
 cmake <path_to_project> && make
 ```
 
-running `test` executable will dump CFG & DFG of 1st assignment
-
 # targets
 
 - `gtests` - google tests for each assignment
-- `test` - executable with example benchmark
 
 # Graph (`graph.h`, `graph.cpp`)
 
@@ -64,7 +60,3 @@ it is done in order to separate instructions and phi's, but still be able to ite
 # Inst (`inst.h`, `inst.cpp`)
 
 instructions are impllemented using OOP. all needed extensions are encoded as `Has...` if extension contains data. Using these extensions, specific instruction types are constructed.
-
-# usage
-
-`test.cpp` contains example
