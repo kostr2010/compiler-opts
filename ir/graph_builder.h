@@ -43,7 +43,6 @@ class GraphBuilder
 
         cfg_constructed = false;
         dfg_constructed = false;
-        is_empty = true;
     }
 
     template <Opcode op, typename... Args>
@@ -122,11 +121,6 @@ class GraphBuilder
         cur_bb_id_ = id;
 
         bb_map_[cur_bb_id_] = bb;
-
-        if (is_empty) {
-            is_empty = false;
-            graph_->GetStartBasicBlock()->AddSucc(bb);
-        }
 
         return id;
     }
@@ -219,7 +213,7 @@ class GraphBuilder
             assert(succs.size() <= 2);
             auto bb = bb_map_.at(bb_id);
             for (auto succ : succs) {
-                bb->AddSucc(bb_map_.at(succ));
+                graph_->AddEdge(bb, bb_map_.at(succ));
             }
         }
 
@@ -268,9 +262,11 @@ class GraphBuilder
         dfg_constructed = true;
     }
 
-    // FIXME:
     bool RunChecks()
     {
+        // FIXME:
+        return true;
+
         if (!(cfg_constructed || dfg_constructed)) {
             LOG_ERROR("can't check graph without CFG or DFG!");
         }
@@ -288,7 +284,7 @@ class GraphBuilder
                 }
 
                 for (auto input : phi->GetInputs()) {
-                    if (!input.GetInst()->GetBasicBlock()->Dominates(input.GetSourceBB())) {
+                    if (!input.GetInst()->GetBasicBlock()->IsInDominated(input.GetSourceBB())) {
                         LOG_ERROR(
                             "BB: "
                             << bb->GetId() << ", INST_ID: " << phi->GetId()
@@ -320,7 +316,6 @@ class GraphBuilder
     bool cfg_constructed = false;
     bool dfg_constructed = false;
 
-    bool is_empty = true;
     Graph* graph_{ nullptr };
     BasicBlock* cur_bb_{ nullptr };
     IdType cur_bb_id_;

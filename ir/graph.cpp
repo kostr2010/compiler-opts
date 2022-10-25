@@ -35,18 +35,46 @@ void Graph::Dump()
     }
 }
 
-void Graph::RPOPass_(std::vector<BasicBlock*>* rpo_bb, std::unordered_set<IdType>* rpo_visited,
-                     BasicBlock* cur_bb) const
+void Graph::ClearDominators()
 {
-    auto bb_id = cur_bb->GetId();
-    if (rpo_visited->find(bb_id) != rpo_visited->end()) {
-        return;
+    for (auto bb : bb_vector_) {
+        bb->ClearImmDominator();
+        bb->ClearDominators();
+        bb->ClearDominated();
+    }
+}
+
+void Graph::UnbindBasicBlock(BasicBlock* bb)
+{
+    assert(bb != nullptr);
+
+    for (auto pred : bb->GetPredecesors()) {
+        pred->RemoveSucc(bb);
     }
 
-    rpo_visited->emplace(bb_id);
-    rpo_bb->push_back(cur_bb);
-
-    for (const auto succ : cur_bb->GetSuccessors()) {
-        RPOPass_(rpo_bb, rpo_visited, succ);
+    for (auto succ : bb->GetSuccessors()) {
+        succ->RemovePred(bb);
     }
+}
+
+void Graph::BindBasicBlock(BasicBlock* bb)
+{
+    assert(bb != nullptr);
+
+    for (auto pred : bb->GetPredecesors()) {
+        pred->AddSucc(bb);
+    }
+
+    for (auto succ : bb->GetSuccessors()) {
+        succ->AddPred(bb);
+    }
+}
+
+void Graph::AddEdge(BasicBlock* from, BasicBlock* to)
+{
+    assert(to != nullptr);
+    assert(from != nullptr);
+
+    from->AddSucc(to);
+    to->AddPred(from);
 }

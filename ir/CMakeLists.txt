@@ -11,6 +11,7 @@ add_library(ir SHARED
     analyser.cpp
     ${PASSES_DIR}/pass.cpp
     ${PASSES_DIR}/rpo.cpp
+    ${PASSES_DIR}/dom_tree_slow.cpp
 )
 
 target_include_directories(ir PUBLIC ${CMAKE_SOURCE_DIR}/utils ${CMAKE_CURRENT_SOURCE_DIR})

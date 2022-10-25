@@ -1,6 +1,7 @@
 #ifndef ___GRAPH_H_INCLUDED___
 #define ___GRAPH_H_INCLUDED___
 
+#include <cassert>
 #include <iostream>
 #include <map>
 #include <set>
@@ -38,6 +39,47 @@ class Graph
     {
         return bb_start_;
     }
+
+    BasicBlock* GetBasicBlock(IdType bb_id) const
+    {
+        assert(bb_id < bb_vector_.size());
+        return bb_vector_.at(bb_id);
+    }
+
+    void ClearDominators();
+
+    void UnbindBasicBlock(IdType bb_id)
+    {
+        assert(bb_id < bb_vector_.size());
+        auto bb = bb_vector_.at(bb_id);
+
+        UnbindBasicBlock(bb);
+    }
+
+    void UnbindBasicBlock(BasicBlock* bb);
+
+    void BindBasicBlock(IdType bb_id)
+    {
+        assert(bb_id < bb_vector_.size());
+        auto bb = bb_vector_.at(bb_id);
+
+        BindBasicBlock(bb);
+    }
+
+    void BindBasicBlock(BasicBlock* bb);
+
+    void AddEdge(IdType from, IdType to)
+    {
+        assert(from < bb_vector_.size());
+        assert(to < bb_vector_.size());
+
+        auto bb_to = bb_vector_.at(to);
+        auto bb_from = bb_vector_.at(from);
+
+        AddEdge(bb_from, bb_to);
+    }
+
+    void AddEdge(BasicBlock* from, BasicBlock* to);
 
     BasicBlock* NewBasicBlock();
 
@@ -93,19 +135,8 @@ class Graph
         return analyser_.RunPass<T>();
     }
 
-    std::vector<BasicBlock*> RPOPass() const
-    {
-        std::vector<BasicBlock*> rpo_bb{};
-        std::unordered_set<IdType> rpo_visited{};
-        RPOPass_(&rpo_bb, &rpo_visited, GetStartBasicBlock());
-        return rpo_bb;
-    }
-
   private:
     void InitStartBlock();
-
-    void RPOPass_(std::vector<BasicBlock*>* rpo_bb, std::unordered_set<IdType>* rpo_visited,
-                  BasicBlock* cur_bb) const;
 
     std::vector<BasicBlock*> bb_vector_;
     BasicBlock* bb_start_{ nullptr };
