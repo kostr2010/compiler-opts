@@ -10,6 +10,8 @@ add_library(ir SHARED
     mark.cpp
     analyser.cpp
     ${PASSES_DIR}/rpo.cpp
+    ${PASSES_DIR}/dfs.cpp
+    ${PASSES_DIR}/bfs.cpp
     ${PASSES_DIR}/dom_tree_slow.cpp
 )
 

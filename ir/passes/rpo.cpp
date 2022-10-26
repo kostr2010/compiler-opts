@@ -22,16 +22,13 @@ std::vector<BasicBlock*> RPO::GetBlocks()
 
 void RPO::RunPass_(BasicBlock* cur_bb)
 {
-    auto bits = cur_bb->GetBits();
-
-    if (BbVisited::Get(*bits)) {
-        return;
-    }
-
-    BbVisited::Set(bits);
+    BbVisited::Set(cur_bb->GetBits());
     rpo_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
+        if (BbVisited::Get(*(succ->GetBits()))) {
+            continue;
+        }
         RunPass_(succ);
     }
 }

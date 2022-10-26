@@ -2,6 +2,8 @@
 #define __ANALYZER_H_INCLUDED__
 
 #include "macros.h"
+#include "passes/bfs.h"
+#include "passes/dfs.h"
 #include "passes/dom_tree_slow.h"
 #include "passes/rpo.h"
 
@@ -45,7 +47,7 @@ class Passes
   private:
 };
 
-using PassesList = Passes<RPO, DomTreeSlow>;
+using PassesList = Passes<DFS, BFS, RPO, DomTreeSlow>;
 
 class Analyser
 {

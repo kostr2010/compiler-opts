@@ -4,9 +4,10 @@
 #include "mark.h"
 #include "pass.h"
 
+#include <vector>
+
 class BasicBlock;
 
-// FIXME:
 class BFS : public Pass
 {
     using BbVisited = Mark<>;
@@ -22,8 +23,6 @@ class BFS : public Pass
     std::vector<BasicBlock*> GetBlocks();
 
   private:
-    void RunPass_(BasicBlock* cur_bb);
-
     std::vector<BasicBlock*> bfs_bb_{};
 };
 
