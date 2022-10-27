@@ -7,7 +7,6 @@ add_library(ir SHARED
     graph_builder.cpp
     graph.cpp
     inst.cpp
-    mark.cpp
     analyser.cpp
     ${PASSES_DIR}/rpo.cpp
     ${PASSES_DIR}/dfs.cpp

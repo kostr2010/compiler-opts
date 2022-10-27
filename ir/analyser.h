@@ -6,19 +6,20 @@
 #include "passes/dfs.h"
 #include "passes/dom_tree_slow.h"
 #include "passes/rpo.h"
+#include "typedefs.h"
 
 #include <iostream>
 #include <utility>
 #include <vector>
 
 template <typename... Types>
-class Passes
+struct Passes
 {
-  public:
+    static_assert((Types::Marks::LEN + ...) <= sizeof(MarkHolderT) * BITS_IN_BYTE);
+
     NO_DEFAULT_CTOR(Passes);
     NO_DEFAULT_DTOR(Passes);
 
-    template <typename... Args>
     static std::vector<Pass*> Allocate(Graph* graph)
     {
         std::vector<Pass*> vec{};
@@ -44,7 +45,22 @@ class Passes
         return (std::is_same<Type, Types>::value || ...);
     }
 
-  private:
+    template <typename MarkT>
+    static constexpr bool HasMark()
+    {
+        return (std::is_same<MarkT, typename Types::Marks>::value || ...);
+    }
+
+    template <typename Type>
+    static constexpr size_t GetMarkOffset()
+    {
+        static_assert(HasPass<Type>());
+        static_assert(HasMark<typename Type::Marks>());
+        size_t i = 0;
+        size_t res = 0;
+        (((std::is_same<Type, Types>::value) ? (res = i) : (i += Types::Marks::LEN)), ...);
+        return res;
+    }
 };
 
 using PassesList = Passes<DFS, BFS, RPO, DomTreeSlow>;
@@ -72,6 +88,42 @@ class Analyser
         static_assert(PassesList::HasPass<PassT>());
 
         return passes_[PassesList::GetIndex<PassT>()]->RunPass();
+    }
+
+    template <typename PassT, size_t N>
+    void SetMark(MarkHolderT* ptr)
+    {
+        static_assert(PassesList::HasPass<PassT>());
+        static_assert(PassesList::HasMark<typename PassT::Marks>());
+        static_assert(N < PassT::Marks::LEN);
+        static_assert(PassesList::GetMarkOffset<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
+
+        constexpr auto OFFT = PassesList::GetMarkOffset<PassT>();
+        PassT::Marks::template Set<OFFT, N>(ptr);
+    }
+
+    template <typename PassT, size_t N>
+    void ClearMark(MarkHolderT* ptr)
+    {
+        static_assert(PassesList::HasPass<PassT>());
+        static_assert(PassesList::HasMark<typename PassT::Marks>());
+        static_assert(N < PassT::Marks::LEN);
+        static_assert(PassesList::GetMarkOffset<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
+
+        constexpr auto OFFT = PassesList::GetMarkOffset<PassT>();
+        PassT::Marks::template Clear<OFFT, N>(ptr);
+    }
+
+    template <typename PassT, size_t N>
+    bool GetMark(const MarkHolderT& ptr)
+    {
+        static_assert(PassesList::HasPass<PassT>());
+        static_assert(PassesList::HasMark<typename PassT::Marks>());
+        static_assert(N < PassT::Marks::LEN);
+        static_assert(PassesList::GetMarkOffset<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
+
+        constexpr auto OFFT = PassesList::GetMarkOffset<PassT>();
+        return PassT::Marks::template Get<OFFT, N>(ptr);
     }
 
   private:

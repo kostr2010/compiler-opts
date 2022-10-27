@@ -1,7 +1,6 @@
 #ifndef __BFS_H_INCLUDED__
 #define __BFS_H_INCLUDED__
 
-#include "mark.h"
 #include "pass.h"
 
 #include <vector>
@@ -10,9 +9,13 @@ class BasicBlock;
 
 class BFS : public Pass
 {
-    using BbVisited = Mark<>;
-
   public:
+    using Marks = Pass::MarksT<1>;
+    enum MarkType
+    {
+        VISITED = 0,
+    };
+
     BFS(Graph* graph) : Pass(graph)
     {
     }

@@ -6,9 +6,6 @@
 
 TEST(BasicTests, Example1)
 {
-    Graph g;
-    GraphBuilder b(&g);
-
     // SSA form of
     // uint64_t fact(uint32_t n)
     // {
@@ -18,6 +15,9 @@ TEST(BasicTests, Example1)
     //     }
     //     return res;
     // }
+
+    Graph g;
+    GraphBuilder b(&g);
 
     auto p0 = b.NewParameter(0);
 

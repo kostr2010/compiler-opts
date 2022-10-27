@@ -6,8 +6,9 @@
 
 # structure
 
-- `ir/` - source dir for IR (1st assignment)
+- `ir/` - source dir for IR
 - `tests/` - tests folder
+- `test.cpp` - file for tomfoolery and experiments
 
 # clone
 

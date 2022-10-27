@@ -44,32 +44,6 @@ void Graph::ClearDominators()
     }
 }
 
-void Graph::UnbindBasicBlock(BasicBlock* bb)
-{
-    assert(bb != nullptr);
-
-    for (auto pred : bb->GetPredecesors()) {
-        pred->RemoveSucc(bb);
-    }
-
-    for (auto succ : bb->GetSuccessors()) {
-        succ->RemovePred(bb);
-    }
-}
-
-void Graph::BindBasicBlock(BasicBlock* bb)
-{
-    assert(bb != nullptr);
-
-    for (auto pred : bb->GetPredecesors()) {
-        pred->AddSucc(bb);
-    }
-
-    for (auto succ : bb->GetSuccessors()) {
-        succ->AddPred(bb);
-    }
-}
-
 void Graph::AddEdge(BasicBlock* from, BasicBlock* to)
 {
     assert(to != nullptr);

@@ -187,11 +187,6 @@ class BasicBlock
         return &bits;
     }
 
-    void ResetBits()
-    {
-        bits &= 0;
-    }
-
   private:
     void SetFirstInst(Inst* inst)
     {
@@ -226,7 +221,7 @@ class BasicBlock
     Inst* last_inst_{ nullptr };
     Inst* first_phi_{ nullptr };
 
-    uint64_t bits{ 0 };
+    MarkHolderT bits{};
 };
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef __PASS_DOM_TREE_INCLUDED__
 #define __PASS_DOM_TREE_INCLUDED__
 
-#include "mark.h"
 #include "pass.h"
 
 #include <vector>
@@ -11,9 +10,9 @@ class BasicBlock;
 // FIXME:
 class DomTree : public Pass
 {
-    using BbVisited = Mark<>;
-
   public:
+    using Marks = Pass::MarksT<0>;
+
     DomTree(Graph* graph) : Pass(graph)
     {
     }

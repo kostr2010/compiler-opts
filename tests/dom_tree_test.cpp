@@ -91,17 +91,17 @@ TEST(TestDomTree, Example1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.RunPass<RPO>());
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
 
     std::vector<char> rpo_c{};
 
-    for (auto bb : g.GetPass<RPO>()->GetBlocks()) {
+    for (auto bb : g.GetAnalyser()->GetPass<RPO>()->GetBlocks()) {
         rpo_c.push_back(IdToChar(bb->GetId()));
     }
 
     ASSERT_EQ(rpo_c, std::vector<char>({ '0', 'A', 'B', 'C', 'D', 'F', 'E', 'G' }));
 
-    ASSERT_TRUE(g.RunPass<DomTreeSlow>());
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<DomTreeSlow>());
 
     DomCheck::CheckDominators(g.GetBasicBlock(START), { START });
     DomCheck::CheckDominated(g.GetBasicBlock(START), { START, A, B, C, D, E, F, G });
@@ -163,17 +163,17 @@ TEST(TestDomTree, Example2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.RunPass<RPO>());
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
 
     std::vector<char> rpo_c{};
 
-    for (auto bb : g.GetPass<RPO>()->GetBlocks()) {
+    for (auto bb : g.GetAnalyser()->GetPass<RPO>()->GetBlocks()) {
         rpo_c.push_back(IdToChar(bb->GetId()));
     }
     ASSERT_EQ(rpo_c,
               std::vector<char>({ '0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'J' }));
 
-    ASSERT_TRUE(g.RunPass<DomTreeSlow>());
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<DomTreeSlow>());
 
     DomCheck::CheckDominators(g.GetBasicBlock(START), { START });
     DomCheck::CheckDominated(g.GetBasicBlock(START), { START, A, B, C, D, E, F, G, H, I, J, K });
@@ -243,17 +243,17 @@ TEST(TestDomTree, Example3)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.RunPass<RPO>());
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
 
     std::vector<char> rpo_c{};
 
-    for (auto bb : g.GetPass<RPO>()->GetBlocks()) {
+    for (auto bb : g.GetAnalyser()->GetPass<RPO>()->GetBlocks()) {
         rpo_c.push_back(IdToChar(bb->GetId()));
     }
 
     ASSERT_EQ(rpo_c, std::vector<char>({ '0', 'A', 'B', 'E', 'F', 'H', 'I', 'G', 'C', 'D' }));
 
-    ASSERT_TRUE(g.RunPass<DomTreeSlow>());
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<DomTreeSlow>());
 
     DomCheck::CheckDominators(g.GetBasicBlock(START), { START });
     DomCheck::CheckDominated(g.GetBasicBlock(START), { START, A, B, C, D, E, F, G, H, I });
@@ -307,10 +307,9 @@ TEST(TestDomTree, Example4)
 
     b.ConstructCFG();
     b.ConstructDFG();
-
     ASSERT_TRUE(b.RunChecks());
-    ASSERT_TRUE(g.RunPass<RPO>());
-    ASSERT_TRUE(g.RunPass<DomTreeSlow>());
+
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<DomTreeSlow>());
 
     DomCheck::CheckDominators(g.GetBasicBlock(START), { START });
     DomCheck::CheckDominated(g.GetBasicBlock(START), { START, A, B, C, D, E });
@@ -354,10 +353,9 @@ TEST(TestDomTree, Example5)
 
     b.ConstructCFG();
     b.ConstructDFG();
-
     ASSERT_TRUE(b.RunChecks());
-    ASSERT_TRUE(g.RunPass<RPO>());
-    ASSERT_TRUE(g.RunPass<DomTreeSlow>());
+
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<DomTreeSlow>());
 
     DomCheck::CheckDominators(g.GetBasicBlock(START), { START });
     DomCheck::CheckDominated(g.GetBasicBlock(START), { START, A, B, C, D, E, F });
@@ -408,10 +406,9 @@ TEST(TestDomTree, Example6)
 
     b.ConstructCFG();
     b.ConstructDFG();
-
     ASSERT_TRUE(b.RunChecks());
-    ASSERT_TRUE(g.RunPass<RPO>());
-    ASSERT_TRUE(g.RunPass<DomTreeSlow>());
+
+    ASSERT_TRUE(g.GetAnalyser()->RunPass<DomTreeSlow>());
 
     DomCheck::CheckDominators(g.GetBasicBlock(START), { START });
     DomCheck::CheckDominated(g.GetBasicBlock(START), { START, A, B, C, D, E, F, G, H });

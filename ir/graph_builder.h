@@ -272,8 +272,9 @@ class GraphBuilder
         }
 
         // check inputs of variable length
-        assert(graph_->RunPass<RPO>());
-        auto rpo = graph_->GetPass<RPO>()->GetBlocks();
+        auto analyser = graph_->GetAnalyser();
+        assert(analyser->RunPass<RPO>());
+        auto rpo = analyser->GetPass<RPO>()->GetBlocks();
         for (auto bb : rpo) {
             for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetPrev()) {
                 if (phi->GetInputs().size() > bb->GetPredecesors().size()) {

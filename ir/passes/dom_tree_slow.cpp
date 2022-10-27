@@ -7,9 +7,12 @@
 bool DomTreeSlow::RunPass()
 {
     graph_->ClearDominators();
-    graph_->RunPass<RPO>();
 
-    auto reachable = graph_->GetPass<RPO>()->GetBlocks();
+    auto analyser = graph_->GetAnalyser();
+
+    analyser->RunPass<RPO>();
+
+    auto reachable = analyser->GetPass<RPO>()->GetBlocks();
 
     auto comparator = [](BasicBlock* rhs, BasicBlock* lhs) { return rhs->GetId() < lhs->GetId(); };
     std::sort(reachable.begin(), reachable.end(), comparator);
@@ -18,10 +21,10 @@ bool DomTreeSlow::RunPass()
         bb->AddDominator(graph_->GetStartBasicBlock());
         graph_->GetStartBasicBlock()->AddDominated(bb);
 
-        graph_->UnbindBasicBlock(bb);
+        analyser->SetMark<RPO, RPO::MarkType::VISITED>(bb->GetBits());
+        analyser->RunPass<RPO>();
 
-        graph_->RunPass<RPO>();
-        auto new_reachable = graph_->GetPass<RPO>()->GetBlocks();
+        auto new_reachable = analyser->GetPass<RPO>()->GetBlocks();
         std::sort(new_reachable.begin(), new_reachable.end(), comparator);
 
         std::vector<BasicBlock*> diff{};
@@ -34,7 +37,7 @@ bool DomTreeSlow::RunPass()
             bb->AddDominated(bb_dom);
         }
 
-        graph_->BindBasicBlock(bb);
+        analyser->ClearMark<RPO, RPO::MarkType::VISITED>(bb->GetBits());
     }
 
     return true;

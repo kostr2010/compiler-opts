@@ -48,26 +48,6 @@ class Graph
 
     void ClearDominators();
 
-    void UnbindBasicBlock(IdType bb_id)
-    {
-        assert(bb_id < bb_vector_.size());
-        auto bb = bb_vector_.at(bb_id);
-
-        UnbindBasicBlock(bb);
-    }
-
-    void UnbindBasicBlock(BasicBlock* bb);
-
-    void BindBasicBlock(IdType bb_id)
-    {
-        assert(bb_id < bb_vector_.size());
-        auto bb = bb_vector_.at(bb_id);
-
-        BindBasicBlock(bb);
-    }
-
-    void BindBasicBlock(BasicBlock* bb);
-
     void AddEdge(IdType from, IdType to)
     {
         assert(from < bb_vector_.size());
@@ -123,16 +103,9 @@ class Graph
 
     void Dump();
 
-    template <typename T>
-    T* GetPass()
+    Analyser* GetAnalyser()
     {
-        return analyser_.GetPass<T>();
-    }
-
-    template <typename T>
-    bool RunPass()
-    {
-        return analyser_.RunPass<T>();
+        return &analyser_;
     }
 
   private:

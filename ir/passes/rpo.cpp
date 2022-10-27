@@ -8,8 +8,9 @@ bool RPO::RunPass()
 
     RunPass_(graph_->GetStartBasicBlock());
 
+    auto analyser = graph_->GetAnalyser();
     for (auto& bb : rpo_bb_) {
-        bb->ResetBits();
+        analyser->ClearMark<RPO, MarkType::VISITED>(bb->GetBits());
     }
 
     return true;
@@ -22,13 +23,17 @@ std::vector<BasicBlock*> RPO::GetBlocks()
 
 void RPO::RunPass_(BasicBlock* cur_bb)
 {
-    BbVisited::Set(cur_bb->GetBits());
+    auto analyser = graph_->GetAnalyser();
+    auto bits = cur_bb->GetBits();
+
+    if (analyser->GetMark<RPO, MarkType::VISITED>(*bits)) {
+        return;
+    }
+
+    analyser->SetMark<RPO, MarkType::VISITED>(bits);
     rpo_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
-        if (BbVisited::Get(*(succ->GetBits()))) {
-            continue;
-        }
         RunPass_(succ);
     }
 }

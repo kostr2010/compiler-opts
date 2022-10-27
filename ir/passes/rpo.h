@@ -1,7 +1,6 @@
 #ifndef __PASS_RPO_INCLUDED__
 #define __PASS_RPO_INCLUDED__
 
-#include "mark.h"
 #include "pass.h"
 
 #include <vector>
@@ -10,9 +9,13 @@ class BasicBlock;
 
 class RPO : public Pass
 {
-    using BbVisited = Mark<>;
-
   public:
+    using Marks = Pass::MarksT<1>;
+    enum MarkType
+    {
+        VISITED = 0,
+    };
+
     RPO(Graph* graph) : Pass(graph)
     {
     }

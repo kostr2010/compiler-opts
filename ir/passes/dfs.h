@@ -1,19 +1,21 @@
 #ifndef __PASS_DFS_INCLUDED__
 #define __PASS_DFS_INCLUDED__
 
-#include "mark.h"
 #include "pass.h"
 
 #include <vector>
 
 class BasicBlock;
 
-// FIXME:
 class DFS : public Pass
 {
-    using BbVisited = Mark<>;
-
   public:
+    using Marks = Pass::MarksT<1>;
+    enum MarkType
+    {
+        VISITED = 0,
+    };
+
     DFS(Graph* graph) : Pass(graph)
     {
     }
