@@ -1,20 +1,16 @@
 #ifndef ___INST_H_INCLUDED___
 #define ___INST_H_INCLUDED___
 
-#include <array>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <limits>
-#include <map>
+#include <memory>
 #include <numeric>
-#include <set>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "ir_isa.h"
@@ -68,16 +64,38 @@ class Inst
     NO_DEFAULT_CTOR(Inst);
     DEFAULT_DTOR(Inst);
 
+    template <typename IType, typename... Args>
+    static std::unique_ptr<IType> NewInst(Args&&... args)
+    {
+        std::unique_ptr<IType> inst(new IType(std::forward<Args>(args)...));
+        inst->SetId(RecieveId());
+        return inst;
+    }
+
     static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
     static constexpr size_t N_INPUTS = 0;
 
     GETTER_SETTER(Prev, Inst*, prev_);
-    GETTER_SETTER(Next, Inst*, next_);
     GETTER_SETTER(BasicBlock, BasicBlock*, bb_);
     GETTER_SETTER(Id, IdType, id_);
     GETTER_SETTER(Opcode, Opcode, opcode_);
     GETTER_SETTER(InstType, InstType, inst_type_);
     GETTER_SETTER(DataType, DataType, data_type_);
+    GETTER(Inputs, inputs_);
+    GETTER(Users, users_);
+
+    void SetInput(size_t idx, Inst* inst);
+    size_t AddInput(Inst* inst);
+
+    Inst* GetNext()
+    {
+        return next_.get();
+    }
+
+    void SetNext(std::unique_ptr<Inst> next)
+    {
+        next_ = std::move(next);
+    }
 
     bool IsPhi() const
     {
@@ -110,27 +128,25 @@ class Inst
         return true;
     }
 
-    void SetInput(size_t idx, Inst* inst);
-    size_t AddInput(Inst* inst);
-    GETTER(Inputs, inputs_);
-    GETTER(Users, users_);
-
-    template <typename IType, typename... Args>
-    static IType* NewInst(Args&&... args);
-
     virtual void Dump() const;
 
   protected:
     explicit Inst(Opcode op, InstType t) : opcode_(op), inst_type_(t){};
 
-    bool IsNotTypeSensitive() const
+    static IdType RecieveId()
+    {
+        static IdType INST_ID_COUNTER = 0;
+        return INST_ID_COUNTER++;
+    }
+
+    inline bool IsNotTypeSensitive() const
     {
         return opcode_ == Opcode::RETURN || opcode_ == Opcode::RETURN_VOID ||
                opcode_ == Opcode::PARAM || opcode_ == Opcode::CONST;
     }
 
+    std::unique_ptr<Inst> next_{ nullptr };
     Inst* prev_{ nullptr };
-    Inst* next_{ nullptr };
 
     IdType id_;
 
@@ -439,11 +455,5 @@ class IfImmOp : public FixedInputOp<1>, public HasCond, public HasImm
     DEFAULT_CTOR(IfImmOp);
     DEFAULT_DTOR(IfImmOp);
 };
-
-template <typename IType, typename... Args>
-IType* Inst::NewInst(Args&&... args)
-{
-    return new IType(std::forward<Args>(args)...);
-}
 
 #endif

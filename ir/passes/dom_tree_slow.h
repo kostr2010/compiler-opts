@@ -3,15 +3,9 @@
 
 #include "pass.h"
 
-#include <vector>
-
-class BasicBlock;
-
 class DomTreeSlow : public Pass
 {
   public:
-    using Marks = Pass::MarksT<0>;
-
     DomTreeSlow(Graph* graph) : Pass(graph)
     {
     }

@@ -3,10 +3,6 @@
 
 #include "pass.h"
 
-#include <vector>
-
-class BasicBlock;
-
 // FIXME:
 class DomTree : public Pass
 {

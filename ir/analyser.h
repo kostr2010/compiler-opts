@@ -9,6 +9,7 @@
 #include "typedefs.h"
 
 #include <iostream>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -20,11 +21,11 @@ struct Passes
     NO_DEFAULT_CTOR(Passes);
     NO_DEFAULT_DTOR(Passes);
 
-    static std::vector<Pass*> Allocate(Graph* graph)
+    static std::vector<std::unique_ptr<Pass> > Allocate(Graph* graph)
     {
-        std::vector<Pass*> vec{};
+        std::vector<std::unique_ptr<Pass> > vec{};
         vec.reserve(sizeof...(Types));
-        (vec.push_back(new Types(graph)), ...);
+        (vec.emplace_back(new Types(graph)), ...);
         return vec;
     }
 
@@ -32,7 +33,6 @@ struct Passes
     static constexpr size_t GetIndex()
     {
         static_assert(HasPass<Type>());
-
         size_t i = 0;
         size_t res = 0;
         (((std::is_same<Type, Types>::value) ? (res = i) : (++i)), ...);
@@ -63,14 +63,14 @@ struct Passes
     }
 };
 
-using PassesList = Passes<DFS, BFS, RPO, DomTreeSlow>;
+using PassesList = Passes<DomTreeSlow, DFS, BFS, RPO>;
 
 class Analyser
 {
   public:
     Analyser(Graph* graph)
     {
-        passes_ = PassesList::Allocate(graph);
+        passes_ = std::move(PassesList::Allocate(graph));
     }
     DEFAULT_DTOR(Analyser);
 
@@ -79,7 +79,7 @@ class Analyser
     {
         static_assert(PassesList::HasPass<PassT>());
 
-        return static_cast<PassT*>(passes_[PassesList::GetIndex<PassT>()]);
+        return static_cast<PassT*>(passes_[PassesList::GetIndex<PassT>()].get());
     }
 
     template <typename PassT>
@@ -127,7 +127,7 @@ class Analyser
     }
 
   private:
-    std::vector<Pass*> passes_;
+    std::vector<std::unique_ptr<Pass> > passes_;
 };
 
 #endif

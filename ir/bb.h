@@ -4,12 +4,9 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <list>
-#include <map>
-#include <set>
+#include <memory>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "graph.h"
@@ -35,11 +32,19 @@ class BasicBlock
     GETTER(Successors, succs_);
     GETTER(Dominated, dominated_);
     GETTER(Dominators, dominators_);
-    GETTER(FirstPhi, first_phi_);
-    GETTER(FirstInst, first_inst_);
     GETTER(LastInst, last_inst_);
     GETTER_SETTER(Id, IdType, id_);
     GETTER_SETTER(ImmDominator, BasicBlock*, imm_dominator_);
+
+    Inst* GetFirstPhi()
+    {
+        return first_phi_.get();
+    }
+
+    Inst* GetFirstInst()
+    {
+        return first_inst_.get();
+    }
 
     void ClearImmDominator()
     {
@@ -176,9 +181,9 @@ class BasicBlock
         preds_.erase(std::find(preds_.begin(), preds_.end(), bb));
     }
 
-    void PushBackInst(Inst* inst);
-    void PushFrontInst(Inst* inst);
-    void PushBackPhi(Inst* inst);
+    void PushBackInst(std::unique_ptr<Inst> inst);
+    void PushFrontInst(std::unique_ptr<Inst> inst);
+    void PushBackPhi(std::unique_ptr<Inst> inst);
 
     void Dump() const;
 
@@ -188,22 +193,17 @@ class BasicBlock
     }
 
   private:
-    void SetFirstInst(Inst* inst)
+    void SetFirstInst(std::unique_ptr<Inst> inst)
     {
         assert(inst != nullptr);
         assert(first_inst_ == nullptr);
         assert(last_inst_ == nullptr);
 
-        inst->SetNext(nullptr);
+        inst->SetNext(std::unique_ptr<Inst>(nullptr));
         inst->SetPrev(nullptr);
 
-        if (first_phi_ != nullptr) {
-            first_phi_->SetNext(inst);
-            inst->SetPrev(first_phi_);
-        }
-
-        first_inst_ = inst;
-        last_inst_ = inst;
+        first_inst_ = std::move(inst);
+        last_inst_ = inst.get();
     }
 
     Graph* graph_; // access to metadata
@@ -217,9 +217,9 @@ class BasicBlock
 
     IdType id_;
 
-    Inst* first_inst_{ nullptr };
+    std::unique_ptr<Inst> first_inst_{ nullptr };
     Inst* last_inst_{ nullptr };
-    Inst* first_phi_{ nullptr };
+    std::unique_ptr<Inst> first_phi_{ nullptr };
 
     MarkHolderT bits{};
 };

@@ -3,14 +3,12 @@
 
 #include <cassert>
 #include <iostream>
-#include <map>
-#include <set>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "bb.h"
+#include "ir_isa.h"
 #include "macros.h"
 #include "typedefs.h"
 
@@ -52,20 +50,27 @@ class GraphBuilder
         assert(cur_bb_ != nullptr);
 
         static_assert(op != Opcode::CONST);
+        static_assert(op != Opcode::PARAM);
 
-        auto inst = graph_->NewInst<op>(std::forward<Args>(args)...);
+        std::unique_ptr<Inst> inst{};
+
+#define CREATE(OPCODE, TYPE)                                                                      \
+    if constexpr (op == Opcode::OPCODE) {                                                         \
+        inst = std::move(Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...));       \
+    }
+        INSTRUCTION_LIST(CREATE)
+#undef CREATE
+
         assert(inst != nullptr);
         auto id = inst->GetId();
 
-        cur_inst_ = inst;
-        cur_inst_id_ = id;
-
-        inst_map_[id] = inst;
+        cur_inst_ = inst.get();
+        inst_map_[id] = inst.get();
 
         if (inst->IsPhi()) {
-            cur_bb_->PushBackPhi(inst);
+            cur_bb_->PushBackPhi(std::move(inst));
         } else {
-            cur_bb_->PushBackInst(inst);
+            cur_bb_->PushBackInst(std::move(inst));
         }
 
         return id;
@@ -76,16 +81,15 @@ class GraphBuilder
         assert(graph_ != nullptr);
         assert(graph_->GetStartBasicBlock() != nullptr);
 
-        auto inst = graph_->NewParam(arg_num);
+        auto inst = Inst::NewInst<ParamOp>(Opcode::PARAM, arg_num);
+
         assert(inst != nullptr);
         auto id = inst->GetId();
 
-        cur_inst_ = inst;
-        cur_inst_id_ = id;
+        cur_inst_ = inst.get();
+        inst_map_[id] = inst.get();
 
-        inst_map_[id] = inst;
-
-        graph_->GetStartBasicBlock()->PushBackInst(inst);
+        graph_->GetStartBasicBlock()->PushBackInst(std::move(inst));
 
         return id;
     }
@@ -96,16 +100,15 @@ class GraphBuilder
         assert(graph_ != nullptr);
         assert(graph_->GetStartBasicBlock() != nullptr);
 
-        auto inst = graph_->NewConst(value);
+        auto inst = Inst::NewInst<ConstantOp>(Opcode::CONST, value);
+
         assert(inst != nullptr);
         auto id = inst->GetId();
 
-        cur_inst_ = inst;
-        cur_inst_id_ = id;
+        cur_inst_ = inst.get();
+        inst_map_[id] = inst.get();
 
-        inst_map_[id] = inst;
-
-        graph_->GetStartBasicBlock()->PushBackInst(inst);
+        graph_->GetStartBasicBlock()->PushBackInst(std::move(inst));
 
         return id;
     }
@@ -321,7 +324,6 @@ class GraphBuilder
     BasicBlock* cur_bb_{ nullptr };
     IdType cur_bb_id_;
     Inst* cur_inst_{ nullptr };
-    IdType cur_inst_id_;
 
     std::unordered_map<IdType, BasicBlock*> bb_map_;
     std::unordered_map<IdType, std::vector<IdType> > bb_succ_map_;

@@ -9,13 +9,6 @@ class Graph;
 class Pass
 {
   public:
-    Pass(Graph* g) : graph_{ g }
-    {
-    }
-    DEFAULT_DTOR(Pass);
-
-    virtual bool RunPass() = 0;
-
     template <uint8_t N_BITS>
     struct MarksT
     {
@@ -28,7 +21,8 @@ class Pass
         {
             static_assert(N_TH_BIT < N_BITS);
             static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            (*ptr) |= (1ULL << (OFFT + N_TH_BIT));
+            constexpr MarkHolderT MASK = (1ULL << (OFFT + N_TH_BIT));
+            (*ptr) |= MASK;
         }
 
         template <uint8_t OFFT, uint8_t N_TH_BIT>
@@ -36,7 +30,8 @@ class Pass
         {
             static_assert(N_TH_BIT < N_BITS);
             static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            (*ptr) &= ~(1ULL << (OFFT + N_TH_BIT));
+            constexpr MarkHolderT MASK = ~(1ULL << (OFFT + N_TH_BIT));
+            (*ptr) &= MASK;
         }
 
         template <uint8_t OFFT, uint8_t N_TH_BIT>
@@ -44,9 +39,19 @@ class Pass
         {
             static_assert(N_TH_BIT < N_BITS);
             static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            return (ptr) & (1ULL << (OFFT + N_TH_BIT));
+            constexpr MarkHolderT MASK = (1ULL << (OFFT + N_TH_BIT));
+            return ptr & MASK;
         }
     };
+
+    using Marks = MarksT<0>;
+
+    Pass(Graph* g) : graph_{ g }
+    {
+    }
+    DEFAULT_DTOR(Pass);
+
+    virtual bool RunPass() = 0;
 
   protected:
     Graph* graph_;
