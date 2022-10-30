@@ -13,6 +13,8 @@ bool DFS::RunPass()
         analyser->ClearMark<DFS, MarkType::VISITED>(bb->GetBits());
     }
 
+    SetValid(true);
+
     return true;
 }
 

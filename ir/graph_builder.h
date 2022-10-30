@@ -8,15 +8,13 @@
 #include <vector>
 
 #include "bb.h"
+#include "graph.h"
 #include "ir_isa.h"
 #include "macros.h"
 #include "typedefs.h"
 
-class Graph;
-// class BasicBlock;
 class Inst;
 
-// pointers to avoid circular dependency
 class GraphBuilder
 {
   public:
@@ -213,7 +211,7 @@ class GraphBuilder
     void ConstructCFG()
     {
         for (auto& [bb_id, succs] : bb_succ_map_) {
-            assert(succs.size() <= 2);
+            // assert(succs.size() <= 2);
             auto bb = bb_map_.at(bb_id);
             for (auto succ : succs) {
                 graph_->AddEdge(bb, bb_map_.at(succ));
@@ -276,8 +274,7 @@ class GraphBuilder
 
         // check inputs of variable length
         auto analyser = graph_->GetAnalyser();
-        assert(analyser->RunPass<RPO>());
-        auto rpo = analyser->GetPass<RPO>()->GetBlocks();
+        auto rpo = analyser->GetValidPass<RPO>()->GetBlocks();
         for (auto bb : rpo) {
             for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetPrev()) {
                 if (phi->GetInputs().size() > bb->GetPredecesors().size()) {

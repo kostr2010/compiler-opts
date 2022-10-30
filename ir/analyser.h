@@ -4,10 +4,12 @@
 #include "macros.h"
 #include "passes/bfs.h"
 #include "passes/dfs.h"
+#include "passes/dom_tree.h"
 #include "passes/dom_tree_slow.h"
 #include "passes/rpo.h"
 #include "typedefs.h"
 
+#include <cassert>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -63,7 +65,7 @@ struct Passes
     }
 };
 
-using PassesList = Passes<DomTreeSlow, DFS, BFS, RPO>;
+using PassesList = Passes<DomTree, DomTreeSlow, DFS, BFS, RPO>;
 
 class Analyser
 {
@@ -79,6 +81,16 @@ class Analyser
     {
         static_assert(PassesList::HasPass<PassT>());
 
+        return static_cast<PassT*>(passes_[PassesList::GetIndex<PassT>()].get());
+    }
+
+    template <typename PassT>
+    PassT* GetValidPass()
+    {
+        static_assert(PassesList::HasPass<PassT>());
+        if (!IsValid<PassT>()) {
+            assert(RunPass<PassT>());
+        }
         return static_cast<PassT*>(passes_[PassesList::GetIndex<PassT>()].get());
     }
 
@@ -124,6 +136,21 @@ class Analyser
 
         constexpr auto OFFT = PassesList::GetMarkOffset<PassT>();
         return PassT::Marks::template Get<OFFT, N>(ptr);
+    }
+
+    template <typename PassT>
+    bool IsValid()
+    {
+        return GetPass<PassT>()->GetValid();
+    }
+
+    void InvalidateCfgDependentPasses()
+    {
+        GetPass<DFS>()->SetValid(false);
+        GetPass<BFS>()->SetValid(false);
+        GetPass<RPO>()->SetValid(false);
+        GetPass<DomTree>()->SetValid(false);
+        GetPass<DomTreeSlow>()->SetValid(false);
     }
 
   private:

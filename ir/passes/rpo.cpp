@@ -13,6 +13,8 @@ bool RPO::RunPass()
         analyser->ClearMark<RPO, MarkType::VISITED>(bb->GetBits());
     }
 
+    SetValid(true);
+
     return true;
 }
 

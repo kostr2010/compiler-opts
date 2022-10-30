@@ -50,11 +50,14 @@ class Pass
     {
     }
     DEFAULT_DTOR(Pass);
+    GETTER_SETTER(Valid, bool, is_valid_);
 
     virtual bool RunPass() = 0;
 
   protected:
     Graph* graph_;
+
+    bool is_valid_ = false;
 };
 
 #endif

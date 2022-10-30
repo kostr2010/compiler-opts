@@ -67,9 +67,7 @@ class Inst
     template <typename IType, typename... Args>
     static std::unique_ptr<IType> NewInst(Args&&... args)
     {
-        std::unique_ptr<IType> inst(new IType(std::forward<Args>(args)...));
-        inst->SetId(RecieveId());
-        return inst;
+        return std::unique_ptr<IType>(new IType(std::forward<Args>(args)...));
     }
 
     static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
@@ -77,12 +75,12 @@ class Inst
 
     GETTER_SETTER(Prev, Inst*, prev_);
     GETTER_SETTER(BasicBlock, BasicBlock*, bb_);
-    GETTER_SETTER(Id, IdType, id_);
     GETTER_SETTER(Opcode, Opcode, opcode_);
     GETTER_SETTER(InstType, InstType, inst_type_);
     GETTER_SETTER(DataType, DataType, data_type_);
     GETTER(Inputs, inputs_);
     GETTER(Users, users_);
+    GETTER(Id, id_);
 
     void SetInput(size_t idx, Inst* inst);
     size_t AddInput(Inst* inst);
@@ -131,7 +129,7 @@ class Inst
     virtual void Dump() const;
 
   protected:
-    explicit Inst(Opcode op, InstType t) : opcode_(op), inst_type_(t){};
+    explicit Inst(Opcode op, InstType t) : id_(RecieveId()), opcode_(op), inst_type_(t){};
 
     static IdType RecieveId()
     {
@@ -148,7 +146,7 @@ class Inst
     std::unique_ptr<Inst> next_{ nullptr };
     Inst* prev_{ nullptr };
 
-    IdType id_;
+    const IdType id_;
 
     Opcode opcode_ = Opcode::INVALID_OPCODE;
     InstType inst_type_ = InstType::INVALID_TYPE;

@@ -91,11 +91,9 @@ TEST(TestDomTree, Example1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
-
     std::vector<char> rpo_c{};
 
-    for (auto bb : g.GetAnalyser()->GetPass<RPO>()->GetBlocks()) {
+    for (auto bb : g.GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         rpo_c.push_back(IdToChar(bb->GetId()));
     }
 
@@ -163,11 +161,9 @@ TEST(TestDomTree, Example2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
-
     std::vector<char> rpo_c{};
 
-    for (auto bb : g.GetAnalyser()->GetPass<RPO>()->GetBlocks()) {
+    for (auto bb : g.GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         rpo_c.push_back(IdToChar(bb->GetId()));
     }
     ASSERT_EQ(rpo_c,
@@ -243,11 +239,9 @@ TEST(TestDomTree, Example3)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
-
     std::vector<char> rpo_c{};
 
-    for (auto bb : g.GetAnalyser()->GetPass<RPO>()->GetBlocks()) {
+    for (auto bb : g.GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         rpo_c.push_back(IdToChar(bb->GetId()));
     }
 

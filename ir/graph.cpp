@@ -4,23 +4,16 @@
 void Graph::InitStartBlock()
 {
     assert(bb_vector_.empty());
-    bb_vector_.emplace_back(new BasicBlock(this));
+    assert(BB_START_ID == bb_id_counter_);
 
-    auto bb = bb_vector_.back().get();
-    bb->SetId(BB_START_ID);
-    bb_start_ = bb;
-
-    ++bb_id_counter_;
+    bb_vector_.emplace_back(new BasicBlock(bb_id_counter_++));
+    bb_start_ = bb_vector_.back().get();
 }
 
 BasicBlock* Graph::NewBasicBlock()
 {
-    bb_vector_.emplace_back(new BasicBlock(this));
-
-    auto bb = bb_vector_.back().get();
-    bb->SetId(bb_id_counter_++);
-
-    return bb;
+    bb_vector_.emplace_back(new BasicBlock(bb_id_counter_++));
+    return bb_vector_.back().get();
 }
 
 void Graph::Dump()
@@ -46,4 +39,6 @@ void Graph::AddEdge(BasicBlock* from, BasicBlock* to)
 
     from->AddSucc(to);
     to->AddPred(from);
+
+    analyser_.InvalidateCfgDependentPasses();
 }

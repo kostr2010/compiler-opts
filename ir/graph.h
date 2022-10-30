@@ -48,9 +48,6 @@ class Graph
 
     void AddEdge(IdType from, IdType to)
     {
-        assert(from < bb_vector_.size());
-        assert(to < bb_vector_.size());
-
         auto bb_to = bb_vector_.at(to).get();
         auto bb_from = bb_vector_.at(from).get();
 

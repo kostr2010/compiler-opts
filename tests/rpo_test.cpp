@@ -35,8 +35,7 @@ TEST(TestRPO, Example1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
-    auto rpo = g.GetAnalyser()->GetPass<RPO>()->GetBlocks();
+    auto rpo = g.GetAnalyser()->GetValidPass<RPO>()->GetBlocks();
 
     std::vector<char> rpo_c{};
 
@@ -81,8 +80,7 @@ TEST(TestRPO, Example2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
-    auto rpo = g.GetAnalyser()->GetPass<RPO>()->GetBlocks();
+    auto rpo = g.GetAnalyser()->GetValidPass<RPO>()->GetBlocks();
 
     std::vector<char> rpo_c{};
 
@@ -123,8 +121,7 @@ TEST(TestRPO, Example3)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    ASSERT_TRUE(g.GetAnalyser()->RunPass<RPO>());
-    auto rpo = g.GetAnalyser()->GetPass<RPO>()->GetBlocks();
+    auto rpo = g.GetAnalyser()->GetValidPass<RPO>()->GetBlocks();
 
     std::vector<char> rpo_c{};
 

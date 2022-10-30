@@ -36,6 +36,8 @@ bool BFS::RunPass()
         analyser->ClearMark<BFS, MarkType::VISITED>(b->GetBits());
     }
 
+    SetValid(true);
+
     return true;
 }
 
