@@ -44,8 +44,6 @@ class Pass
         }
     };
 
-    using Marks = MarksT<0>;
-
     Pass(Graph* g) : graph_{ g }
     {
     }

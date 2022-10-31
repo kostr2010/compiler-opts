@@ -6,6 +6,7 @@
 #include "passes/dfs.h"
 #include "passes/dom_tree.h"
 #include "passes/dom_tree_slow.h"
+#include "passes/pass.h"
 #include "passes/rpo.h"
 #include "typedefs.h"
 
@@ -16,52 +17,107 @@
 #include <vector>
 
 template <typename... Types>
-struct Passes
+class Passes
 {
-    static_assert((Types::Marks::LEN + ...) <= sizeof(MarkHolderT) * BITS_IN_BYTE);
+  private:
+    template <typename Type, typename... Pack>
+    struct is_one_of;
 
+    template <typename Type>
+    struct is_one_of<Type> : std::false_type
+    {
+    };
+
+    template <typename Type, typename... Pack>
+    struct is_one_of<Type, Type, Pack...> : std::true_type
+    {
+    };
+
+    template <typename Type, typename T0, typename... Pack>
+    struct is_one_of<Type, T0, Pack...> : is_one_of<Type, Pack...>
+    {
+    };
+
+    template <typename, typename = void>
+    struct has_marks_field : std::false_type
+    {
+    };
+
+    template <typename Type>
+    struct has_marks_field<Type, std::void_t<typename Type::Marks> > : std::true_type
+    {
+    };
+
+    template <typename Type, size_t IDX, typename... Pack>
+    struct get_pass_idx;
+
+    template <typename Type, size_t IDX, typename T, typename... Pack>
+    struct get_pass_idx<Type, IDX, T, Pack...> : get_pass_idx<Type, IDX + 1, Pack...>
+    {
+    };
+
+    template <typename Type, size_t IDX, typename... Pack>
+    struct get_pass_idx<Type, IDX, Type, Pack...> : std::integral_constant<size_t, IDX>
+    {
+    };
+
+    template <typename, typename = void>
+    struct get_mark_length : std::integral_constant<size_t, 0>
+    {
+    };
+
+    template <typename Type>
+    struct get_mark_length<Type, std::void_t<typename Type::Marks> >
+        : std::integral_constant<size_t, Type::Marks::LEN>
+    {
+    };
+
+    template <typename Type, size_t IDX, typename T, typename... Pack>
+    struct get_mark_offt : get_mark_offt<Type, IDX + get_mark_length<T>(), Pack...>
+    {
+    };
+
+    template <typename Type, size_t IDX, typename... Pack>
+    struct get_mark_offt<Type, IDX, Type, Pack...> : std::integral_constant<size_t, IDX>
+    {
+    };
+
+    template <size_t COUNT, typename... Pack>
+    struct count_mark_bits;
+
+    template <size_t COUNT, typename Type, typename... Pack>
+    struct count_mark_bits<COUNT, Type, Pack...>
+        : count_mark_bits<COUNT + get_mark_length<Type>(), Pack...>
+    {
+    };
+
+    template <size_t COUNT>
+    struct count_mark_bits<COUNT> : std::integral_constant<size_t, COUNT>
+    {
+    };
+
+    using CountMarkBits = count_mark_bits<0, Types...>;
+    static_assert(CountMarkBits() <= sizeof(MarkHolderT) * BITS_IN_BYTE);
+
+  public:
     NO_DEFAULT_CTOR(Passes);
     NO_DEFAULT_DTOR(Passes);
 
-    static std::vector<std::unique_ptr<Pass> > Allocate(Graph* graph)
+    template <typename Type>
+    using HasPass = is_one_of<Type, Types...>;
+    template <typename Type>
+    using HasMarks = has_marks_field<Type>;
+    template <typename Type>
+    using GetPassIdx = get_pass_idx<Type, 0, Types...>;
+    template <typename Type>
+    using GetMarkOfft = get_mark_offt<Type, 0, Types...>;
+
+    static auto Allocate(Graph* graph)
     {
         std::vector<std::unique_ptr<Pass> > vec{};
         vec.reserve(sizeof...(Types));
         (vec.emplace_back(new Types(graph)), ...);
         return vec;
-    }
-
-    template <typename Type>
-    static constexpr size_t GetIndex()
-    {
-        static_assert(HasPass<Type>());
-        size_t i = 0;
-        size_t res = 0;
-        (((std::is_same<Type, Types>::value) ? (res = i) : (++i)), ...);
-        return res;
-    }
-
-    template <typename Type>
-    static constexpr bool HasPass()
-    {
-        return (std::is_same<Type, Types>::value || ...);
-    }
-
-    template <typename MarkT>
-    static constexpr bool HasMark()
-    {
-        return (std::is_same<MarkT, typename Types::Marks>::value || ...);
-    }
-
-    template <typename Type>
-    static constexpr size_t GetMarkOffset()
-    {
-        static_assert(HasPass<Type>());
-        static_assert(HasMark<typename Type::Marks>());
-        size_t i = 0;
-        size_t res = 0;
-        (((std::is_same<Type, Types>::value) ? (res = i) : (i += Types::Marks::LEN)), ...);
-        return res;
     }
 };
 
@@ -70,9 +126,8 @@ using PassesList = Passes<DomTree, DomTreeSlow, DFS, BFS, RPO>;
 class Analyser
 {
   public:
-    Analyser(Graph* graph)
+    Analyser(Graph* graph) : passes_(std::move(PassesList::Allocate(graph)))
     {
-        passes_ = std::move(PassesList::Allocate(graph));
     }
     DEFAULT_DTOR(Analyser);
 
@@ -81,7 +136,7 @@ class Analyser
     {
         static_assert(PassesList::HasPass<PassT>());
 
-        return static_cast<PassT*>(passes_[PassesList::GetIndex<PassT>()].get());
+        return static_cast<PassT*>(passes_[PassesList::GetPassIdx<PassT>()].get());
     }
 
     template <typename PassT>
@@ -91,7 +146,7 @@ class Analyser
         if (!IsValid<PassT>()) {
             assert(RunPass<PassT>());
         }
-        return static_cast<PassT*>(passes_[PassesList::GetIndex<PassT>()].get());
+        return static_cast<PassT*>(passes_[PassesList::GetPassIdx<PassT>()].get());
     }
 
     template <typename PassT>
@@ -99,18 +154,18 @@ class Analyser
     {
         static_assert(PassesList::HasPass<PassT>());
 
-        return passes_[PassesList::GetIndex<PassT>()]->RunPass();
+        return passes_[PassesList::GetPassIdx<PassT>()]->RunPass();
     }
 
     template <typename PassT, size_t N>
     void SetMark(MarkHolderT* ptr)
     {
         static_assert(PassesList::HasPass<PassT>());
-        static_assert(PassesList::HasMark<typename PassT::Marks>());
+        static_assert(PassesList::HasMarks<PassT>());
         static_assert(N < PassT::Marks::LEN);
-        static_assert(PassesList::GetMarkOffset<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
+        static_assert(PassesList::GetMarkOfft<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
 
-        constexpr auto OFFT = PassesList::GetMarkOffset<PassT>();
+        constexpr auto OFFT = PassesList::GetMarkOfft<PassT>();
         PassT::Marks::template Set<OFFT, N>(ptr);
     }
 
@@ -118,11 +173,11 @@ class Analyser
     void ClearMark(MarkHolderT* ptr)
     {
         static_assert(PassesList::HasPass<PassT>());
-        static_assert(PassesList::HasMark<typename PassT::Marks>());
+        static_assert(PassesList::HasMarks<PassT>());
         static_assert(N < PassT::Marks::LEN);
-        static_assert(PassesList::GetMarkOffset<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
+        static_assert(PassesList::GetMarkOfft<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
 
-        constexpr auto OFFT = PassesList::GetMarkOffset<PassT>();
+        constexpr auto OFFT = PassesList::GetMarkOfft<PassT>();
         PassT::Marks::template Clear<OFFT, N>(ptr);
     }
 
@@ -130,11 +185,11 @@ class Analyser
     bool GetMark(const MarkHolderT& ptr)
     {
         static_assert(PassesList::HasPass<PassT>());
-        static_assert(PassesList::HasMark<typename PassT::Marks>());
+        static_assert(PassesList::HasMarks<PassT>());
         static_assert(N < PassT::Marks::LEN);
-        static_assert(PassesList::GetMarkOffset<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
+        static_assert(PassesList::GetMarkOfft<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
 
-        constexpr auto OFFT = PassesList::GetMarkOffset<PassT>();
+        constexpr auto OFFT = PassesList::GetMarkOfft<PassT>();
         return PassT::Marks::template Get<OFFT, N>(ptr);
     }
 
@@ -154,7 +209,7 @@ class Analyser
     }
 
   private:
-    std::vector<std::unique_ptr<Pass> > passes_;
+    const std::vector<std::unique_ptr<Pass> > passes_;
 };
 
 #endif
