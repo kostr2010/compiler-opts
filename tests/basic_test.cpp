@@ -38,14 +38,14 @@ TEST(BasicTests, Example1)
     auto b2 = b.NewBlock();
     auto i5 = b.NewInst<Opcode::RETURN>();
 
-    b.SetInputs(i0, { { c1, g.BB_START_ID }, { i4, b1 } });
+    b.SetInputs(i0, { { c1, Graph::BB_START_ID }, { i4, b1 } });
     b.SetInputs(i2, i0, p0);
-    b.SetInputs(i1, { { c0, g.BB_START_ID }, { i3, b1 } });
+    b.SetInputs(i1, { { c0, Graph::BB_START_ID }, { i3, b1 } });
     b.SetInputs(i3, i1, i0);
     b.SetInputs(i4, i0);
     b.SetInputs(i5, i1);
 
-    b.SetSuccessors(g.GetStartBasicBlockId(), { b0 });
+    b.SetSuccessors(Graph::BB_START_ID, { b0 });
     b.SetSuccessors(b0, { b1, b2 });
     b.SetSuccessors(b1, { b0 });
     b.SetSuccessors(b2, {});

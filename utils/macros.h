@@ -1,13 +1,13 @@
 #ifndef __MACROS_H_INCLUDED__
 #define __MACROS_H_INCLUDED__
 
-#define DEFAULT_DTOR(class_name) ~class_name() = default;
-#define DEFAULT_CTOR(class_name) class_name() = default;
+#define DEFAULT_DTOR(class_name) ~class_name() = default
+#define DEFAULT_CTOR(class_name) class_name() = default
 
-#define NO_DEFAULT_DTOR(class_name) ~class_name() = delete;
-#define NO_DEFAULT_CTOR(class_name) class_name() = delete;
+#define NO_DEFAULT_DTOR(class_name) ~class_name() = delete
+#define NO_DEFAULT_CTOR(class_name) class_name() = delete
 
-#define NO_COPY_CTOR(class_name) class_name(const class_name&) = delete;
+#define NO_COPY_CTOR(class_name) class_name(const class_name&) = delete
 
 #define LOG_ERROR(msg) std::cerr << "ERROR/[" << __FUNCTION__ << "] " << msg << "\n";
 

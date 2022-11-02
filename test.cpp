@@ -34,7 +34,7 @@ int main()
     auto K = b.NewBlock();
     auto L = b.NewBlock();
 
-    const auto START = g.GetStartBasicBlockId();
+    const auto START = Graph::BB_START_ID;
     b.SetSuccessors(START, { C, B, A });
     b.SetSuccessors(A, { D });
     b.SetSuccessors(B, { E, A, D });

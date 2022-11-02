@@ -22,7 +22,7 @@ TEST(TestRPO, Example1)
     auto F = b.NewBlock();
     auto G = b.NewBlock();
 
-    b.SetSuccessors(g.GetStartBasicBlockId(), { A });
+    b.SetSuccessors(Graph::BB_START_ID, { A });
     b.SetSuccessors(A, { B });
     b.SetSuccessors(B, { C, F });
     b.SetSuccessors(C, { D });
@@ -63,7 +63,7 @@ TEST(TestRPO, Example2)
     auto J = b.NewBlock();
     auto K = b.NewBlock();
 
-    b.SetSuccessors(g.GetStartBasicBlockId(), { A });
+    b.SetSuccessors(Graph::BB_START_ID, { A });
     b.SetSuccessors(A, { B });
     b.SetSuccessors(B, { C, J });
     b.SetSuccessors(C, { D });
@@ -106,7 +106,7 @@ TEST(TestRPO, Example3)
     auto H = b.NewBlock();
     auto I = b.NewBlock();
 
-    b.SetSuccessors(g.GetStartBasicBlockId(), { A });
+    b.SetSuccessors(Graph::BB_START_ID, { A });
     b.SetSuccessors(A, { B });
     b.SetSuccessors(B, { E, C });
     b.SetSuccessors(C, { D });

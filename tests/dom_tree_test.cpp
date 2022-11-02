@@ -69,7 +69,7 @@ TEST(TestDomTree, Example1)
     Graph g;
     GraphBuilder b(&g);
 
-    auto START = g.GetStartBasicBlockId();
+    auto START = Graph::BB_START_ID;
     auto A = b.NewBlock();
     auto B = b.NewBlock();
     auto C = b.NewBlock();
@@ -124,6 +124,30 @@ TEST(TestDomTree, Example1)
 
     DomCheck::CheckDominators(g.GetBasicBlock(G), { START, A, B, F, G });
     DomCheck::CheckDominated(g.GetBasicBlock(G), { G });
+
+    const auto CheckImmDoms = [&]() {
+        auto bb = g.GetBasicBlock(START);
+        ASSERT_EQ(bb->GetImmDominator(), nullptr);
+        bb = g.GetBasicBlock(A);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(B);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), A);
+        bb = g.GetBasicBlock(C);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(D);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(E);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), F);
+        bb = g.GetBasicBlock(F);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(G);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), F);
+    };
+
+    CheckImmDoms();
+
+    g.GetAnalyser()->RunPass<DomTree>();
+    CheckImmDoms();
 }
 
 TEST(TestDomTree, Example2)
@@ -131,7 +155,7 @@ TEST(TestDomTree, Example2)
     Graph g;
     GraphBuilder b(&g);
 
-    auto START = g.GetStartBasicBlockId();
+    auto START = Graph::BB_START_ID;
     auto A = b.NewBlock();
     auto B = b.NewBlock();
     auto C = b.NewBlock();
@@ -206,6 +230,38 @@ TEST(TestDomTree, Example2)
 
     DomCheck::CheckDominators(g.GetBasicBlock(K), { START, K, A, B, C, D, E, F, G, I, K });
     DomCheck::CheckDominated(g.GetBasicBlock(K), { K });
+
+    const auto CheckImmDoms = [&]() {
+        auto bb = g.GetBasicBlock(START);
+        ASSERT_EQ(bb->GetImmDominator(), nullptr);
+        bb = g.GetBasicBlock(A);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(B);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), A);
+        bb = g.GetBasicBlock(C);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(D);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), C);
+        bb = g.GetBasicBlock(E);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), D);
+        bb = g.GetBasicBlock(F);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), E);
+        bb = g.GetBasicBlock(G);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), F);
+        bb = g.GetBasicBlock(H);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), G);
+        bb = g.GetBasicBlock(I);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), G);
+        bb = g.GetBasicBlock(J);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(K);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), I);
+    };
+
+    CheckImmDoms();
+
+    g.GetAnalyser()->RunPass<DomTree>();
+    CheckImmDoms();
 }
 
 TEST(TestDomTree, Example3)
@@ -213,7 +269,7 @@ TEST(TestDomTree, Example3)
     Graph g;
     GraphBuilder b(&g);
 
-    auto START = g.GetStartBasicBlockId();
+    auto START = Graph::BB_START_ID;
     auto A = b.NewBlock();
     auto B = b.NewBlock();
     auto C = b.NewBlock();
@@ -278,6 +334,34 @@ TEST(TestDomTree, Example3)
 
     DomCheck::CheckDominators(g.GetBasicBlock(I), { START, I, B, A });
     DomCheck::CheckDominated(g.GetBasicBlock(I), { I });
+
+    const auto CheckImmDoms = [&]() {
+        auto bb = g.GetBasicBlock(START);
+        ASSERT_EQ(bb->GetImmDominator(), nullptr);
+        bb = g.GetBasicBlock(A);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(B);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), A);
+        bb = g.GetBasicBlock(C);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(D);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(E);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(F);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), E);
+        bb = g.GetBasicBlock(G);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(H);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), F);
+        bb = g.GetBasicBlock(I);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+    };
+
+    CheckImmDoms();
+
+    g.GetAnalyser()->RunPass<DomTree>();
+    CheckImmDoms();
 }
 
 TEST(TestDomTree, Example4)
@@ -285,7 +369,7 @@ TEST(TestDomTree, Example4)
     Graph g;
     GraphBuilder b(&g);
 
-    auto START = g.GetStartBasicBlockId();
+    auto START = Graph::BB_START_ID;
     auto A = b.NewBlock();
     auto B = b.NewBlock();
     auto C = b.NewBlock();
@@ -322,6 +406,26 @@ TEST(TestDomTree, Example4)
 
     DomCheck::CheckDominators(g.GetBasicBlock(E), { START, E, B, A, D });
     DomCheck::CheckDominated(g.GetBasicBlock(E), { E });
+
+    const auto CheckImmDoms = [&]() {
+        auto bb = g.GetBasicBlock(START);
+        ASSERT_EQ(bb->GetImmDominator(), nullptr);
+        bb = g.GetBasicBlock(A);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(B);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), A);
+        bb = g.GetBasicBlock(C);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(D);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(E);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), D);
+    };
+
+    CheckImmDoms();
+
+    g.GetAnalyser()->RunPass<DomTree>();
+    CheckImmDoms();
 }
 
 TEST(TestDomTree, Example5)
@@ -329,7 +433,7 @@ TEST(TestDomTree, Example5)
     Graph g;
     GraphBuilder b(&g);
 
-    auto START = g.GetStartBasicBlockId();
+    auto START = Graph::BB_START_ID;
     auto A = b.NewBlock();
     auto B = b.NewBlock();
     auto C = b.NewBlock();
@@ -371,6 +475,28 @@ TEST(TestDomTree, Example5)
 
     DomCheck::CheckDominators(g.GetBasicBlock(F), { START, F, B, A, C });
     DomCheck::CheckDominated(g.GetBasicBlock(F), { F });
+
+    const auto CheckImmDoms = [&]() {
+        auto bb = g.GetBasicBlock(START);
+        ASSERT_EQ(bb->GetImmDominator(), nullptr);
+        bb = g.GetBasicBlock(A);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(B);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), A);
+        bb = g.GetBasicBlock(C);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(D);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), C);
+        bb = g.GetBasicBlock(E);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), D);
+        bb = g.GetBasicBlock(F);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), C);
+    };
+
+    CheckImmDoms();
+
+    g.GetAnalyser()->RunPass<DomTree>();
+    CheckImmDoms();
 }
 
 TEST(TestDomTree, Example6)
@@ -378,7 +504,7 @@ TEST(TestDomTree, Example6)
     Graph g;
     GraphBuilder b(&g);
 
-    auto START = g.GetStartBasicBlockId();
+    auto START = Graph::BB_START_ID;
     auto A = b.NewBlock();
     auto B = b.NewBlock();
     auto C = b.NewBlock();
@@ -430,4 +556,102 @@ TEST(TestDomTree, Example6)
 
     DomCheck::CheckDominators(g.GetBasicBlock(H), { START, H, A, B, E, G });
     DomCheck::CheckDominated(g.GetBasicBlock(H), { H });
+
+    const auto CheckImmDoms = [&]() {
+        auto bb = g.GetBasicBlock(START);
+        ASSERT_EQ(bb->GetImmDominator(), nullptr);
+        bb = g.GetBasicBlock(A);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(B);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), A);
+        bb = g.GetBasicBlock(C);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(D);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(E);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
+        bb = g.GetBasicBlock(F);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), C);
+        bb = g.GetBasicBlock(G);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), E);
+        bb = g.GetBasicBlock(H);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), G);
+    };
+
+    CheckImmDoms();
+
+    g.GetAnalyser()->RunPass<DomTree>();
+    CheckImmDoms();
+}
+
+TEST(TestDomTree, ExampleArticle)
+{
+    Graph g;
+    GraphBuilder b(&g);
+
+    auto A = b.NewBlock();
+    auto B = b.NewBlock();
+    auto C = b.NewBlock();
+    auto D = b.NewBlock();
+    auto E = b.NewBlock();
+    auto F = b.NewBlock();
+    auto G = b.NewBlock();
+    auto H = b.NewBlock();
+    auto I = b.NewBlock();
+    auto J = b.NewBlock();
+    auto K = b.NewBlock();
+    auto L = b.NewBlock();
+
+    const auto START = Graph::BB_START_ID;
+    b.SetSuccessors(START, { C, B, A });
+    b.SetSuccessors(A, { D });
+    b.SetSuccessors(B, { E, A, D });
+    b.SetSuccessors(C, { F, G });
+    b.SetSuccessors(D, { L });
+    b.SetSuccessors(E, { H });
+    b.SetSuccessors(F, { I });
+    b.SetSuccessors(G, { I, J });
+    b.SetSuccessors(H, { E, K });
+    b.SetSuccessors(I, { K });
+    b.SetSuccessors(J, { I });
+    b.SetSuccessors(K, { I, START });
+    b.SetSuccessors(L, { H });
+
+    b.ConstructCFG();
+    b.ConstructDFG();
+
+    const auto CheckImmDoms = [&]() {
+        auto bb = g.GetBasicBlock(START);
+        ASSERT_EQ(bb->GetImmDominator(), nullptr);
+        bb = g.GetBasicBlock(A);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(B);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(C);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(D);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(E);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(F);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), C);
+        bb = g.GetBasicBlock(G);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), C);
+        bb = g.GetBasicBlock(H);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(I);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(J);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), G);
+        bb = g.GetBasicBlock(K);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), START);
+        bb = g.GetBasicBlock(L);
+        ASSERT_EQ(bb->GetImmDominator()->GetId(), D);
+    };
+
+    g.GetAnalyser()->RunPass<DomTree>();
+    CheckImmDoms();
+
+    g.GetAnalyser()->RunPass<DomTreeSlow>();
+    CheckImmDoms();
 }

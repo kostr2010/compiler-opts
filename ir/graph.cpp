@@ -42,3 +42,14 @@ void Graph::AddEdge(BasicBlock* from, BasicBlock* to)
 
     analyser_.InvalidateCfgDependentPasses();
 }
+
+void Graph::RemoveEdge(BasicBlock* from, BasicBlock* to)
+{
+    assert(to != nullptr);
+    assert(from != nullptr);
+
+    from->RemoveSucc(to);
+    to->RemovePred(from);
+
+    analyser_.InvalidateCfgDependentPasses();
+}

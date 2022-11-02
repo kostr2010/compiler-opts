@@ -82,22 +82,7 @@ class Passes
     {
     };
 
-    template <size_t COUNT, typename... Pack>
-    struct count_mark_bits;
-
-    template <size_t COUNT, typename Type, typename... Pack>
-    struct count_mark_bits<COUNT, Type, Pack...>
-        : count_mark_bits<COUNT + get_mark_length<Type>(), Pack...>
-    {
-    };
-
-    template <size_t COUNT>
-    struct count_mark_bits<COUNT> : std::integral_constant<size_t, COUNT>
-    {
-    };
-
-    using CountMarkBits = count_mark_bits<0, Types...>;
-    static_assert(CountMarkBits() <= sizeof(MarkHolderT) * BITS_IN_BYTE);
+    static_assert((get_mark_length<Types>() + ...) <= sizeof(MarkHolderT) * BITS_IN_BYTE);
 
   public:
     NO_DEFAULT_CTOR(Passes);

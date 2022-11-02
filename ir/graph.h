@@ -23,15 +23,7 @@ class Graph
     {
         InitStartBlock();
     }
-
-    ~Graph()
-    {
-    }
-
-    static inline IdType GetStartBasicBlockId()
-    {
-        return BB_START_ID;
-    }
+    DEFAULT_DTOR(Graph);
 
     BasicBlock* GetStartBasicBlock() const
     {
@@ -55,6 +47,16 @@ class Graph
     }
 
     void AddEdge(BasicBlock* from, BasicBlock* to);
+
+    void RemoveEdge(IdType from, IdType to)
+    {
+        auto bb_to = bb_vector_.at(to).get();
+        auto bb_from = bb_vector_.at(from).get();
+
+        RemoveEdge(bb_from, bb_to);
+    }
+
+    void RemoveEdge(BasicBlock* from, BasicBlock* to);
 
     BasicBlock* NewBasicBlock();
 

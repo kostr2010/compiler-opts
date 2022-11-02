@@ -5,116 +5,106 @@
 #include "dom_tree.h"
 #include "graph.h"
 
-static inline char IdToChar(IdType id)
-{
-    return (id == 0) ? '0' : (char)('A' + id - 1);
-}
-
 bool DomTree::RunPass()
 {
     graph_->ClearDominators();
 
     FillTree();
+    ComputeSdoms();
+    ComputeDoms();
 
-    for (const auto& node : tree_) {
-        std::cout << IdToChar(node.bb->GetId()) << "\n";
-        std::cout << "\tpred:  "
-                  << ((node.pred != nullptr) ? IdToChar(node.pred->bb->GetId()) : '-') << "\n";
-        std::cout << "\tsuccs: ";
-        for (const auto& succ : node.succs) {
-            std::cout << IdToChar(succ->bb->GetId()) << " ";
-        }
-        std::cout << "\n";
-    }
-
-    for (auto node = tree_.begin() + 1; node != tree_.end(); ++node) {
-        ComputeSdom(&(*node));
-    }
-
-    for (const auto& node : tree_) {
-        std::cout << IdToChar(node.bb->GetId()) << "\n";
-        std::cout << "\tsdom: "
-                  << ((node.sdom != nullptr) ? IdToChar(node.sdom->bb->GetId()) : '-') << "\n";
-    }
+    SetValid(true);
 
     return true;
 }
 
-void DomTree::ComputeAncestors(BasicBlock* bb, std::vector<Node*>* pot_doms, size_t w_dfs_idx)
+void DomTree::ComputeDoms()
 {
-    auto idx_u = id_to_dfs_idx_.at(bb->GetId());
-    if (idx_u > w_dfs_idx) {
-        pot_doms->push_back(ComputeSdom(&(tree_.at(idx_u))));
-        for (auto pred : bb->GetPredecesors()) {
-            ComputeAncestors(pred, pot_doms, w_dfs_idx);
+    for (auto w = tree_.begin() + 1; w != tree_.end(); ++w) {
+        if (w->dom->dfs_idx != w->semi->dfs_idx) {
+            w->dom = w->dom->dom;
+        }
+
+        w->bb->SetImmDominator(w->dom->bb);
+    }
+}
+
+void DomTree::ComputeSdoms()
+{
+    for (auto w = tree_.rbegin(); w != tree_.rend() - 1; ++w) {
+        for (auto v : w->pred) {
+            auto u = Eval(v);
+            if (u->semi < w->semi) {
+                w->semi = u->semi;
+            }
+        }
+
+        w->semi->bucket.push_back(&(*w));
+        Link(w->parent, &(*w));
+
+        for (const auto& v : w->parent->bucket) {
+            auto u = Eval(v);
+            v->dom = (u->semi->dfs_idx < v->semi->dfs_idx) ? u : w->parent;
         }
     }
 }
 
-DomTree::Node* DomTree::ComputeSdom(DomTree::Node* w)
+void DomTree::Link(Node* v, Node* w)
 {
-    assert(!w->bb->IsStartBlock());
+    w->ancestor = v;
+}
 
-    auto sdom = w->sdom;
-    if (sdom != nullptr) {
-        return sdom;
+DomTree::Node* DomTree::Eval(Node* v)
+{
+    if (v->ancestor == nullptr) {
+        return v;
+    }
+    Compress(v);
+
+    return v->label;
+}
+
+void DomTree::Compress(Node* v)
+{
+    assert(v->ancestor != nullptr);
+
+    if (v->ancestor->ancestor == nullptr) {
+        return;
     }
 
-    std::cout << "computing sdoms for " << IdToChar(w->bb->GetId()) << "\n";
+    Compress(v->ancestor);
 
-    std::vector<Node*> potential_sdoms{};
-
-    if (w->pred->dfs_idx < w->dfs_idx) {
-        potential_sdoms.push_back(w->pred);
+    if (v->ancestor->label->semi->dfs_idx < v->label->semi->dfs_idx) {
+        v->label = v->ancestor->label;
     }
 
-    for (auto v : w->bb->GetPredecesors()) {
-        for (auto u : v->GetPredecesors()) {
-            ComputeAncestors(u, &potential_sdoms, w->dfs_idx);
-        }
-    }
-
-    std::cout << "potential sdoms for " << IdToChar(w->bb->GetId()) << ": ";
-    for (auto node : potential_sdoms) {
-        std::cout << IdToChar(node->bb->GetId()) << " ";
-    }
-    std::cout << "\n";
-
-    auto comparator = [this](Node* lhs, Node* rhs) { return lhs->dfs_idx < rhs->dfs_idx; };
-
-    auto it = std::min_element(potential_sdoms.begin(), potential_sdoms.end(), comparator);
-
-    w->sdom = *it;
-
-    return w->sdom;
+    v->ancestor = v->ancestor->ancestor;
 }
 
 void DomTree::FillTree()
 {
-    dfs_bb_ = graph_->GetAnalyser()->GetValidPass<DFS>()->GetBlocks();
-    for (size_t i = 0; i < dfs_bb_.size(); ++i) {
-        auto bb = dfs_bb_.at(i);
-        tree_.emplace_back(bb);
+    auto dfs_bb = graph_->GetAnalyser()->GetValidPass<DFS>()->GetBlocks();
+    for (size_t i = 0; i < dfs_bb.size(); ++i) {
+        auto bb = dfs_bb.at(i);
         id_to_dfs_idx_[bb->GetId()] = i;
+        tree_.emplace_back(bb);
+        tree_.back().dfs_idx = i;
     }
 
-    FillTree_(&(tree_.at(0)));
+    auto root = &(tree_.at(0));
+    FillTree_(root);
 }
 
-void DomTree::FillTree_(Node* node)
+void DomTree::FillTree_(Node* v)
 {
-    auto analyser = graph_->GetAnalyser();
-    analyser->SetMark<DomTree, MarkType::IN_TREE>(node->bb->GetBits());
-
-    for (auto succ : node->bb->GetSuccessors()) {
-        if (!analyser->GetMark<DomTree, MarkType::IN_TREE>(*(succ->GetBits()))) {
-            auto succ_dfs_idx = id_to_dfs_idx_.at(succ->GetId());
-            auto succ_node = &(tree_.at(succ_dfs_idx));
-            succ_node->dfs_idx = succ_dfs_idx;
-            succ_node->pred = node;
-            node->succs.push_back(succ_node);
-
-            FillTree_(succ_node);
+    v->label = v;
+    v->semi = v;
+    for (auto w_bb : v->bb->GetSuccessors()) {
+        auto w = &(tree_.at(id_to_dfs_idx_.at(w_bb->GetId())));
+        if (w->semi == nullptr) {
+            w->parent = v;
+            FillTree_(w);
         }
+        w->pred.push_back(v);
     }
 }

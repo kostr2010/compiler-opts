@@ -10,12 +10,6 @@
 class DomTree : public Pass
 {
   public:
-    using Marks = MarksT<1>;
-    enum MarkType
-    {
-        IN_TREE = 0,
-    };
-
     DomTree(Graph* graph) : Pass(graph)
     {
     }
@@ -29,23 +23,32 @@ class DomTree : public Pass
         Node(BasicBlock* block) : bb(block)
         {
         }
+        NO_DEFAULT_CTOR(Node);
+        DEFAULT_DTOR(Node);
 
-        Node* sdom = nullptr;
-        Node* pred = nullptr;
-        std::vector<Node*> succs{};
+        Node* ancestor = nullptr;
+        Node* parent = nullptr;
+        Node* semi = nullptr;
+        Node* label = nullptr;
+        Node* dom = nullptr;
+
+        std::vector<Node*> bucket{};
+        std::vector<Node*> pred{};
 
         size_t dfs_idx{};
 
-        BasicBlock* bb = nullptr;
+        BasicBlock* bb;
     };
 
     void FillTree();
     void FillTree_(Node* node);
-    void ComputeAncestors(BasicBlock* bb, std::vector<Node*>* pot_doms, size_t w_dfs_idx);
-    Node* ComputeSdom(Node* node);
+    void ComputeDoms();
+    void ComputeSdoms();
+    void Link(Node* v, Node* w);
+    Node* Eval(Node* v);
+    void Compress(Node* v);
 
     std::unordered_map<IdType, size_t> id_to_dfs_idx_{};
-    std::vector<BasicBlock*> dfs_bb_;
     std::vector<Node> tree_{};
 };
 

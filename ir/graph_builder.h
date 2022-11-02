@@ -22,10 +22,7 @@ class GraphBuilder
     {
         SetGraph(g);
     }
-
-    ~GraphBuilder()
-    {
-    }
+    DEFAULT_DTOR(GraphBuilder);
 
     void SetGraph(Graph* g)
     {
