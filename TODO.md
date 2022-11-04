@@ -1,5 +1,11 @@
 - Add dependency tree of passes in Analyzer
 
-- add flags like "INVALIDATES_DOM_TREE" "INVALIDATES_RPO", check them whem doing pass (like AddBB, RemoveBB, etc)
+- ADD, ASHR, XOR peepholes
 
-- fill immediate dominator
+- back edge split
+
+- pre-header insertion
+
+- const fold / propagation
+
+- dce

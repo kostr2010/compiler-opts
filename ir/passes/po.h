@@ -1,5 +1,5 @@
-#ifndef __BFS_H_INCLUDED__
-#define __BFS_H_INCLUDED__
+#ifndef __PASS_PO_INCLUDED__
+#define __PASS_PO_INCLUDED__
 
 #include "pass.h"
 
@@ -7,7 +7,7 @@
 
 class BasicBlock;
 
-class BFS : public Pass
+class PO : public Pass
 {
   public:
     enum MarkType
@@ -17,20 +17,21 @@ class BFS : public Pass
     };
     using Marks = Pass::MarksT<MarkType::NUM_MARKS>;
 
-    BFS(Graph* graph) : Pass(graph)
+    PO(Graph* graph) : Pass(graph)
     {
     }
-    DEFAULT_DTOR(BFS);
+    DEFAULT_DTOR(PO);
 
     bool RunPass() override;
 
     std::vector<BasicBlock*> GetBlocks();
 
   private:
+    void RunPass_(BasicBlock* cur_bb);
     void ResetStructs();
     void ClearMarks();
 
-    std::vector<BasicBlock*> bfs_bb_{};
+    std::vector<BasicBlock*> po_bb_{};
 };
 
 #endif

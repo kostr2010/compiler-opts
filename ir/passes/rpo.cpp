@@ -4,15 +4,9 @@
 
 bool RPO::RunPass()
 {
-    rpo_bb_.clear();
-
+    ResetStructs();
     RunPass_(graph_->GetStartBasicBlock());
-
-    auto analyser = graph_->GetAnalyser();
-    for (auto& bb : rpo_bb_) {
-        analyser->ClearMark<RPO, MarkType::VISITED>(bb->GetBits());
-    }
-
+    ClearMarks();
     SetValid(true);
 
     return true;
@@ -37,5 +31,18 @@ void RPO::RunPass_(BasicBlock* cur_bb)
 
     for (const auto succ : cur_bb->GetSuccessors()) {
         RunPass_(succ);
+    }
+}
+
+void RPO::ResetStructs()
+{
+    rpo_bb_.clear();
+}
+
+void RPO::ClearMarks()
+{
+    auto analyser = graph_->GetAnalyser();
+    for (auto& bb : rpo_bb_) {
+        analyser->ClearMark<RPO, MarkType::VISITED>(bb->GetBits());
     }
 }

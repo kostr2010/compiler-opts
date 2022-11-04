@@ -10,11 +10,12 @@ class BasicBlock;
 class DFS : public Pass
 {
   public:
-    using Marks = Pass::MarksT<1>;
     enum MarkType
     {
         VISITED = 0,
+        NUM_MARKS,
     };
+    using Marks = Pass::MarksT<MarkType::NUM_MARKS>;
 
     DFS(Graph* graph) : Pass(graph)
     {
@@ -27,6 +28,8 @@ class DFS : public Pass
 
   private:
     void RunPass_(BasicBlock* cur_bb);
+    void ResetStructs();
+    void ClearMarks();
 
     std::vector<BasicBlock*> dfs_bb_{};
 };

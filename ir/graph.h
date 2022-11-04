@@ -37,6 +37,7 @@ class Graph
     }
 
     void ClearDominators();
+    void ClearLoops();
 
     void AddEdge(IdType from, IdType to)
     {
@@ -45,7 +46,6 @@ class Graph
 
         AddEdge(bb_from, bb_to);
     }
-
     void AddEdge(BasicBlock* from, BasicBlock* to);
 
     void RemoveEdge(IdType from, IdType to)
@@ -55,8 +55,11 @@ class Graph
 
         RemoveEdge(bb_from, bb_to);
     }
-
     void RemoveEdge(BasicBlock* from, BasicBlock* to);
+
+    void InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to);
+    void InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before);
+    void InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after);
 
     BasicBlock* NewBasicBlock();
 

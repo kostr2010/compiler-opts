@@ -27,8 +27,13 @@ void Graph::ClearDominators()
 {
     for (const auto& bb : bb_vector_) {
         bb->ClearImmDominator();
-        bb->ClearDominators();
-        bb->ClearDominated();
+    }
+}
+
+void Graph::ClearLoops()
+{
+    for (const auto& bb : bb_vector_) {
+        bb->SetLoop(nullptr);
     }
 }
 
@@ -50,6 +55,44 @@ void Graph::RemoveEdge(BasicBlock* from, BasicBlock* to)
 
     from->RemoveSucc(to);
     to->RemovePred(from);
+
+    analyser_.InvalidateCfgDependentPasses();
+}
+
+void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
+{
+    from->ReplaceSucc(to, bb);
+    to->ReplacePred(from, bb);
+
+    analyser_.InvalidateCfgDependentPasses();
+}
+
+void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
+{
+    assert(!before->GetPredecesors().empty());
+
+    for (const auto& pred : before->GetPredecesors()) {
+        pred->ReplaceSucc(before, bb);
+        before->RemovePred(pred);
+        bb->AddPred(pred);
+    }
+    AddEdge(bb, before);
+
+    analyser_.InvalidateCfgDependentPasses();
+}
+
+void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
+{
+    if (after->GetSuccessors().empty()) {
+        AddEdge(after, bb);
+    } else {
+        for (const auto& succ : after->GetSuccessors()) {
+            succ->ReplacePred(after, bb);
+            after->RemoveSucc(succ);
+            bb->AddSucc(succ);
+        }
+        AddEdge(after, bb);
+    }
 
     analyser_.InvalidateCfgDependentPasses();
 }

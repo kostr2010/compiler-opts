@@ -282,7 +282,7 @@ class GraphBuilder
                 }
 
                 for (auto input : phi->GetInputs()) {
-                    if (!input.GetInst()->GetBasicBlock()->HasDominated(input.GetSourceBB())) {
+                    if (!input.GetInst()->GetBasicBlock()->Dominates(input.GetSourceBB())) {
                         LOG_ERROR(
                             "BB: "
                             << bb->GetId() << ", INST_ID: " << phi->GetId()

@@ -6,7 +6,7 @@
 
 #include "pass.h"
 
-// FIXME:
+class BasicBlock;
 class DomTree : public Pass
 {
   public:
@@ -47,6 +47,7 @@ class DomTree : public Pass
     void Link(Node* v, Node* w);
     Node* Eval(Node* v);
     void Compress(Node* v);
+    void ResetStructs();
 
     std::unordered_map<IdType, size_t> id_to_dfs_idx_{};
     std::vector<Node> tree_{};

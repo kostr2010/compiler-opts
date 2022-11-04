@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "inst.h"
+#include "loop.h"
 #include "macros.h"
-
 #include "typedefs.h"
 
 class Graph;
@@ -19,20 +19,31 @@ class Graph;
 class BasicBlock
 {
   public:
-    BasicBlock(/* Graph* graph, */ const IdType& id) : id_(id)
+    BasicBlock(const IdType& id) : id_(id)
     {
-        // assert(graph != nullptr);
-        // graph_ = graph;
     }
+    NO_DEFAULT_CTOR(BasicBlock);
     DEFAULT_DTOR(BasicBlock);
 
     GETTER(Predecesors, preds_);
     GETTER(Successors, succs_);
-    GETTER(Dominated, dominated_);
-    GETTER(Dominators, dominators_);
     GETTER(LastInst, last_inst_);
     GETTER(Id, id_);
     GETTER_SETTER(ImmDominator, BasicBlock*, imm_dominator_);
+    GETTER(Loop, loop_);
+
+    void SetLoop(Loop* loop, bool is_header = false)
+    {
+        assert(loop != nullptr);
+
+        is_loop_header_ = is_header;
+        loop_ = loop;
+    }
+
+    bool IsLoopHeader()
+    {
+        return is_loop_header_;
+    }
 
     uint64_t* GetBits()
     {
@@ -54,62 +65,18 @@ class BasicBlock
         imm_dominator_ = nullptr;
     }
 
-    inline void ClearDominators()
-    {
-        dominators_.clear();
-    }
-
-    inline void ClearDominated()
-    {
-        dominated_.clear();
-    }
-
-    void AddDominator(BasicBlock* bb)
-    {
-        if (HasDominator(bb)) {
-            return;
-        }
-
-        dominators_.push_back(bb);
-    }
-
-    void AddDominated(BasicBlock* bb)
-    {
-        if (HasDominated(bb)) {
-            return;
-        }
-
-        dominated_.push_back(bb);
-    }
-
-    inline bool HasDominated(IdType bb_id)
-    {
-        return std::find_if(dominated_.begin(), dominated_.end(), [bb_id](BasicBlock* bb) {
-                   return bb->GetId() == bb_id;
-               }) != dominated_.end();
-    }
-
-    inline bool HasDominated(BasicBlock* bb)
+    bool Dominates(BasicBlock* bb) const
     {
         assert(bb != nullptr);
-        return std::find_if(dominated_.begin(), dominated_.end(), [bb](BasicBlock* d) {
-                   return bb->GetId() == d->GetId();
-               }) != dominated_.end();
-    }
 
-    inline bool HasDominator(IdType bb_id)
-    {
-        return std::find_if(dominators_.begin(), dominators_.end(), [bb_id](BasicBlock* bb) {
-                   return bb->GetId() == bb_id;
-               }) != dominators_.end();
-    }
-
-    inline bool HasDominator(BasicBlock* bb)
-    {
-        assert(bb != nullptr);
-        return std::find_if(dominators_.begin(), dominators_.end(), [bb](BasicBlock* d) {
-                   return bb->GetId() == d->GetId();
-               }) != dominators_.end();
+        auto dom = bb->GetImmDominator();
+        while (dom != nullptr) {
+            if (dom == this) {
+                return true;
+            }
+            dom = dom->GetImmDominator();
+        }
+        return false;
     }
 
     bool IsStartBlock() const;
@@ -125,6 +92,9 @@ class BasicBlock
     bool IsInPred(BasicBlock* bb) const;
     void RemovePred(BasicBlock* bb);
 
+    void ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new);
+    void ReplacePred(BasicBlock* bb_old, BasicBlock* bb_new);
+
     void PushBackInst(std::unique_ptr<Inst> inst);
     void PushFrontInst(std::unique_ptr<Inst> inst);
     void PushBackPhi(std::unique_ptr<Inst> inst);
@@ -134,13 +104,12 @@ class BasicBlock
   private:
     void SetFirstInst(std::unique_ptr<Inst> inst);
 
-    // Graph* graph_; // access to metadata
+    Loop* loop_ = nullptr;
+    bool is_loop_header_ = false;
 
     std::vector<BasicBlock*> preds_{}; // predecessors
     std::vector<BasicBlock*> succs_{}; // successors
 
-    std::vector<BasicBlock*> dominated_{};
-    std::vector<BasicBlock*> dominators_{};
     BasicBlock* imm_dominator_{ nullptr };
 
     const IdType id_;

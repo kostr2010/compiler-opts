@@ -21,47 +21,24 @@ int main()
     Graph g;
     GraphBuilder b(&g);
 
+    auto START = Graph::BB_START_ID;
     auto A = b.NewBlock();
     auto B = b.NewBlock();
     auto C = b.NewBlock();
     auto D = b.NewBlock();
     auto E = b.NewBlock();
-    auto F = b.NewBlock();
-    auto G = b.NewBlock();
-    auto H = b.NewBlock();
-    auto I = b.NewBlock();
-    auto J = b.NewBlock();
-    auto K = b.NewBlock();
-    auto L = b.NewBlock();
 
-    const auto START = Graph::BB_START_ID;
-    b.SetSuccessors(START, { C, B, A });
-    b.SetSuccessors(A, { D });
-    b.SetSuccessors(B, { E, A, D });
-    b.SetSuccessors(C, { F, G });
-    b.SetSuccessors(D, { L });
-    b.SetSuccessors(E, { H });
-    b.SetSuccessors(F, { I });
-    b.SetSuccessors(G, { I, J });
-    b.SetSuccessors(H, { E, K });
-    b.SetSuccessors(I, { K });
-    b.SetSuccessors(J, { I });
-    b.SetSuccessors(K, { I, START });
-    b.SetSuccessors(L, { H });
+    b.SetSuccessors(START, { E });
+    b.SetSuccessors(A, { E });
+    b.SetSuccessors(B, { A, E });
+    b.SetSuccessors(C, { E, B });
+    b.SetSuccessors(D, { C, E });
+    b.SetSuccessors(E, { D });
 
     b.ConstructCFG();
     b.ConstructDFG();
 
-    g.GetAnalyser()->RunPass<RPO>();
-    // g.GetAnalyser()->RunPass<DomTree>();
-
-    // for (const auto* bb : g.GetAnalyser()->GetPass<RPO>()->GetBlocks()) {
-    //     std::cout << IdToChar(bb->GetId()) << " : "
-    //               << ((bb->GetImmDominator()) ? IdToChar(bb->GetImmDominator()->GetId()) : '-')
-    //               << "\n";
-    // }
-
-    g.GetAnalyser()->RunPass<DomTree>();
+    g.GetAnalyser()->RunPass<LoopAnalysis>();
 
     return 0;
 }

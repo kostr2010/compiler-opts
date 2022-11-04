@@ -9,6 +9,7 @@ bool DomTree::RunPass()
 {
     graph_->ClearDominators();
 
+    ResetStructs();
     FillTree();
     ComputeSdoms();
     ComputeDoms();
@@ -84,6 +85,7 @@ void DomTree::Compress(Node* v)
 void DomTree::FillTree()
 {
     auto dfs_bb = graph_->GetAnalyser()->GetValidPass<DFS>()->GetBlocks();
+    tree_.reserve(dfs_bb.size());
     for (size_t i = 0; i < dfs_bb.size(); ++i) {
         auto bb = dfs_bb.at(i);
         id_to_dfs_idx_[bb->GetId()] = i;
@@ -107,4 +109,10 @@ void DomTree::FillTree_(Node* v)
         }
         w->pred.push_back(v);
     }
+}
+
+void DomTree::ResetStructs()
+{
+    tree_.clear();
+    id_to_dfs_idx_.clear();
 }

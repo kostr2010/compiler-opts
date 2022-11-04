@@ -21,8 +21,7 @@ class Pass
         {
             static_assert(N_TH_BIT < N_BITS);
             static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            constexpr MarkHolderT MASK = (1ULL << (OFFT + N_TH_BIT));
-            (*ptr) |= MASK;
+            (*ptr) |= (1ULL << (OFFT + N_TH_BIT));
         }
 
         template <uint8_t OFFT, uint8_t N_TH_BIT>
@@ -30,8 +29,7 @@ class Pass
         {
             static_assert(N_TH_BIT < N_BITS);
             static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            constexpr MarkHolderT MASK = ~(1ULL << (OFFT + N_TH_BIT));
-            (*ptr) &= MASK;
+            (*ptr) &= ~(1ULL << (OFFT + N_TH_BIT));
         }
 
         template <uint8_t OFFT, uint8_t N_TH_BIT>
@@ -39,8 +37,7 @@ class Pass
         {
             static_assert(N_TH_BIT < N_BITS);
             static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            constexpr MarkHolderT MASK = (1ULL << (OFFT + N_TH_BIT));
-            return ptr & MASK;
+            return ptr & (1ULL << (OFFT + N_TH_BIT));
         }
     };
 

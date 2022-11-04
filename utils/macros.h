@@ -1,6 +1,9 @@
 #ifndef __MACROS_H_INCLUDED__
 #define __MACROS_H_INCLUDED__
 
+#define DEFAULT_MOVE_CTOR(class_name) class_name(class_name&& other) = default;
+#define NO_DEFAULT_MOVE_CTOR(class_name) class_name(class_name&& other) = delete;
+
 #define DEFAULT_DTOR(class_name) ~class_name() = default
 #define DEFAULT_CTOR(class_name) class_name() = default
 

@@ -6,7 +6,7 @@
 
 bool BFS::RunPass()
 {
-    bfs_bb_.clear();
+    ResetStructs();
 
     std::list<BasicBlock*> queue{};
 
@@ -32,10 +32,7 @@ bool BFS::RunPass()
         }
     }
 
-    for (auto& b : bfs_bb_) {
-        analyser->ClearMark<BFS, MarkType::VISITED>(b->GetBits());
-    }
-
+    ClearMarks();
     SetValid(true);
 
     return true;
@@ -44,4 +41,17 @@ bool BFS::RunPass()
 std::vector<BasicBlock*> BFS::GetBlocks()
 {
     return bfs_bb_;
+}
+
+void BFS::ResetStructs()
+{
+    bfs_bb_.clear();
+}
+
+void BFS::ClearMarks()
+{
+    auto analyser = graph_->GetAnalyser();
+    for (auto& bb : bfs_bb_) {
+        analyser->ClearMark<DFS, MarkType::VISITED>(bb->GetBits());
+    }
 }

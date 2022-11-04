@@ -9,7 +9,7 @@ void BasicBlock::AddSucc(BasicBlock* bb)
         return;
     }
 
-    succs_.push_back(bb);
+    succs_.emplace_back(bb);
 }
 
 bool BasicBlock::IsInSucc(IdType bb_id) const
@@ -45,7 +45,7 @@ void BasicBlock::AddPred(BasicBlock* bb)
         return;
     }
 
-    preds_.push_back(bb);
+    preds_.emplace_back(bb);
 }
 
 bool BasicBlock::IsInPred(IdType bb_id) const
@@ -71,6 +71,20 @@ void BasicBlock::RemovePred(BasicBlock* bb)
 
     preds_.erase(std::find_if(preds_.begin(), preds_.end(),
                               [bb](BasicBlock* p) { return bb->GetId() == p->GetId(); }));
+}
+
+void BasicBlock::ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new)
+{
+    std::replace_if(
+        succs_.begin(), succs_.end(),
+        [bb_old](BasicBlock* bb) { return bb->GetId() == bb_old->GetId(); }, bb_new);
+}
+
+void BasicBlock::ReplacePred(BasicBlock* bb_old, BasicBlock* bb_new)
+{
+    std::replace_if(
+        preds_.begin(), preds_.end(),
+        [bb_old](BasicBlock* bb) { return bb->GetId() == bb_old->GetId(); }, bb_new);
 }
 
 void BasicBlock::PushBackInst(std::unique_ptr<Inst> inst)

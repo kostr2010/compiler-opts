@@ -4,15 +4,9 @@
 
 bool DFS::RunPass()
 {
-    dfs_bb_.clear();
-
+    ResetStructs();
     RunPass_(graph_->GetStartBasicBlock());
-
-    auto analyser = graph_->GetAnalyser();
-    for (auto& bb : dfs_bb_) {
-        analyser->ClearMark<DFS, MarkType::VISITED>(bb->GetBits());
-    }
-
+    ClearMarks();
     SetValid(true);
 
     return true;
@@ -26,16 +20,27 @@ std::vector<BasicBlock*> DFS::GetBlocks()
 void DFS::RunPass_(BasicBlock* cur_bb)
 {
     auto analyser = graph_->GetAnalyser();
-    auto bits = cur_bb->GetBits();
 
-    if (analyser->GetMark<DFS, MarkType::VISITED>(*bits)) {
-        return;
-    }
-
-    analyser->SetMark<DFS, MarkType::VISITED>(bits);
+    analyser->SetMark<DFS, MarkType::VISITED>(cur_bb->GetBits());
     dfs_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
+        if (analyser->GetMark<DFS, MarkType::VISITED>(*(succ->GetBits()))) {
+            continue;
+        }
         RunPass_(succ);
+    }
+}
+
+void DFS::ResetStructs()
+{
+    dfs_bb_.clear();
+}
+
+void DFS::ClearMarks()
+{
+    auto analyser = graph_->GetAnalyser();
+    for (auto& bb : dfs_bb_) {
+        analyser->ClearMark<DFS, MarkType::VISITED>(bb->GetBits());
     }
 }

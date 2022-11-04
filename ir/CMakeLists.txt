@@ -7,14 +7,14 @@ add_library(ir SHARED
     graph_builder.cpp
     graph.cpp
     inst.cpp
+    loop.cpp
     analyser.cpp
     ${PASSES_DIR}/rpo.cpp
+    ${PASSES_DIR}/po.cpp
     ${PASSES_DIR}/dfs.cpp
     ${PASSES_DIR}/bfs.cpp
     ${PASSES_DIR}/dom_tree.cpp
-    ${PASSES_DIR}/dom_tree_slow.cpp
+    ${PASSES_DIR}/loop_analysis.cpp
 )
 
 target_include_directories(ir PUBLIC ${CMAKE_SOURCE_DIR}/utils ${CMAKE_CURRENT_SOURCE_DIR})
-
-# add_subdirectory(passes)

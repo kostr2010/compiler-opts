@@ -5,8 +5,9 @@
 #include "passes/bfs.h"
 #include "passes/dfs.h"
 #include "passes/dom_tree.h"
-#include "passes/dom_tree_slow.h"
+#include "passes/loop_analysis.h"
 #include "passes/pass.h"
+#include "passes/po.h"
 #include "passes/rpo.h"
 #include "typedefs.h"
 
@@ -106,7 +107,7 @@ class Passes
     }
 };
 
-using PassesList = Passes<DomTree, DomTreeSlow, DFS, BFS, RPO>;
+using PassesList = Passes<DomTree, LoopAnalysis, DFS, BFS, RPO, PO>;
 
 class Analyser
 {
@@ -150,8 +151,7 @@ class Analyser
         static_assert(N < PassT::Marks::LEN);
         static_assert(PassesList::GetMarkOfft<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
 
-        constexpr auto OFFT = PassesList::GetMarkOfft<PassT>();
-        PassT::Marks::template Set<OFFT, N>(ptr);
+        PassT::Marks::template Set<PassesList::GetMarkOfft<PassT>::value, N>(ptr);
     }
 
     template <typename PassT, size_t N>
@@ -162,8 +162,7 @@ class Analyser
         static_assert(N < PassT::Marks::LEN);
         static_assert(PassesList::GetMarkOfft<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
 
-        constexpr auto OFFT = PassesList::GetMarkOfft<PassT>();
-        PassT::Marks::template Clear<OFFT, N>(ptr);
+        PassT::Marks::template Clear<PassesList::GetMarkOfft<PassT>::value, N>(ptr);
     }
 
     template <typename PassT, size_t N>
@@ -174,8 +173,7 @@ class Analyser
         static_assert(N < PassT::Marks::LEN);
         static_assert(PassesList::GetMarkOfft<PassT>() + N < sizeof(MarkHolderT) * BITS_IN_BYTE);
 
-        constexpr auto OFFT = PassesList::GetMarkOfft<PassT>();
-        return PassT::Marks::template Get<OFFT, N>(ptr);
+        return PassT::Marks::template Get<PassesList::GetMarkOfft<PassT>::value, N>(ptr);
     }
 
     template <typename PassT>
@@ -189,8 +187,9 @@ class Analyser
         GetPass<DFS>()->SetValid(false);
         GetPass<BFS>()->SetValid(false);
         GetPass<RPO>()->SetValid(false);
+        GetPass<PO>()->SetValid(false);
         GetPass<DomTree>()->SetValid(false);
-        GetPass<DomTreeSlow>()->SetValid(false);
+        GetPass<LoopAnalysis>()->SetValid(false);
     }
 
   private:

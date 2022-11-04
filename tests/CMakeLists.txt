@@ -1,6 +1,7 @@
 set(TESTS 
     rpo_test.cpp
     dom_tree_test.cpp
+    loop_analysis_test.cpp
     basic_test.cpp
     main.cpp
     )
