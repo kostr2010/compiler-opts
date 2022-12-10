@@ -208,8 +208,6 @@ TEST(TestLoopAnalysis, Example3)
     ASSERT_EQ(root->GetOuterLoop(), nullptr);
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
-    // FIXME: is it correct?
-
     ASSERT_EQ(g.GetBasicBlock(A)->GetSuccessors().size(), 1);
     auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
     CheckPredecessors(B_, { A });

@@ -2,7 +2,6 @@
 #include "loop_analysis.h"
 #include "bb.h"
 #include "graph.h"
-#include "loop.h"
 
 bool LoopAnalysis::RunPass()
 {
@@ -22,17 +21,16 @@ bool LoopAnalysis::RunPass()
 
 void LoopAnalysis::CollectBackEdges(BasicBlock* bb)
 {
-    auto analyser = graph_->GetAnalyser();
-    auto bb_bits = bb->GetBits();
+    auto bb_bits = bb->GetMarkHolder();
 
-    analyser->SetMark<LoopAnalysis, MarkType::GREY>(bb_bits);
-    analyser->SetMark<LoopAnalysis, MarkType::BLACK>(bb_bits);
+    marking::Marker::SetMark<LoopAnalysis, Marks::GREY>(bb_bits);
+    marking::Marker::SetMark<LoopAnalysis, Marks::BLACK>(bb_bits);
     id_to_dfs_idx_[bb->GetId()] = id_to_dfs_idx_.size();
 
     for (const auto& succ : bb->GetSuccessors()) {
-        auto succ_bits = *(succ->GetBits());
+        auto succ_bits = *(succ->GetMarkHolder());
 
-        if (analyser->GetMark<LoopAnalysis, MarkType::GREY>(succ_bits)) {
+        if (marking::Marker::GetMark<LoopAnalysis, Marks::GREY>(succ_bits)) {
             auto loop = succ->GetLoop();
             bool need_new_loop = (loop == nullptr);
 
@@ -44,14 +42,14 @@ void LoopAnalysis::CollectBackEdges(BasicBlock* bb)
             }
         }
 
-        if (analyser->GetMark<LoopAnalysis, MarkType::BLACK>(succ_bits)) {
+        if (marking::Marker::GetMark<LoopAnalysis, Marks::BLACK>(succ_bits)) {
             continue;
         }
 
         CollectBackEdges(succ);
     }
 
-    analyser->ClearMark<LoopAnalysis, MarkType::GREY>(bb_bits);
+    marking::Marker::ClearMark<LoopAnalysis, Marks::GREY>(bb_bits);
 }
 
 void LoopAnalysis::PopulateLoops()
@@ -65,11 +63,10 @@ void LoopAnalysis::PopulateLoops()
 
 void LoopAnalysis::ClearLoopMarks(Loop* loop)
 {
-    auto analyser = graph_->GetAnalyser();
     for (const auto& bb : loop->GetBlocks()) {
-        analyser->ClearMark<LoopAnalysis, MarkType::GREEN>(bb->GetBits());
+        marking::Marker::ClearMark<LoopAnalysis, Marks::GREEN>(bb->GetMarkHolder());
     }
-    analyser->ClearMark<LoopAnalysis, MarkType::GREEN>(loop->GetHeader()->GetBits());
+    marking::Marker::ClearMark<LoopAnalysis, Marks::GREEN>(loop->GetHeader()->GetMarkHolder());
     for (const auto& l : loop->GetInnerLoops()) {
         ClearLoopMarks(l);
     }
@@ -78,8 +75,7 @@ void LoopAnalysis::ClearLoopMarks(Loop* loop)
 void LoopAnalysis::PopulateLoop(Loop* loop)
 {
     if (loop->IsReducible()) {
-        auto analyser = graph_->GetAnalyser();
-        analyser->SetMark<LoopAnalysis, MarkType::GREEN>(loop->GetHeader()->GetBits());
+        marking::Marker::SetMark<LoopAnalysis, Marks::GREEN>(loop->GetHeader()->GetMarkHolder());
 
         for (const auto& bck : loop->GetBackEdges()) {
             RunLoopSearch(loop, bck);
@@ -100,8 +96,7 @@ void LoopAnalysis::PopulateLoop(Loop* loop)
 
 void LoopAnalysis::RunLoopSearch(Loop* cur_loop, BasicBlock* cur_bb)
 {
-    auto analyser = graph_->GetAnalyser();
-    analyser->SetMark<LoopAnalysis, MarkType::GREEN>(cur_bb->GetBits());
+    marking::Marker::SetMark<LoopAnalysis, Marks::GREEN>(cur_bb->GetMarkHolder());
 
     auto cur_bb_loop = cur_bb->GetLoop();
 
@@ -115,7 +110,7 @@ void LoopAnalysis::RunLoopSearch(Loop* cur_loop, BasicBlock* cur_bb)
     }
 
     for (const auto& bb : cur_bb->GetPredecesors()) {
-        if (!analyser->GetMark<LoopAnalysis, MarkType::GREEN>(*(bb->GetBits()))) {
+        if (!marking::Marker::GetMark<LoopAnalysis, Marks::GREEN>(*(bb->GetMarkHolder()))) {
             RunLoopSearch(cur_loop, bb);
         }
     }
@@ -173,6 +168,7 @@ void LoopAnalysis::AddPreHeaders()
             continue;
         }
         AddPreHeader(loop->get());
+        ReconstructPhi(loop->get());
     }
 }
 
@@ -192,6 +188,11 @@ void LoopAnalysis::AddPreHeader(Loop* loop)
     for (const auto& bck : loop->GetBackEdges()) {
         head->AddPred(bck);
     }
+}
+
+void LoopAnalysis::ReconstructPhi(Loop* loop)
+{
+    loop->GetId();
 }
 
 void LoopAnalysis::PopulateRootLoop()
@@ -225,13 +226,11 @@ void LoopAnalysis::ResetStructs()
 
 void LoopAnalysis::ClearMarks()
 {
-    auto analyser = graph_->GetAnalyser();
-
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
-        auto bits = bb->GetBits();
-        analyser->ClearMark<LoopAnalysis, MarkType::GREY>(bits);
-        analyser->ClearMark<LoopAnalysis, MarkType::BLACK>(bits);
-        analyser->ClearMark<LoopAnalysis, MarkType::GREEN>(bits);
+        auto bits = bb->GetMarkHolder();
+        marking::Marker::ClearMark<LoopAnalysis, Marks::GREY>(bits);
+        marking::Marker::ClearMark<LoopAnalysis, Marks::BLACK>(bits);
+        marking::Marker::ClearMark<LoopAnalysis, Marks::GREEN>(bits);
     }
 }
 
@@ -253,6 +252,6 @@ void LoopAnalysis::RecalculateLoopsReducibility()
     analyser->RunPass<DomTree>();
 
     for (const auto& loop : loops_) {
-        loop->RecalculateReducibility();
+        loop->CalculateReducibility();
     }
 }

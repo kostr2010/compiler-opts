@@ -11,9 +11,8 @@ bool BFS::RunPass()
     std::list<BasicBlock*> queue{};
 
     auto bb = graph_->GetStartBasicBlock();
-    auto analyser = graph_->GetAnalyser();
 
-    analyser->SetMark<BFS, MarkType::VISITED>(bb->GetBits());
+    marking::Marker::SetMark<BFS, Marks::VISITED>(bb->GetMarkHolder());
     queue.push_back(bb);
 
     while (!queue.empty()) {
@@ -22,12 +21,12 @@ bool BFS::RunPass()
         queue.pop_front();
 
         for (auto b : bb->GetSuccessors()) {
-            auto bits = b->GetBits();
-            if (analyser->GetMark<BFS, MarkType::VISITED>(*bits)) {
+            auto bits = b->GetMarkHolder();
+            if (marking::Marker::GetMark<BFS, Marks::VISITED>(*bits)) {
                 continue;
             }
 
-            analyser->SetMark<BFS, MarkType::VISITED>(bits);
+            marking::Marker::SetMark<BFS, Marks::VISITED>(bits);
             queue.push_back(b);
         }
     }
@@ -50,8 +49,7 @@ void BFS::ResetStructs()
 
 void BFS::ClearMarks()
 {
-    auto analyser = graph_->GetAnalyser();
     for (auto& bb : bfs_bb_) {
-        analyser->ClearMark<DFS, MarkType::VISITED>(bb->GetBits());
+        marking::Marker::ClearMark<DFS, Marks::VISITED>(bb->GetMarkHolder());
     }
 }

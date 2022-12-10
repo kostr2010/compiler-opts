@@ -26,28 +26,13 @@ class Loop
     GETTER_SETTER(OuterLoop, Loop*, outer_loop_);
     GETTER_SETTER(PreHeader, BasicBlock*, pre_header_);
 
-    bool IsRoot() const
-    {
-        return outer_loop_ == nullptr;
-    }
-
-    void RecalculateReducibility();
-    bool IsReducible() const
-    {
-        return is_reducible_;
-    }
-
-    void AddInnerLoop(Loop* loop)
-    {
-        inner_loops_.push_back(loop);
-    }
-
+    bool IsRoot() const;
+    void CalculateReducibility();
+    bool IsReducible() const;
+    void AddInnerLoop(Loop* loop);
     void AddBlock(BasicBlock* bb);
     void AddBackEdge(BasicBlock* bb);
-    void ClearBackEdges()
-    {
-        back_edges_.clear();
-    }
+    void ClearBackEdges();
 
     void Dump();
 

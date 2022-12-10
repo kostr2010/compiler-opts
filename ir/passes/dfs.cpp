@@ -19,13 +19,11 @@ std::vector<BasicBlock*> DFS::GetBlocks()
 
 void DFS::RunPass_(BasicBlock* cur_bb)
 {
-    auto analyser = graph_->GetAnalyser();
-
-    analyser->SetMark<DFS, MarkType::VISITED>(cur_bb->GetBits());
+    marking::Marker::SetMark<DFS, Marks::VISITED>(cur_bb->GetMarkHolder());
     dfs_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
-        if (analyser->GetMark<DFS, MarkType::VISITED>(*(succ->GetBits()))) {
+        if (marking::Marker::GetMark<DFS, Marks::VISITED>(*(succ->GetMarkHolder()))) {
             continue;
         }
         RunPass_(succ);
@@ -39,8 +37,7 @@ void DFS::ResetStructs()
 
 void DFS::ClearMarks()
 {
-    auto analyser = graph_->GetAnalyser();
     for (auto& bb : dfs_bb_) {
-        analyser->ClearMark<DFS, MarkType::VISITED>(bb->GetBits());
+        marking::Marker::ClearMark<DFS, Marks::VISITED>(bb->GetMarkHolder());
     }
 }

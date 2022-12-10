@@ -10,12 +10,16 @@ class BasicBlock;
 class RPO : public Pass
 {
   public:
-    enum MarkType
+    enum Marks
     {
         VISITED = 0,
-        NUM_MARKS,
+        N_MARKS,
     };
-    using Marks = Pass::MarksT<MarkType::NUM_MARKS>;
+
+    static constexpr size_t GetNumMarks()
+    {
+        return Marks::N_MARKS;
+    }
 
     RPO(Graph* graph) : Pass(graph)
     {

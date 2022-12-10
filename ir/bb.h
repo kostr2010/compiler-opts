@@ -12,11 +12,12 @@
 #include "inst.h"
 #include "loop.h"
 #include "macros.h"
+#include "marker.h"
 #include "typedefs.h"
 
 class Graph;
 
-class BasicBlock
+class BasicBlock : public marking::Markable
 {
   public:
     BasicBlock(const IdType& id) : id_(id)
@@ -43,11 +44,6 @@ class BasicBlock
     bool IsLoopHeader()
     {
         return is_loop_header_;
-    }
-
-    uint64_t* GetBits()
-    {
-        return &bits;
     }
 
     inline Inst* GetFirstPhi()
@@ -117,8 +113,6 @@ class BasicBlock
     std::unique_ptr<Inst> first_inst_{ nullptr };
     Inst* last_inst_{ nullptr };
     std::unique_ptr<Inst> first_phi_{ nullptr };
-
-    MarkHolderT bits{};
 };
 
 #endif

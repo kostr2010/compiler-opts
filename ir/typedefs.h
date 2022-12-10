@@ -8,8 +8,4 @@ typedef size_t IdType;
 typedef int ImmType;
 typedef size_t ArgNumType;
 
-typedef uint64_t MarkHolderT;
-
-#define BITS_IN_BYTE 8
-
 #endif

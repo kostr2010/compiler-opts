@@ -19,14 +19,13 @@ std::vector<BasicBlock*> RPO::GetBlocks()
 
 void RPO::RunPass_(BasicBlock* cur_bb)
 {
-    auto analyser = graph_->GetAnalyser();
-    auto bits = cur_bb->GetBits();
+    auto bits = cur_bb->GetMarkHolder();
 
-    if (analyser->GetMark<RPO, MarkType::VISITED>(*bits)) {
+    if (marking::Marker::GetMark<RPO, Marks::VISITED>(*bits)) {
         return;
     }
 
-    analyser->SetMark<RPO, MarkType::VISITED>(bits);
+    marking::Marker::SetMark<RPO, Marks::VISITED>(bits);
     rpo_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
@@ -41,8 +40,7 @@ void RPO::ResetStructs()
 
 void RPO::ClearMarks()
 {
-    auto analyser = graph_->GetAnalyser();
     for (auto& bb : rpo_bb_) {
-        analyser->ClearMark<RPO, MarkType::VISITED>(bb->GetBits());
+        marking::Marker::ClearMark<RPO, Marks::VISITED>(bb->GetMarkHolder());
     }
 }

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "loop.h"
 #include "pass.h"
 
 class BasicBlock;
@@ -13,14 +14,18 @@ class Loop;
 class LoopAnalysis : public Pass
 {
   public:
-    enum MarkType
+    enum Marks
     {
         GREY = 0,
         BLACK,
         GREEN,
-        NUM_MARKS,
+        N_MARKS,
     };
-    using Marks = Pass::MarksT<MarkType::NUM_MARKS>;
+
+    static constexpr size_t GetNumMarks()
+    {
+        return Marks::N_MARKS;
+    }
 
     LoopAnalysis(Graph* graph) : Pass(graph)
     {
@@ -45,6 +50,7 @@ class LoopAnalysis : public Pass
     void SplitBackEdge(Loop* loop);
     void AddPreHeaders();
     void AddPreHeader(Loop* loop);
+    void ReconstructPhi(Loop* loop);
     void PopulateRootLoop();
     void BuildLoopTree();
     void ResetStructs();

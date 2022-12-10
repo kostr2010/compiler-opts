@@ -1,6 +1,8 @@
 #ifndef __MACROS_H_INCLUDED__
 #define __MACROS_H_INCLUDED__
 
+#define BITS_IN_BYTE 8
+
 #define DEFAULT_MOVE_CTOR(class_name) class_name(class_name&& other) = default;
 #define NO_DEFAULT_MOVE_CTOR(class_name) class_name(class_name&& other) = delete;
 

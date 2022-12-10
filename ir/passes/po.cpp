@@ -19,14 +19,13 @@ std::vector<BasicBlock*> PO::GetBlocks()
 
 void PO::RunPass_(BasicBlock* cur_bb)
 {
-    auto analyser = graph_->GetAnalyser();
-    auto bits = cur_bb->GetBits();
+    auto bits = cur_bb->GetMarkHolder();
 
-    if (analyser->GetMark<PO, MarkType::VISITED>(*bits)) {
+    if (marking::Marker::GetMark<PO, Marks::VISITED>(*bits)) {
         return;
     }
 
-    analyser->SetMark<PO, MarkType::VISITED>(bits);
+    marking::Marker::SetMark<PO, Marks::VISITED>(bits);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
         RunPass_(succ);
@@ -42,8 +41,7 @@ void PO::ResetStructs()
 
 void PO::ClearMarks()
 {
-    auto analyser = graph_->GetAnalyser();
     for (auto& bb : po_bb_) {
-        analyser->ClearMark<PO, MarkType::VISITED>(bb->GetBits());
+        marking::Marker::ClearMark<PO, Marks::VISITED>(bb->GetMarkHolder());
     }
 }

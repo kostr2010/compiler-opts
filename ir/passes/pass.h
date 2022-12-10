@@ -9,38 +9,6 @@ class Graph;
 class Pass
 {
   public:
-    template <uint8_t N_BITS>
-    struct MarksT
-    {
-        NO_DEFAULT_CTOR(MarksT);
-        NO_DEFAULT_DTOR(MarksT);
-        static constexpr uint8_t LEN = N_BITS;
-
-        template <uint8_t OFFT, uint8_t N_TH_BIT>
-        static constexpr void Set(MarkHolderT* ptr)
-        {
-            static_assert(N_TH_BIT < N_BITS);
-            static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            (*ptr) |= (1ULL << (OFFT + N_TH_BIT));
-        }
-
-        template <uint8_t OFFT, uint8_t N_TH_BIT>
-        static constexpr void Clear(MarkHolderT* ptr)
-        {
-            static_assert(N_TH_BIT < N_BITS);
-            static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            (*ptr) &= ~(1ULL << (OFFT + N_TH_BIT));
-        }
-
-        template <uint8_t OFFT, uint8_t N_TH_BIT>
-        static constexpr bool Get(const MarkHolderT& ptr)
-        {
-            static_assert(N_TH_BIT < N_BITS);
-            static_assert((OFFT + N_TH_BIT) <= (sizeof(MarkHolderT) * BITS_IN_BYTE));
-            return ptr & (1ULL << (OFFT + N_TH_BIT));
-        }
-    };
-
     Pass(Graph* g) : graph_{ g }
     {
     }
@@ -48,6 +16,11 @@ class Pass
     GETTER_SETTER(Valid, bool, is_valid_);
 
     virtual bool RunPass() = 0;
+
+    static constexpr size_t GetNumMarks()
+    {
+        return 0;
+    }
 
   protected:
     Graph* graph_;

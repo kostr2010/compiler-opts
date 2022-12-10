@@ -25,36 +25,16 @@ class Graph
     }
     DEFAULT_DTOR(Graph);
 
-    BasicBlock* GetStartBasicBlock() const
-    {
-        return bb_start_;
-    }
-
-    BasicBlock* GetBasicBlock(IdType bb_id) const
-    {
-        assert(bb_id < bb_vector_.size());
-        return bb_vector_.at(bb_id).get();
-    }
+    BasicBlock* GetStartBasicBlock() const;
+    BasicBlock* GetBasicBlock(IdType bb_id) const;
 
     void ClearDominators();
     void ClearLoops();
 
-    void AddEdge(IdType from, IdType to)
-    {
-        auto bb_to = bb_vector_.at(to).get();
-        auto bb_from = bb_vector_.at(from).get();
-
-        AddEdge(bb_from, bb_to);
-    }
+    void AddEdge(IdType from, IdType to);
     void AddEdge(BasicBlock* from, BasicBlock* to);
 
-    void RemoveEdge(IdType from, IdType to)
-    {
-        auto bb_to = bb_vector_.at(to).get();
-        auto bb_from = bb_vector_.at(from).get();
-
-        RemoveEdge(bb_from, bb_to);
-    }
+    void RemoveEdge(IdType from, IdType to);
     void RemoveEdge(BasicBlock* from, BasicBlock* to);
 
     void InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to);

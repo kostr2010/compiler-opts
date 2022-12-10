@@ -2,6 +2,7 @@
 #include "ir/bb.h"
 #include "ir/graph.h"
 #include "ir/graph_builder.h"
+#include "ir/marker.h"
 
 #include <bitset>
 #include <iostream>
@@ -18,28 +19,13 @@ static inline char IdToChar(IdType id)
 
 int main()
 {
-    Graph g;
-    GraphBuilder b(&g);
-
-    auto START = Graph::BB_START_ID;
-    auto A = b.NewBlock();
-    auto B = b.NewBlock();
-    auto C = b.NewBlock();
-    auto D = b.NewBlock();
-    auto E = b.NewBlock();
-
-    b.SetSuccessors(START, { E });
-    b.SetSuccessors(A, { E });
-    b.SetSuccessors(B, { A, E });
-    b.SetSuccessors(C, { E, B });
-    b.SetSuccessors(D, { C, E });
-    b.SetSuccessors(E, { D });
-
-    b.ConstructCFG();
-    b.ConstructDFG();
-
-    g.GetAnalyser()->RunPass<LoopAnalysis>();
-
+    // using ActivePasses = PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO>;
+    // std::cout << "DomTree " << marking::Marker::GetMarkOffset<DomTree>() << "\n";
+    // std::cout << "LoopAnalysis " << marking::Marker::GetMarkOffset<LoopAnalysis>() << "\n";
+    // std::cout << "DFS " << marking::Marker::GetMarkOffset<DFS>() << "\n";
+    // std::cout << "BFS " << marking::Marker::GetMarkOffset<BFS>() << "\n";
+    // std::cout << "RPO " << marking::Marker::GetMarkOffset<RPO>() << "\n";
+    // std::cout << "PO " << marking::Marker::GetMarkOffset<PO>() << "\n";
     return 0;
 }
 

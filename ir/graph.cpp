@@ -1,6 +1,17 @@
 #include "graph.h"
 #include "bb.h"
 
+BasicBlock* Graph::GetStartBasicBlock() const
+{
+    return bb_start_;
+}
+
+BasicBlock* Graph::GetBasicBlock(IdType bb_id) const
+{
+    assert(bb_id < bb_vector_.size());
+    return bb_vector_.at(bb_id).get();
+}
+
 void Graph::InitStartBlock()
 {
     assert(bb_vector_.empty());
@@ -37,6 +48,14 @@ void Graph::ClearLoops()
     }
 }
 
+void Graph::AddEdge(IdType from, IdType to)
+{
+    auto bb_to = bb_vector_.at(to).get();
+    auto bb_from = bb_vector_.at(from).get();
+
+    AddEdge(bb_from, bb_to);
+}
+
 void Graph::AddEdge(BasicBlock* from, BasicBlock* to)
 {
     assert(to != nullptr);
@@ -45,7 +64,15 @@ void Graph::AddEdge(BasicBlock* from, BasicBlock* to)
     from->AddSucc(to);
     to->AddPred(from);
 
-    analyser_.InvalidateCfgDependentPasses();
+    analyser_.InvalidateCfgDependentActivePasses();
+}
+
+void Graph::RemoveEdge(IdType from, IdType to)
+{
+    auto bb_to = bb_vector_.at(to).get();
+    auto bb_from = bb_vector_.at(from).get();
+
+    RemoveEdge(bb_from, bb_to);
 }
 
 void Graph::RemoveEdge(BasicBlock* from, BasicBlock* to)
@@ -56,7 +83,7 @@ void Graph::RemoveEdge(BasicBlock* from, BasicBlock* to)
     from->RemoveSucc(to);
     to->RemovePred(from);
 
-    analyser_.InvalidateCfgDependentPasses();
+    analyser_.InvalidateCfgDependentActivePasses();
 }
 
 void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
@@ -64,7 +91,7 @@ void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
     from->ReplaceSucc(to, bb);
     to->ReplacePred(from, bb);
 
-    analyser_.InvalidateCfgDependentPasses();
+    analyser_.InvalidateCfgDependentActivePasses();
 }
 
 void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
@@ -78,7 +105,7 @@ void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
     }
     AddEdge(bb, before);
 
-    analyser_.InvalidateCfgDependentPasses();
+    analyser_.InvalidateCfgDependentActivePasses();
 }
 
 void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
@@ -94,5 +121,5 @@ void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
         AddEdge(after, bb);
     }
 
-    analyser_.InvalidateCfgDependentPasses();
+    analyser_.InvalidateCfgDependentActivePasses();
 }

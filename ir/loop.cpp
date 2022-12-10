@@ -3,11 +3,16 @@
 
 Loop::Loop(IdType id, BasicBlock* header, BasicBlock* back_edge) : id_(id), header_(header)
 {
-    is_reducible_ = header_->Dominates(back_edge);
     AddBackEdge(back_edge);
+    CalculateReducibility();
 }
 
-void Loop::RecalculateReducibility()
+bool Loop::IsRoot() const
+{
+    return outer_loop_ == nullptr;
+}
+
+void Loop::CalculateReducibility()
 {
     if (header_ == nullptr || back_edges_.empty()) {
         return;
@@ -17,6 +22,16 @@ void Loop::RecalculateReducibility()
     for (const auto& bck : back_edges_) {
         is_reducible_ = is_reducible_ & header_->Dominates(bck);
     }
+}
+
+bool Loop::IsReducible() const
+{
+    return is_reducible_;
+}
+
+void Loop::AddInnerLoop(Loop* loop)
+{
+    inner_loops_.push_back(loop);
 }
 
 void Loop::AddBlock(BasicBlock* bb)
@@ -30,6 +45,11 @@ void Loop::AddBackEdge(BasicBlock* bb)
     if (!header_->Dominates(bb)) {
         is_reducible_ = false;
     }
+}
+
+void Loop::ClearBackEdges()
+{
+    back_edges_.clear();
 }
 
 void Loop::Dump()

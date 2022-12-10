@@ -9,6 +9,7 @@ add_library(ir SHARED
     inst.cpp
     loop.cpp
     analyser.cpp
+    marker.cpp
     ${PASSES_DIR}/rpo.cpp
     ${PASSES_DIR}/po.cpp
     ${PASSES_DIR}/dfs.cpp

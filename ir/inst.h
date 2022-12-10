@@ -15,6 +15,7 @@
 
 #include "ir_isa.h"
 #include "macros.h"
+#include "marker.h"
 #include "typedefs.h"
 
 enum class Opcode : uint8_t
@@ -58,7 +59,7 @@ class BasicBlock;
 class User;
 class Input;
 
-class Inst
+class Inst : public marking::Markable
 {
   public:
     NO_DEFAULT_CTOR(Inst);
@@ -146,15 +147,17 @@ class Inst
     std::unique_ptr<Inst> next_{ nullptr };
     Inst* prev_{ nullptr };
 
-    const IdType id_;
+    const IdType id_{};
 
     Opcode opcode_ = Opcode::INVALID_OPCODE;
     InstType inst_type_ = InstType::INVALID_TYPE;
     DataType data_type_ = DataType::NO_TYPE;
-    BasicBlock* bb_ = nullptr;
+    BasicBlock* bb_{ nullptr };
 
-    std::vector<User> users_;
-    std::vector<Input> inputs_;
+    uint64_t flags_ = 0;
+
+    std::vector<User> users_{};
+    std::vector<Input> inputs_{};
 };
 
 class Input
