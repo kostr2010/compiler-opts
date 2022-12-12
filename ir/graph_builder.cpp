@@ -170,8 +170,7 @@ void GraphBuilder::ConstructDFG()
             auto input_inst = inst_map_.at(input_inst_id);
             auto input_bb = bb_map_.at(input_inst_bb);
 
-            auto idx = inst->AddInput(input_inst);
-            static_cast<PhiOp*>(inst)->SetInputBB(idx, input_bb);
+            static_cast<PhiOp*>(inst)->AddInput(input_inst, input_bb);
         }
     }
 

@@ -7,22 +7,8 @@ void Inst::SetInput(size_t idx, Inst* inst)
     assert(idx < inputs_.size());
     assert(!IsPhi());
 
-    inst->users_.emplace_back(User(this, idx));
-    inputs_[idx] = Input(inst);
-}
-
-size_t Inst::AddInput(Inst* inst)
-{
-    assert(inst != nullptr);
-    assert(inputs_.size() + 1 < MAX_INPUTS);
-    assert(IsPhi());
-
-    size_t idx = inputs_.size();
-
-    inst->users_.emplace_back(User(this, idx));
-    inputs_.emplace_back(Input(inst));
-
-    return idx;
+    inst->users_.push_back(User(this, idx));
+    inputs_[idx] = Input(inst, inst->GetBasicBlock());
 }
 
 void Inst::Dump() const
@@ -39,7 +25,7 @@ void Inst::Dump() const
     std::cout << "\tinst users:\n\t\t[";
 
     for (auto user : users_) {
-        std::cout << user.GetInst()->GetId() << " ";
+        std::cout << user.GetInst()->GetId() << "(" << user.GetIdx() << ") ";
     }
     std::cout << "]\n";
 
@@ -55,4 +41,53 @@ void Inst::Dump() const
         }
     }
     std::cout << "]\n";
+}
+
+size_t PhiOp::AddInput(Inst* inst, BasicBlock* bb)
+{
+    assert(inst != nullptr);
+    assert(bb != nullptr);
+    assert(inputs_.size() + 1 < MAX_INPUTS);
+    assert(IsPhi());
+
+    size_t idx = inputs_.size();
+
+    inst->AddUser(this);
+    inputs_.emplace_back(Input(inst, bb));
+
+    return idx;
+}
+
+size_t PhiOp::AddInput(const Input& input)
+{
+    assert(input.GetInst() != nullptr);
+    assert(input.GetSourceBB() != nullptr);
+    assert(inputs_.size() + 1 < MAX_INPUTS);
+    assert(IsPhi());
+
+    size_t idx = inputs_.size();
+
+    input.GetInst()->AddUser(this);
+    inputs_.push_back(input);
+
+    return idx;
+}
+
+void PhiOp::RemoveInput(const Input& input)
+{
+    input.GetInst()->RemoveUser(User(this));
+    inputs_.erase(std::find_if(inputs_.begin(), inputs_.end(), [input](const Input& i) {
+        return (i.GetSourceBB()->GetId() == input.GetSourceBB()->GetId());
+    }));
+}
+
+Input PhiOp::GetInput(const BasicBlock* bb)
+{
+    auto it = std::find_if(inputs_.begin(), inputs_.end(), [bb](const Input& i) {
+        return (i.GetSourceBB()->GetId() == bb->GetId());
+    });
+
+    assert(it != inputs_.end());
+
+    return *it;
 }

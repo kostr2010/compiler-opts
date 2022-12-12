@@ -29,6 +29,7 @@ class BasicBlock : public marking::Markable
     GETTER(Predecesors, preds_);
     GETTER(Successors, succs_);
     GETTER(LastInst, last_inst_);
+    GETTER(LastPhi, last_phi_);
     GETTER(Id, id_);
     GETTER_SETTER(ImmDominator, BasicBlock*, imm_dominator_);
     GETTER(Loop, loop_);
@@ -93,7 +94,13 @@ class BasicBlock : public marking::Markable
 
     void PushBackInst(std::unique_ptr<Inst> inst);
     void PushFrontInst(std::unique_ptr<Inst> inst);
+    void InsertInst(std::unique_ptr<Inst> inst, Inst* right, Inst* left);
     void PushBackPhi(std::unique_ptr<Inst> inst);
+    void PushBackPhi(Inst* inst);
+
+    void RemoveInst(Inst* inst);
+    void RemovePhi(Inst* inst);
+    void RemoveInst(const IdType inst_id);
 
     void Dump() const;
 
@@ -113,6 +120,7 @@ class BasicBlock : public marking::Markable
     std::unique_ptr<Inst> first_inst_{ nullptr };
     Inst* last_inst_{ nullptr };
     std::unique_ptr<Inst> first_phi_{ nullptr };
+    Inst* last_phi_{ nullptr };
 };
 
 #endif

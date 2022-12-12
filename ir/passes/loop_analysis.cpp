@@ -139,24 +139,25 @@ void LoopAnalysis::SplitBackEdge(Loop* loop)
     std::sort(back_edges.begin(), back_edges.end(), comparator);
     auto header = loop->GetHeader();
 
-    std::vector<BasicBlock*> pre_headers{};
+    std::vector<BasicBlock*> new_headers{};
     for (auto edge = back_edges.begin() + 1; edge != back_edges.end(); ++edge) {
         auto bb = graph_->NewBasicBlock();
         loops_.emplace_back(new Loop(loops_.size(), bb, *edge));
         bb->SetLoop(loops_.back().get(), true);
         (*edge)->ReplaceSucc(header, bb);
         header->RemovePred(*edge);
-        pre_headers.push_back(bb);
+        new_headers.push_back(bb);
     }
     header->RemovePred(back_edges.at(0));
     loop->ClearBackEdges();
     loop->AddBackEdge(back_edges.at(0));
 
     auto prev_head = header;
-    for (size_t i = 0; i < pre_headers.size(); ++i) {
-        graph_->InsertBasicBlockBefore(pre_headers.at(i), prev_head);
+    for (size_t i = 0; i < new_headers.size(); ++i) {
+        graph_->InsertBasicBlockBefore(new_headers.at(i), prev_head);
         graph_->AddEdge(back_edges.at(i), prev_head);
-        prev_head = pre_headers.at(i);
+        PropagatePhis(prev_head, new_headers.at(i));
+        prev_head = new_headers.at(i);
     }
     graph_->AddEdge(back_edges.back(), prev_head);
 }
@@ -168,7 +169,7 @@ void LoopAnalysis::AddPreHeaders()
             continue;
         }
         AddPreHeader(loop->get());
-        ReconstructPhi(loop->get());
+        PropagatePhis(loop->get()->GetHeader(), loop->get()->GetPreHeader());
     }
 }
 
@@ -190,9 +191,43 @@ void LoopAnalysis::AddPreHeader(Loop* loop)
     }
 }
 
-void LoopAnalysis::ReconstructPhi(Loop* loop)
+void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
 {
-    loop->GetId();
+    assert(bb != nullptr);
+    assert(bb->GetLoop() != nullptr);
+    assert(bb->GetLoop()->GetBackEdges().size() == 1);
+    assert(bb->GetPredecesors().front() != nullptr);
+
+    auto loop = bb->GetLoop();
+    auto bck = loop->GetBackEdges().front();
+
+    for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetNext()) {
+        auto inputs = phi->GetInputs();
+        auto it = std::find_if(inputs.begin(), inputs.end(), [bck](const Input& in) {
+            return in.GetSourceBB()->GetId() == bck->GetId();
+        });
+
+        if (it != phi->GetInputs().end()) {
+            auto bck_input = *it;
+            static_cast<PhiOp*>(phi)->RemoveInput(bck_input);
+            inputs = phi->GetInputs();
+            static_cast<PhiOp*>(phi)->ClearInputs();
+
+            Inst* source_inst = nullptr;
+            if (inputs.size() > 1) {
+                pred->PushBackPhi(Inst::NewInst<PhiOp>(Opcode::PHI));
+                source_inst = pred->GetLastPhi();
+                for (const auto& input : inputs) {
+                    static_cast<PhiOp*>(source_inst)->AddInput(input);
+                }
+            } else {
+                source_inst = inputs.front().GetInst();
+            }
+
+            static_cast<PhiOp*>(phi)->AddInput(bck_input);
+            static_cast<PhiOp*>(phi)->AddInput(source_inst, pred);
+        }
+    }
 }
 
 void LoopAnalysis::PopulateRootLoop()

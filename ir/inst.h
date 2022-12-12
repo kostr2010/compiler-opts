@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <list>
 #include <memory>
 #include <numeric>
 #include <string>
@@ -55,9 +56,43 @@ enum class CondType : uint8_t
     CONSD_G
 };
 
+class Inst;
 class BasicBlock;
-class User;
-class Input;
+class Input
+{
+  public:
+    explicit Input(Inst* inst, BasicBlock* bb) : inst_(inst), bb_(bb)
+    {
+    }
+    DEFAULT_CTOR(Input);
+
+    GETTER_SETTER(Inst, Inst*, inst_);
+    GETTER_SETTER(SourceBB, BasicBlock*, bb_);
+
+  private:
+    Inst* inst_{ nullptr };
+    BasicBlock* bb_{ nullptr };
+};
+
+class User
+{
+  public:
+    explicit User(Inst* inst) : inst_(inst)
+    {
+    }
+    explicit User(Inst* inst, int idx) : inst_(inst), idx_(idx)
+    {
+    }
+    DEFAULT_CTOR(User);
+    DEFAULT_DTOR(User);
+
+    GETTER_SETTER(Inst, Inst*, inst_);
+    GETTER_SETTER(Idx, int, idx_);
+
+  private:
+    Inst* inst_{ nullptr };
+    int idx_{ -1 };
+};
 
 class Inst : public marking::Markable
 {
@@ -84,9 +119,44 @@ class Inst : public marking::Markable
     GETTER(Id, id_);
 
     void SetInput(size_t idx, Inst* inst);
-    size_t AddInput(Inst* inst);
 
-    Inst* GetNext()
+    void AddUser(Inst* inst)
+    {
+        assert(inst->IsPhi());
+        users_.emplace_back(inst);
+    }
+
+    void AddUser(Inst* inst, size_t idx)
+    {
+        assert(!inst->IsPhi());
+        users_.emplace_back(inst, idx);
+    }
+
+    void RemoveUser(const User& user)
+    {
+        users_.erase(std::find_if(users_.begin(), users_.end(), [user](const User& u) {
+            return u.GetInst()->GetId() == user.GetInst()->GetId();
+        }));
+    }
+
+    void RemoveUser(Inst* user)
+    {
+        users_.erase(std::find_if(users_.begin(), users_.end(), [user](const User& u) {
+            return u.GetInst()->GetId() == user->GetId();
+        }));
+    }
+
+    void ReplaceUser(const User& user_old, const User& user_new)
+    {
+        std::replace_if(
+            users_.begin(), users_.end(),
+            [user_old](const User& u) {
+                return user_old.GetInst()->GetId() == u.GetInst()->GetId();
+            },
+            user_new);
+    }
+
+    Inst* GetNext() const
     {
         return next_.get();
     }
@@ -94,6 +164,16 @@ class Inst : public marking::Markable
     void SetNext(std::unique_ptr<Inst> next)
     {
         next_ = std::move(next);
+    }
+
+    void SetNext(Inst* next)
+    {
+        next_.reset(next);
+    }
+
+    Inst* ReleaseNext()
+    {
+        return next_.release();
     }
 
     bool IsPhi() const
@@ -156,42 +236,8 @@ class Inst : public marking::Markable
 
     uint64_t flags_ = 0;
 
-    std::vector<User> users_{};
+    std::list<User> users_{};
     std::vector<Input> inputs_{};
-};
-
-class Input
-{
-  public:
-    explicit Input(Inst* inst) : inst_(inst)
-    {
-    }
-    DEFAULT_CTOR(Input);
-    DEFAULT_DTOR(Input);
-
-    GETTER_SETTER(Inst, Inst*, inst_);
-    GETTER_SETTER(SourceBB, BasicBlock*, bb_);
-
-  private:
-    Inst* inst_{ nullptr };
-    BasicBlock* bb_{ nullptr };
-};
-
-class User
-{
-  public:
-    explicit User(Inst* inst, size_t idx) : inst_(inst), idx_(idx)
-    {
-    }
-    DEFAULT_CTOR(User);
-    DEFAULT_DTOR(User);
-
-    GETTER_SETTER(Inst, Inst*, inst_);
-    GETTER_SETTER(Idx, size_t, idx_);
-
-  private:
-    Inst* inst_{ nullptr };
-    size_t idx_;
 };
 
 class HasImm
@@ -416,17 +462,19 @@ class PhiOp : public Inst
         Inst::Dump();
     }
 
-    void SetInputBB(size_t idx, BasicBlock* bb)
+    size_t AddInput(Inst* inst, BasicBlock* bb);
+    size_t AddInput(const Input& input);
+
+    void ClearInputs()
     {
-        assert(idx < inputs_.size());
-        inputs_.at(idx).SetSourceBB(bb);
+        for (const auto& in : inputs_) {
+            in.GetInst()->RemoveUser(this);
+        }
+        inputs_.clear();
     }
 
-    BasicBlock* GetInputBB(size_t idx)
-    {
-        assert(idx < inputs_.size());
-        return inputs_.at(idx).GetSourceBB();
-    }
+    void RemoveInput(const Input& input);
+    Input GetInput(const BasicBlock* bb);
 };
 
 class IfOp : public FixedInputOp<2>, public HasCond

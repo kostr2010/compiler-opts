@@ -48,11 +48,6 @@ struct Pass3
 
 using pss = PassList<Pass2, Pass1, Pass3>;
 
-// struct Offt
-// {
-//     std::tuple_element_t<0, pss::ActivePasses>::Val();
-// };
-
 template <typename Target, size_t Acc, typename Tail>
 struct get_mark_offset;
 
@@ -71,26 +66,8 @@ struct get_mark_offset<Target, Acc, std::tuple<Target, Tail...> >
 template <typename Type>
 using GetMarkOffset = get_mark_offset<Type, 0, pss::ActivePasses>;
 
-class Base
-{
-  private:
-  public:
-    static constexpr size_t MARK_LENGTH = 0;
-};
-
-struct D : public Base
-{
-    static constexpr size_t MARK_LENGTH = 1;
-};
-
 int main()
 {
-    // D d;
-    // Base b;
-    // std::cout << Base::MARK_LENGTH << "\n";
-    // std::cout << D::MARK_LENGTH << "\n";
-    // std::cout << std::tuple_element_t<1, pss::ActivePasses>::Val() << "\n";
-
     std::cout << GetMarkOffset<Pass1>() << "\n";
 }
 

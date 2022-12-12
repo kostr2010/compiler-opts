@@ -37,6 +37,28 @@ static void CheckSuccessors(BasicBlock* bb, std::set<IdType> expected)
     ASSERT_EQ(std::set<IdType>(bb_res.begin(), bb_res.end()), expected);
 }
 
+static void CheckUsers(Inst* inst, std::set<std::pair<IdType, int> > expected)
+{
+    std::vector<std::pair<IdType, int> > res = {};
+    for (const auto& u : inst->GetUsers()) {
+        res.push_back({ u.GetInst()->GetId(), u.GetIdx() });
+    }
+
+    auto res_set = std::set<std::pair<IdType, int> >(res.begin(), res.end());
+    ASSERT_EQ(res_set, expected);
+}
+
+static void CheckInputs(Inst* inst, std::set<std::pair<IdType, IdType> > expected)
+{
+    std::vector<std::pair<IdType, IdType> > res = {};
+    for (const auto& i : inst->GetInputs()) {
+        res.push_back({ i.GetInst()->GetId(), i.GetSourceBB()->GetId() });
+    }
+
+    auto res_set = std::set<std::pair<IdType, IdType> >(res.begin(), res.end());
+    ASSERT_EQ(res_set, expected);
+}
+
 TEST(TestLoopAnalysis, Example1)
 {
     Graph g;
@@ -558,4 +580,191 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     ASSERT_EQ(loop4->GetBackEdges().at(0)->GetId(), D);
     ASSERT_EQ(loop4->GetHeader()->GetId(), E);
     CheckLoopContents(loop4, { D });
+}
+
+TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
+{
+    Graph g;
+    GraphBuilder b(&g);
+
+    auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1U);
+
+    auto A = b.NewBlock();
+    auto I0 = b.NewInst<Opcode::PHI>();
+    auto I1 = b.NewInst<Opcode::PHI>();
+
+    auto B = b.NewBlock();
+    auto I2 = b.NewInst<Opcode::ADDI>(10);
+
+    auto C = b.NewBlock();
+    auto I3 = b.NewInst<Opcode::ADDI>(10);
+
+    auto D = b.NewBlock();
+    auto I4 = b.NewInst<Opcode::ADDI>(10);
+
+    b.SetInputs(I0, { { C0, Graph::BB_START_ID }, { I2, B }, { I3, C }, { I4, D } });
+    b.SetInputs(I1, { { C0, Graph::BB_START_ID }, { I2, B }, { I3, C } });
+    b.SetInputs(I2, C0);
+    b.SetInputs(I3, C0);
+    b.SetInputs(I4, C0);
+
+    b.SetSuccessors(START, { A });
+    b.SetSuccessors(A, { B });
+    b.SetSuccessors(B, { A, C });
+    b.SetSuccessors(C, { A, D });
+    b.SetSuccessors(D, { A });
+
+    b.ConstructCFG();
+    b.ConstructDFG();
+
+    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
+
+    auto start_bb = g.GetStartBasicBlock();
+
+    ASSERT_TRUE(start_bb->GetPredecesors().empty());
+    ASSERT_EQ(start_bb->GetSuccessors().size(), 1);
+
+    ASSERT_EQ(g.GetBasicBlock(START)->GetSuccessors().size(), 1);
+    auto I = g.GetBasicBlock(START)->GetSuccessors().at(0);
+    CheckPredecessors(I, { START });
+    ASSERT_EQ(I->GetSuccessors().size(), 1);
+    auto F = I->GetSuccessors().at(0)->GetId();
+    CheckSuccessors(I, { F });
+
+    auto bb = g.GetBasicBlock(F);
+    ASSERT_EQ(bb->GetPredecesors().size(), 2);
+    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    CheckPredecessors(bb, { I->GetId(), D });
+
+    ASSERT_EQ(g.GetBasicBlock(F)->GetSuccessors().size(), 1);
+    auto H = g.GetBasicBlock(F)->GetSuccessors().at(0);
+    CheckSuccessors(bb, { H->GetId() });
+    CheckPredecessors(H, { F });
+    ASSERT_EQ(H->GetSuccessors().size(), 1);
+    auto E = H->GetSuccessors().at(0)->GetId();
+    CheckSuccessors(H, { E });
+
+    bb = g.GetBasicBlock(E);
+    ASSERT_EQ(bb->GetPredecesors().size(), 2);
+    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    CheckPredecessors(bb, { C, H->GetId() });
+
+    ASSERT_EQ(g.GetBasicBlock(E)->GetSuccessors().size(), 1);
+    auto G = g.GetBasicBlock(E)->GetSuccessors().at(0);
+    CheckSuccessors(bb, { G->GetId() });
+    CheckPredecessors(G, { E });
+    ASSERT_EQ(G->GetSuccessors().size(), 1);
+    CheckSuccessors(G, { A });
+
+    bb = g.GetBasicBlock(A);
+    ASSERT_EQ(bb->GetPredecesors().size(), 2);
+    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    CheckPredecessors(bb, { G->GetId(), B });
+    CheckSuccessors(bb, { B });
+
+    bb = g.GetBasicBlock(B);
+    ASSERT_EQ(bb->GetPredecesors().size(), 1);
+    ASSERT_EQ(bb->GetSuccessors().size(), 2);
+    CheckPredecessors(bb, { A });
+    CheckSuccessors(bb, { A, C });
+
+    bb = g.GetBasicBlock(C);
+    ASSERT_EQ(bb->GetPredecesors().size(), 1);
+    ASSERT_EQ(bb->GetSuccessors().size(), 2);
+    CheckPredecessors(bb, { B });
+    CheckSuccessors(bb, { E, D });
+
+    bb = g.GetBasicBlock(D);
+    ASSERT_EQ(bb->GetPredecesors().size(), 1);
+    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    CheckPredecessors(bb, { C });
+    CheckSuccessors(bb, { F });
+
+    auto root = loop_pass->GetRootLoop();
+
+    ASSERT_TRUE(root->GetBackEdges().empty());
+    ASSERT_FALSE(root->IsReducible());
+    ASSERT_EQ(root->GetHeader(), nullptr);
+    ASSERT_EQ(root->GetOuterLoop(), nullptr);
+    ASSERT_TRUE(root->GetPreHeader() == nullptr);
+    ASSERT_EQ(root->GetInnerLoops().size(), 1);
+    CheckLoopContents(root, { START, I->GetId() });
+
+    auto loop1 = root->GetInnerLoops().at(0);
+    ASSERT_TRUE(loop1->IsReducible());
+    ASSERT_EQ(loop1->GetOuterLoop(), root);
+    ASSERT_EQ(loop1->GetInnerLoops().size(), 1);
+    ASSERT_EQ(loop1->GetBackEdges().size(), 1);
+    ASSERT_EQ(loop1->GetBackEdges().at(0)->GetId(), D);
+    ASSERT_EQ(loop1->GetHeader()->GetId(), F);
+    CheckLoopContents(loop1, { D, H->GetId() });
+
+    auto loop2 = loop1->GetInnerLoops().at(0);
+    ASSERT_TRUE(loop2->IsReducible());
+    ASSERT_EQ(loop2->GetOuterLoop(), loop1);
+    ASSERT_EQ(loop2->GetInnerLoops().size(), 1);
+    ASSERT_EQ(loop2->GetBackEdges().size(), 1);
+    ASSERT_EQ(loop2->GetBackEdges().at(0)->GetId(), C);
+    ASSERT_EQ(loop2->GetHeader()->GetId(), E);
+    CheckLoopContents(loop2, { C, G->GetId() });
+
+    auto loop3 = loop2->GetInnerLoops().at(0);
+    ASSERT_TRUE(loop3->IsReducible());
+    ASSERT_EQ(loop3->GetOuterLoop(), loop2);
+    ASSERT_EQ(loop3->GetInnerLoops().size(), 0);
+    ASSERT_EQ(loop3->GetBackEdges().size(), 1);
+    ASSERT_EQ(loop3->GetBackEdges().at(0)->GetId(), B);
+    ASSERT_EQ(loop3->GetHeader()->GetId(), A);
+    CheckLoopContents(loop3, { B });
+
+    auto c0 = g.GetBasicBlock(START)->GetFirstInst();
+    auto i0 = g.GetBasicBlock(A)->GetFirstPhi();
+    auto i1 = i0->GetNext();
+    auto i2 = g.GetBasicBlock(B)->GetFirstInst();
+    auto i3 = g.GetBasicBlock(C)->GetFirstInst();
+    auto i4 = g.GetBasicBlock(D)->GetFirstInst();
+    auto i5 = g.GetBasicBlock(E)->GetFirstPhi();
+    auto i6 = i5->GetNext();
+    auto i7 = g.GetBasicBlock(F)->GetFirstPhi();
+
+    ASSERT_EQ(c0->GetOpcode(), Opcode::CONST);
+    CheckInputs(c0, {});
+    CheckUsers(c0, { { i7->GetId(), -1 },
+                     { i6->GetId(), -1 },
+                     { i2->GetId(), 0 },
+                     { i3->GetId(), 0 },
+                     { i4->GetId(), 0 } });
+
+    ASSERT_EQ(i7->GetOpcode(), Opcode::PHI);
+    CheckInputs(i7, { { i4->GetId(), D }, { c0->GetId(), I->GetId() } });
+    CheckUsers(i7, { { i5->GetId(), -1 } });
+
+    ASSERT_EQ(i5->GetOpcode(), Opcode::PHI);
+    CheckInputs(i5, { { i3->GetId(), C }, { i7->GetId(), H->GetId() } });
+    CheckUsers(i5, { { i0->GetId(), -1 } });
+
+    ASSERT_EQ(i6->GetOpcode(), Opcode::PHI);
+    CheckInputs(i6, { { i3->GetId(), C }, { c0->GetId(), H->GetId() } });
+    CheckUsers(i6, { { i1->GetId(), -1 } });
+
+    ASSERT_EQ(i0->GetOpcode(), Opcode::PHI);
+    CheckInputs(i0, { { i2->GetId(), B }, { i5->GetId(), G->GetId() } });
+    CheckUsers(i0, {});
+
+    ASSERT_EQ(i1->GetOpcode(), Opcode::PHI);
+    CheckInputs(i1, { { i2->GetId(), B }, { i6->GetId(), G->GetId() } });
+    CheckUsers(i1, {});
+
+    ASSERT_EQ(i2->GetOpcode(), Opcode::ADDI);
+    CheckInputs(i2, { { c0->GetId(), Graph::BB_START_ID } });
+    CheckUsers(i2, { { i0->GetId(), -1 }, { i1->GetId(), -1 } });
+
+    ASSERT_EQ(i3->GetOpcode(), Opcode::ADDI);
+    CheckInputs(i3, { { c0->GetId(), Graph::BB_START_ID } });
+    CheckUsers(i3, { { i5->GetId(), -1 }, { i6->GetId(), -1 } });
+
+    ASSERT_EQ(i4->GetOpcode(), Opcode::ADDI);
+    CheckInputs(i4, { { c0->GetId(), Graph::BB_START_ID } });
+    CheckUsers(i4, { { i7->GetId(), -1 } });
 }

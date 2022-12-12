@@ -50,7 +50,7 @@ class LoopAnalysis : public Pass
     void SplitBackEdge(Loop* loop);
     void AddPreHeaders();
     void AddPreHeader(Loop* loop);
-    void ReconstructPhi(Loop* loop);
+    void PropagatePhis(BasicBlock* bb, BasicBlock* pred);
     void PopulateRootLoop();
     void BuildLoopTree();
     void ResetStructs();
