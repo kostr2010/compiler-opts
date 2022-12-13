@@ -62,7 +62,7 @@ class GraphBuilder
         assert(graph_ != nullptr);
         assert(graph_->GetStartBasicBlock() != nullptr);
 
-        auto inst = Inst::NewInst<ConstantOp>(Opcode::CONST, value);
+        auto inst = Inst::NewInst<ConstantOp>(value);
 
         assert(inst != nullptr);
         auto id = inst->GetId();

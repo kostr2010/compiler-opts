@@ -210,6 +210,8 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
         if (it != phi->GetInputs().end()) {
             auto bck_input = *it;
             static_cast<PhiOp*>(phi)->RemoveInput(bck_input);
+            bck_input.GetInst()->RemoveUser(User(phi));
+
             inputs = phi->GetInputs();
             static_cast<PhiOp*>(phi)->ClearInputs();
 

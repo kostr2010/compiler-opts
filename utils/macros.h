@@ -19,10 +19,6 @@
 #define LOG(msg) std::cerr << "LOG/[" << __FUNCTION__ << "] " << msg << "\n";
 
 #define GETTER(func_name, field_name)                                                             \
-    auto Get##func_name()                                                                         \
-    {                                                                                             \
-        return field_name;                                                                        \
-    }                                                                                             \
     const auto Get##func_name() const                                                             \
     {                                                                                             \
         return field_name;                                                                        \

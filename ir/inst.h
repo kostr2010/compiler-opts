@@ -19,9 +19,8 @@
 #include "marker.h"
 #include "typedefs.h"
 
-enum class Opcode : uint8_t
+enum Opcode : uint8_t
 {
-    INVALID_OPCODE,
 #define OPCODES(op, ...) op,
     INSTRUCTION_LIST(OPCODES)
 #undef OPCODES
@@ -29,10 +28,15 @@ enum class Opcode : uint8_t
 
 enum class InstType : uint8_t
 {
-    INVALID_TYPE,
 #define TYPES(t) t,
     INSTRUCTION_TYPES(TYPES)
 #undef TYPES
+};
+
+enum InstFlags : uint8_t
+{
+    EMPTY = 0b0,
+    NO_DCE = 0b00000001
 };
 
 enum class DataType : uint8_t
@@ -111,50 +115,24 @@ class Inst : public marking::Markable
 
     GETTER_SETTER(Prev, Inst*, prev_);
     GETTER_SETTER(BasicBlock, BasicBlock*, bb_);
-    GETTER_SETTER(Opcode, Opcode, opcode_);
-    GETTER_SETTER(InstType, InstType, inst_type_);
+    GETTER(InstType, inst_type_);
     GETTER_SETTER(DataType, DataType, data_type_);
     GETTER(Inputs, inputs_);
+    GETTER(Opcode, opcode_);
+    GETTER(Flags, flags_);
     GETTER(Users, users_);
     GETTER(Id, id_);
 
     void SetInput(size_t idx, Inst* inst);
+    void ReplaceInput(Inst* old_inst, Inst* new_inst);
+    void ClearInput(Inst* old_inst);
 
-    void AddUser(Inst* inst)
-    {
-        assert(inst->IsPhi());
-        users_.emplace_back(inst);
-    }
-
-    void AddUser(Inst* inst, size_t idx)
-    {
-        assert(!inst->IsPhi());
-        users_.emplace_back(inst, idx);
-    }
-
-    void RemoveUser(const User& user)
-    {
-        users_.erase(std::find_if(users_.begin(), users_.end(), [user](const User& u) {
-            return u.GetInst()->GetId() == user.GetInst()->GetId();
-        }));
-    }
-
-    void RemoveUser(Inst* user)
-    {
-        users_.erase(std::find_if(users_.begin(), users_.end(), [user](const User& u) {
-            return u.GetInst()->GetId() == user->GetId();
-        }));
-    }
-
-    void ReplaceUser(const User& user_old, const User& user_new)
-    {
-        std::replace_if(
-            users_.begin(), users_.end(),
-            [user_old](const User& u) {
-                return user_old.GetInst()->GetId() == u.GetInst()->GetId();
-            },
-            user_new);
-    }
+    void AddUser(Inst* inst);
+    void AddUser(Inst* inst, size_t idx);
+    void AddUser(const User& user);
+    void RemoveUser(const User& user);
+    void RemoveUser(Inst* user);
+    void ReplaceUser(const User& user_old, const User& user_new);
 
     Inst* GetNext() const
     {
@@ -210,7 +188,16 @@ class Inst : public marking::Markable
     virtual void Dump() const;
 
   protected:
-    explicit Inst(Opcode op, InstType t) : id_(RecieveId()), opcode_(op), inst_type_(t){};
+    explicit Inst(Opcode op, InstType t) : id_(RecieveId()), opcode_(op), inst_type_(t)
+    {
+        static constexpr std::array FLAGS{
+#define OPCODES(op, type, flags) flags,
+            INSTRUCTION_LIST(OPCODES)
+#undef OPCODES
+        };
+
+        flags_ = FLAGS[op];
+    }
 
     static IdType RecieveId()
     {
@@ -229,12 +216,12 @@ class Inst : public marking::Markable
 
     const IdType id_{};
 
-    Opcode opcode_ = Opcode::INVALID_OPCODE;
-    InstType inst_type_ = InstType::INVALID_TYPE;
+    Opcode opcode_;
+    InstType inst_type_;
     DataType data_type_ = DataType::NO_TYPE;
     BasicBlock* bb_{ nullptr };
 
-    uint64_t flags_ = 0;
+    uint8_t flags_ = 0;
 
     std::list<User> users_{};
     std::vector<Input> inputs_{};
@@ -368,11 +355,11 @@ class CompareOp : public FixedInputOp<2>, public HasCond
 class ConstantOp : public Inst
 {
   public:
-    ConstantOp(Opcode) : Inst(Opcode::CONST, InstType::ConstantOp)
+    ConstantOp() : Inst(Opcode::CONST, InstType::ConstantOp)
     {
     }
     template <typename T>
-    ConstantOp(Opcode, T val) : Inst(Opcode::CONST, InstType::ConstantOp)
+    ConstantOp(T val) : Inst(Opcode::CONST, InstType::ConstantOp)
     {
         if constexpr (std::numeric_limits<T>::is_integer) {
             SetDataType(DataType::INT);
@@ -388,7 +375,11 @@ class ConstantOp : public Inst
             assert(false);
         }
     }
-    DEFAULT_CTOR(ConstantOp);
+    ConstantOp(uint64_t val_raw, DataType type)
+        : Inst(Opcode::CONST, InstType::ConstantOp), val_(val_raw)
+    {
+        SetDataType(type);
+    }
     DEFAULT_DTOR(ConstantOp);
 
     uint64_t GetValRaw() const
@@ -396,10 +387,10 @@ class ConstantOp : public Inst
         return val_;
     }
 
-    uint64_t GetValInt() const
+    int64_t GetValInt() const
     {
         assert(GetDataType() == DataType::INT);
-        return val_;
+        return (int64_t)val_;
     }
 
     double GetValDouble() const
