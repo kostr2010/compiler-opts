@@ -4,6 +4,8 @@ set(TESTS
     loop_analysis_test.cpp
     basic_test.cpp
     main.cpp
+    dce_test.cpp
+    peepholes_test.cpp
     )
 
 add_executable(gtests ${TESTS})

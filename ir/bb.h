@@ -94,7 +94,9 @@ class BasicBlock : public marking::Markable
 
     void PushBackInst(std::unique_ptr<Inst> inst);
     void PushFrontInst(std::unique_ptr<Inst> inst);
-    void InsertInst(std::unique_ptr<Inst> inst, Inst* right, Inst* left);
+    void InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right);
+    void InsertInstAfter(std::unique_ptr<Inst> inst, Inst* after);
+    void InsertInstBefore(std::unique_ptr<Inst> inst, Inst* before);
     void PushBackPhi(std::unique_ptr<Inst> inst);
     void PushBackPhi(Inst* inst);
 

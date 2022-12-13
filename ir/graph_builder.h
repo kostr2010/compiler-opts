@@ -21,23 +21,16 @@ class GraphBuilder
     GraphBuilder(Graph* g);
     DEFAULT_DTOR(GraphBuilder);
 
-    template <Opcode op, typename... Args>
+    template <Opcode OPCODE, typename... Args>
     IdType NewInst(Args&&... args)
     {
         assert(graph_ != nullptr);
         assert(cur_bb_ != nullptr);
 
-        static_assert(op != Opcode::CONST);
-        static_assert(op != Opcode::PARAM);
+        static_assert(OPCODE != Opcode::CONST);
+        static_assert(OPCODE != Opcode::PARAM);
 
-        std::unique_ptr<Inst> inst{};
-
-#define CREATE(OPCODE, TYPE, ...)                                                                 \
-    if constexpr (op == Opcode::OPCODE) {                                                         \
-        inst = std::move(Inst::NewInst<TYPE>(Opcode::OPCODE, std::forward<Args>(args)...));       \
-    }
-        INSTRUCTION_LIST(CREATE)
-#undef CREATE
+        std::unique_ptr<Inst> inst = Inst::NewInst<OPCODE>(std::forward<Args>(args)...);
 
         assert(inst != nullptr);
         auto id = inst->GetId();
@@ -62,7 +55,7 @@ class GraphBuilder
         assert(graph_ != nullptr);
         assert(graph_->GetStartBasicBlock() != nullptr);
 
-        auto inst = Inst::NewInst<ConstantOp>(Opcode::CONST, value);
+        auto inst = Inst::NewInst<Opcode::CONST>(value);
 
         assert(inst != nullptr);
         auto id = inst->GetId();

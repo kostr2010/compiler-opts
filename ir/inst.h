@@ -19,20 +19,19 @@
 #include "marker.h"
 #include "typedefs.h"
 
-enum class Opcode : uint8_t
+enum Opcode : uint8_t
 {
-    INVALID_OPCODE,
 #define OPCODES(op, ...) op,
     INSTRUCTION_LIST(OPCODES)
 #undef OPCODES
+        N_OPCODES
 };
 
-enum class InstType : uint8_t
+enum InstFlags : uint8_t
 {
-    INVALID_TYPE,
-#define TYPES(t) t,
-    INSTRUCTION_TYPES(TYPES)
-#undef TYPES
+    EMPTY = 0b0,
+    NO_DCE = 0b00000001,
+    SYMMETRY = 0b00000010,
 };
 
 enum class DataType : uint8_t
@@ -83,8 +82,6 @@ class User
     explicit User(Inst* inst, int idx) : inst_(inst), idx_(idx)
     {
     }
-    DEFAULT_CTOR(User);
-    DEFAULT_DTOR(User);
 
     GETTER_SETTER(Inst, Inst*, inst_);
     GETTER_SETTER(Idx, int, idx_);
@@ -94,66 +91,86 @@ class User
     int idx_{ -1 };
 };
 
+#define FORWARD_DECL(T, ...) class T;
+INSTRUCTION_TYPES(FORWARD_DECL);
+#undef FORWARD_DECL
+
 class Inst : public marking::Markable
 {
-  public:
-    NO_DEFAULT_CTOR(Inst);
-    DEFAULT_DTOR(Inst);
+#define GET_TYPES(OP, T, ...) T,
+    using InstTypes = std::tuple<INSTRUCTION_LIST(GET_TYPES) void>;
+#undef GET_TYPES
 
-    template <typename IType, typename... Args>
-    static std::unique_ptr<IType> NewInst(Args&&... args)
+    template <size_t I, typename TUPLE>
+    struct GetInstTypeT;
+
+    template <size_t I, typename Type, typename... Types>
+    struct GetInstTypeT<I, std::tuple<Type, Types...> >
+        : GetInstTypeT<I - 1, std::tuple<Types...> >
+    {};
+
+    template <typename Type, typename... Types>
+    struct GetInstTypeT<0, std::tuple<Type, Types...> >
     {
-        return std::unique_ptr<IType>(new IType(std::forward<Args>(args)...));
-    }
+        using type = Type;
+    };
+
+  public:
+    template <Opcode OPCODE>
+    using ToInstType = typename GetInstTypeT<OPCODE, InstTypes>::type;
+
+    template <typename InstType, typename = void>
+    struct GetNumInputs : std::integral_constant<size_t, std::numeric_limits<size_t>::max()>
+    {};
+
+    template <typename InstType>
+    struct GetNumInputs<InstType, std::void_t<decltype(InstType::N_INPUTS)> >
+        : std::integral_constant<size_t, InstType::N_INPUTS>
+    {};
+
+    template <Opcode OPCODE, typename... Args>
+    static std::unique_ptr<Inst> NewInst(Args&&... args);
 
     static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
-    static constexpr size_t N_INPUTS = 0;
 
     GETTER_SETTER(Prev, Inst*, prev_);
     GETTER_SETTER(BasicBlock, BasicBlock*, bb_);
-    GETTER_SETTER(Opcode, Opcode, opcode_);
-    GETTER_SETTER(InstType, InstType, inst_type_);
     GETTER_SETTER(DataType, DataType, data_type_);
     GETTER(Inputs, inputs_);
+    GETTER(Opcode, opcode_);
     GETTER(Users, users_);
     GETTER(Id, id_);
 
     void SetInput(size_t idx, Inst* inst);
+    void ReplaceInput(Inst* old_inst, Inst* new_inst);
+    void ClearInput(Inst* old_inst);
 
-    void AddUser(Inst* inst)
+    void AddUser(Inst* inst);
+    void AddUser(Inst* inst, size_t idx);
+    void AddUser(const User& user);
+    void RemoveUser(const User& user);
+    void RemoveUser(Inst* user);
+    void ReplaceUser(const User& user_old, const User& user_new);
+
+    bool HasFlag(InstFlags flag) const
     {
-        assert(inst->IsPhi());
-        users_.emplace_back(inst);
+        constexpr std::array<uint8_t, Opcode::N_OPCODES> FLAGS_MAP{
+#define GET_FLAGS(OP, TYPE, FLAGS, ...) FLAGS,
+            INSTRUCTION_LIST(GET_FLAGS)
+#undef GET_FLAGS
+        };
+        return FLAGS_MAP[opcode_] & flag;
     }
 
-    void AddUser(Inst* inst, size_t idx)
+    template <Opcode OPCODE, InstFlags FLAG>
+    static constexpr bool HasFlag()
     {
-        assert(!inst->IsPhi());
-        users_.emplace_back(inst, idx);
-    }
-
-    void RemoveUser(const User& user)
-    {
-        users_.erase(std::find_if(users_.begin(), users_.end(), [user](const User& u) {
-            return u.GetInst()->GetId() == user.GetInst()->GetId();
-        }));
-    }
-
-    void RemoveUser(Inst* user)
-    {
-        users_.erase(std::find_if(users_.begin(), users_.end(), [user](const User& u) {
-            return u.GetInst()->GetId() == user->GetId();
-        }));
-    }
-
-    void ReplaceUser(const User& user_old, const User& user_new)
-    {
-        std::replace_if(
-            users_.begin(), users_.end(),
-            [user_old](const User& u) {
-                return user_old.GetInst()->GetId() == u.GetInst()->GetId();
-            },
-            user_new);
+        constexpr std::array<uint8_t, Opcode::N_OPCODES> FLAGS_MAP{
+#define GET_FLAGS(OP, TYPE, FLAGS, ...) FLAGS,
+            INSTRUCTION_LIST(GET_FLAGS)
+#undef GET_FLAGS
+        };
+        return FLAGS_MAP[OPCODE] & FLAG;
     }
 
     Inst* GetNext() const
@@ -210,7 +227,9 @@ class Inst : public marking::Markable
     virtual void Dump() const;
 
   protected:
-    explicit Inst(Opcode op, InstType t) : id_(RecieveId()), opcode_(op), inst_type_(t){};
+    explicit Inst(Opcode op) : id_(RecieveId()), opcode_(op)
+    {
+    }
 
     static IdType RecieveId()
     {
@@ -229,12 +248,9 @@ class Inst : public marking::Markable
 
     const IdType id_{};
 
-    Opcode opcode_ = Opcode::INVALID_OPCODE;
-    InstType inst_type_ = InstType::INVALID_TYPE;
+    Opcode opcode_;
     DataType data_type_ = DataType::NO_TYPE;
     BasicBlock* bb_{ nullptr };
-
-    uint64_t flags_ = 0;
 
     std::list<User> users_{};
     std::vector<Input> inputs_{};
@@ -246,8 +262,6 @@ class HasImm
     explicit HasImm(ImmType imm) : imm_(imm)
     {
     }
-    DEFAULT_CTOR(HasImm);
-    DEFAULT_DTOR(HasImm);
 
     GETTER_SETTER(Imm, ImmType, imm_);
 
@@ -266,8 +280,6 @@ class HasCond
     explicit HasCond(CondType cc) : cc_(cc)
     {
     }
-    DEFAULT_CTOR(HasCond);
-    DEFAULT_DTOR(HasCond);
 
     GETTER_SETTER(Cond, CondType, cc_);
 
@@ -292,54 +304,44 @@ template <size_t N>
 class FixedInputOp : public Inst
 {
   public:
-    FixedInputOp(Opcode op, InstType t) : Inst(op, t)
+    FixedInputOp(Opcode op) : Inst(op)
     {
         inputs_.resize(N);
     }
-    DEFAULT_CTOR(FixedInputOp);
-    DEFAULT_DTOR(FixedInputOp);
 
     static constexpr size_t N_INPUTS = N;
-
-  private:
 };
 
 class FixedInputOp0 : public FixedInputOp<0>
 {
   public:
-    FixedInputOp0(Opcode op) : FixedInputOp(op, InstType::FixedInputOp0)
+    FixedInputOp0(Opcode op) : FixedInputOp(op)
     {
     }
-    DEFAULT_DTOR(FixedInputOp0);
 };
 
 class FixedInputOp1 : public FixedInputOp<1>
 {
   public:
-    FixedInputOp1(Opcode op) : FixedInputOp(op, InstType::FixedInputOp1)
+    FixedInputOp1(Opcode op) : FixedInputOp(op)
     {
     }
-    DEFAULT_DTOR(FixedInputOp1);
 };
 
 class BinaryOp : public FixedInputOp<2>
 {
   public:
-    BinaryOp(const Opcode op) : FixedInputOp(op, InstType::BinaryOp)
+    BinaryOp(const Opcode op) : FixedInputOp(op)
     {
     }
-    DEFAULT_CTOR(BinaryOp);
-    DEFAULT_DTOR(BinaryOp);
 };
 
 class BinaryImmOp : public FixedInputOp<1>, public HasImm
 {
   public:
-    BinaryImmOp(Opcode op, ImmType imm = 0) : FixedInputOp(op, InstType::BinaryImmOp), HasImm(imm)
+    BinaryImmOp(Opcode op, ImmType imm = 0) : FixedInputOp(op), HasImm(imm)
     {
     }
-    DEFAULT_CTOR(BinaryImmOp);
-    DEFAULT_DTOR(BinaryImmOp);
 
     void Dump() const override
     {
@@ -352,11 +354,9 @@ class CompareOp : public FixedInputOp<2>, public HasCond
 {
   public:
     CompareOp(Opcode, CondType cc = CondType::COND_INVALID)
-        : FixedInputOp(Opcode::CMP, InstType::CompareOp), HasCond(cc)
+        : FixedInputOp(Opcode::CMP), HasCond(cc)
     {
     }
-    DEFAULT_CTOR(CompareOp);
-    DEFAULT_DTOR(CompareOp);
 
     void Dump() const override
     {
@@ -368,11 +368,11 @@ class CompareOp : public FixedInputOp<2>, public HasCond
 class ConstantOp : public Inst
 {
   public:
-    ConstantOp(Opcode) : Inst(Opcode::CONST, InstType::ConstantOp)
+    ConstantOp(Opcode) : Inst(Opcode::CONST)
     {
     }
     template <typename T>
-    ConstantOp(Opcode, T val) : Inst(Opcode::CONST, InstType::ConstantOp)
+    ConstantOp(Opcode, T val) : Inst(Opcode::CONST)
     {
         if constexpr (std::numeric_limits<T>::is_integer) {
             SetDataType(DataType::INT);
@@ -388,18 +388,20 @@ class ConstantOp : public Inst
             assert(false);
         }
     }
-    DEFAULT_CTOR(ConstantOp);
-    DEFAULT_DTOR(ConstantOp);
+    ConstantOp(Opcode, uint64_t val_raw, DataType type) : Inst(Opcode::CONST), val_(val_raw)
+    {
+        SetDataType(type);
+    }
 
     uint64_t GetValRaw() const
     {
         return val_;
     }
 
-    uint64_t GetValInt() const
+    int64_t GetValInt() const
     {
         assert(GetDataType() == DataType::INT);
-        return val_;
+        return (int64_t)val_;
     }
 
     double GetValDouble() const
@@ -429,12 +431,10 @@ class ParamOp : public Inst
   public:
     static constexpr ArgNumType ARG_N_INVALID = std::numeric_limits<ArgNumType>::max();
 
-    ParamOp(Opcode op, ArgNumType arg_n = ARG_N_INVALID) : Inst(op, InstType::ParamOp)
+    ParamOp(Opcode, ArgNumType arg_n = ARG_N_INVALID) : Inst(Opcode::PARAM)
     {
         arg_n_ = arg_n;
     }
-    DEFAULT_CTOR(ParamOp);
-    DEFAULT_DTOR(ParamOp);
 
     GETTER_SETTER(ArgNumber, ArgNumType, arg_n_);
 
@@ -451,11 +451,9 @@ class ParamOp : public Inst
 class PhiOp : public Inst
 {
   public:
-    PhiOp(Opcode op) : Inst(op, InstType::PhiOp)
+    PhiOp(Opcode) : Inst(Opcode::PHI)
     {
     }
-    DEFAULT_CTOR(PhiOp);
-    DEFAULT_DTOR(PhiOp);
 
     void Dump() const override
     {
@@ -480,12 +478,9 @@ class PhiOp : public Inst
 class IfOp : public FixedInputOp<2>, public HasCond
 {
   public:
-    IfOp(Opcode, CondType cc = CondType::COND_INVALID)
-        : FixedInputOp(Opcode::IF, InstType::IfOp), HasCond(cc)
+    IfOp(Opcode, CondType cc = CondType::COND_INVALID) : FixedInputOp(Opcode::IF), HasCond(cc)
     {
     }
-    DEFAULT_CTOR(IfOp);
-    DEFAULT_DTOR(IfOp);
 
     void Dump() const override
     {
@@ -498,11 +493,16 @@ class IfImmOp : public FixedInputOp<1>, public HasCond, public HasImm
 {
   public:
     IfImmOp(Opcode, ImmType imm = 0, CondType cc = CondType::COND_INVALID)
-        : FixedInputOp(Opcode::IF_IMM, InstType::IfImmOp), HasCond(cc), HasImm(imm)
+        : FixedInputOp(Opcode::IF_IMM), HasCond(cc), HasImm(imm)
     {
     }
-    DEFAULT_CTOR(IfImmOp);
-    DEFAULT_DTOR(IfImmOp);
 };
+
+template <Opcode OPCODE, typename... Args>
+std::unique_ptr<Inst> Inst::NewInst(Args&&... args)
+{
+    return std::unique_ptr<Inst::ToInstType<OPCODE> >(
+        new Inst::ToInstType<OPCODE>(OPCODE, std::forward<Args>(args)...));
+}
 
 #endif

@@ -117,7 +117,7 @@ void BasicBlock::PushFrontInst(std::unique_ptr<Inst> inst)
     }
 }
 
-void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* right, Inst* left)
+void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right)
 {
     assert(right != nullptr);
     assert(left != nullptr);
@@ -130,10 +130,33 @@ void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* right, Inst* left)
 
     inst->SetBasicBlock(this);
     inst->SetNext(left->ReleaseNext());
-    left->SetNext(right->ReleaseNext());
     inst->SetPrev(left);
     right->SetPrev(inst.get());
-    right->SetNext(std::move(inst));
+    left->SetNext(std::move(inst));
+}
+
+void BasicBlock::InsertInstAfter(std::unique_ptr<Inst> inst, Inst* after)
+{
+    assert(after != nullptr);
+    auto next = after->GetNext();
+
+    if (next == nullptr) {
+        PushBackInst(std::move(inst));
+    } else {
+        InsertInst(std::move(inst), after, next);
+    }
+}
+
+void BasicBlock::InsertInstBefore(std::unique_ptr<Inst> inst, Inst* before)
+{
+    assert(before != nullptr);
+    auto prev = before->GetPrev();
+
+    if (prev == nullptr) {
+        PushFrontInst(std::move(inst));
+    } else {
+        InsertInst(std::move(inst), prev, before);
+    }
 }
 
 void BasicBlock::PushBackPhi(std::unique_ptr<Inst> inst)
@@ -176,6 +199,16 @@ void BasicBlock::RemoveInst(Inst* inst)
     auto prev = inst->GetPrev();
     auto next = inst->GetNext();
 
+    for (const auto& i : inst->GetInputs()) {
+        if (i.GetInst() != nullptr) {
+            i.GetInst()->RemoveUser(inst);
+        }
+    }
+
+    for (const auto& u : inst->GetUsers()) {
+        u.GetInst()->ClearInput(inst);
+    }
+
     if (prev != nullptr && next != nullptr) {
         next->SetPrev(prev);
         prev->SetNext(inst->ReleaseNext());
@@ -194,8 +227,6 @@ void BasicBlock::RemoveInst(Inst* inst)
             last_inst_ = prev;
         }
     }
-
-    inst->SetBasicBlock(nullptr);
 }
 
 void BasicBlock::RemovePhi(Inst* inst)
@@ -205,6 +236,16 @@ void BasicBlock::RemovePhi(Inst* inst)
 
     auto prev = inst->GetPrev();
     auto next = inst->GetNext();
+
+    for (const auto& i : inst->GetInputs()) {
+        if (i.GetInst() != nullptr) {
+            i.GetInst()->RemoveUser(inst);
+        }
+    }
+
+    for (const auto& u : inst->GetUsers()) {
+        u.GetInst()->ClearInput(inst);
+    }
 
     if (prev != nullptr && next != nullptr) {
         next->SetPrev(prev);
@@ -224,8 +265,6 @@ void BasicBlock::RemovePhi(Inst* inst)
             last_phi_ = prev;
         }
     }
-
-    inst->SetBasicBlock(nullptr);
 }
 
 void BasicBlock::RemoveInst(const IdType inst_id)

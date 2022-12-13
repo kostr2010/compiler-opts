@@ -1,42 +1,42 @@
 #define INSTRUCTION_LIST(_)                                                                       \
-    _(ADD, BinaryOp, /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                           \
-    _(SUB, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(MUL, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(DIV, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(MOD, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(MIN, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(MAX, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(SHL, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(SHR, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(ASHR, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                           \
-    _(AND, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(OR, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                             \
-    _(XOR, BinaryOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                            \
-    _(ADDI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(SUBI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(MULI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(DIVI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(MODI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(MINI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(MAXI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(SHLI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(SHRI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(ASHRI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                       \
-    _(ANDI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(ORI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                         \
-    _(XORI, BinaryImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(CMP, CompareOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                           \
+    _(ADD, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(SUB, BinaryOp, InstFlags::EMPTY)                                                            \
+    _(MUL, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(DIV, BinaryOp, InstFlags::EMPTY)                                                            \
+    _(MOD, BinaryOp, InstFlags::EMPTY)                                                            \
+    _(MIN, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(MAX, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(SHL, BinaryOp, InstFlags::EMPTY)                                                            \
+    _(SHR, BinaryOp, InstFlags::EMPTY)                                                            \
+    _(ASHR, BinaryOp, InstFlags::EMPTY)                                                           \
+    _(AND, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(OR, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                       \
+    _(XOR, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(ADDI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(SUBI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(MULI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(DIVI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(MODI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(MINI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(MAXI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(SHLI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(SHRI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(ASHRI, BinaryImmOp, InstFlags::EMPTY)                                                       \
+    _(ANDI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(ORI, BinaryImmOp, InstFlags::EMPTY)                                                         \
+    _(XORI, BinaryImmOp, InstFlags::EMPTY)                                                        \
+    _(CMP, CompareOp, InstFlags::EMPTY)                                                           \
     /*_(CAST, CastOp )*/                                                                          \
     /*_(CHECK, CHECK )*/                                                                          \
     /*_(CALL, CALL )*/                                                                            \
-    _(CONST, ConstantOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                        \
-    _(PARAM, ParamOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                           \
-    _(RETURN, FixedInputOp1 /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                    \
-    _(RETURN_VOID, FixedInputOp0 /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)               \
-    _(PHI, PhiOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                               \
-    _(IF, IfOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                                 \
-    _(IF_IMM, IfImmOp /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)                          \
-    _(JMP_IND, FixedInputOp1 /*place info here, f.ex NO_DCE, ALLOCATION, etc*/)
+    _(PHI, PhiOp, InstFlags::EMPTY)                                                               \
+    _(CONST, ConstantOp, InstFlags::EMPTY)                                                        \
+    _(PARAM, ParamOp, InstFlags::NO_DCE)                                                          \
+    _(RETURN, FixedInputOp1, InstFlags::NO_DCE)                                                   \
+    _(RETURN_VOID, FixedInputOp0, InstFlags::NO_DCE)                                              \
+    _(IF, IfOp, InstFlags::NO_DCE)                                                                \
+    _(IF_IMM, IfImmOp, InstFlags::NO_DCE)                                                         \
+    _(JMP_IND, FixedInputOp1, InstFlags::NO_DCE)
 
 #define INSTRUCTION_TYPES(_)                                                                      \
     _(BinaryOp)                                                                                   \

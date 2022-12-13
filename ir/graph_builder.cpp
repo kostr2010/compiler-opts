@@ -24,7 +24,7 @@ IdType GraphBuilder::NewParameter(ArgNumType arg_num)
     assert(graph_ != nullptr);
     assert(graph_->GetStartBasicBlock() != nullptr);
 
-    auto inst = Inst::NewInst<ParamOp>(Opcode::PARAM, arg_num);
+    auto inst = Inst::NewInst<Opcode::PARAM>(arg_num);
 
     assert(inst != nullptr);
     auto id = inst->GetId();
