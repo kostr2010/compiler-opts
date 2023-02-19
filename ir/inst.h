@@ -448,10 +448,10 @@ class ParamOp : public Inst
     ArgNumType arg_n_{ ARG_N_INVALID };
 };
 
-class PhiOp : public Inst
+class VariableInputInst : public Inst
 {
   public:
-    PhiOp(Opcode) : Inst(Opcode::PHI)
+    VariableInputInst(Opcode opcode) : Inst(opcode)
     {
     }
 
@@ -472,7 +472,14 @@ class PhiOp : public Inst
     }
 
     void RemoveInput(const Input& input);
-    Input GetInput(const BasicBlock* bb);
+};
+
+class PhiOp : public VariableInputInst
+{
+  public:
+    PhiOp(Opcode) : VariableInputInst(Opcode::PHI)
+    {
+    }
 };
 
 class IfOp : public FixedInputOp<2>, public HasCond

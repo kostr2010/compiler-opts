@@ -42,7 +42,7 @@ void Inst::Dump() const
     std::cout << "]\n";
 }
 
-size_t PhiOp::AddInput(Inst* inst, BasicBlock* bb)
+size_t VariableInputInst::AddInput(Inst* inst, BasicBlock* bb)
 {
     assert(inst != nullptr);
     assert(bb != nullptr);
@@ -57,7 +57,7 @@ size_t PhiOp::AddInput(Inst* inst, BasicBlock* bb)
     return idx;
 }
 
-size_t PhiOp::AddInput(const Input& input)
+size_t VariableInputInst::AddInput(const Input& input)
 {
     assert(input.GetInst() != nullptr);
     assert(input.GetSourceBB() != nullptr);
@@ -72,22 +72,12 @@ size_t PhiOp::AddInput(const Input& input)
     return idx;
 }
 
-void PhiOp::RemoveInput(const Input& input)
+void VariableInputInst::RemoveInput(const Input& input)
 {
     inputs_.erase(std::find_if(inputs_.begin(), inputs_.end(), [input](const Input& i) {
-        return (i.GetSourceBB()->GetId() == input.GetSourceBB()->GetId());
+        return (i.GetSourceBB()->GetId() == input.GetSourceBB()->GetId() &&
+                i.GetInst()->GetId() == input.GetInst()->GetId());
     }));
-}
-
-Input PhiOp::GetInput(const BasicBlock* bb)
-{
-    auto it = std::find_if(inputs_.begin(), inputs_.end(), [bb](const Input& i) {
-        return (i.GetSourceBB()->GetId() == bb->GetId());
-    });
-
-    assert(it != inputs_.end());
-
-    return *it;
 }
 
 void Inst::ReplaceInput(Inst* old_inst, Inst* new_inst)
