@@ -3,7 +3,7 @@
 
 BasicBlock* Graph::GetStartBasicBlock() const
 {
-    return bb_start_;
+    return bb_vector_[BB_START_ID].get();
 }
 
 BasicBlock* Graph::GetBasicBlock(IdType bb_id) const
@@ -18,13 +18,24 @@ void Graph::InitStartBlock()
     assert(BB_START_ID == bb_id_counter_);
 
     bb_vector_.emplace_back(new BasicBlock(bb_id_counter_++));
-    bb_start_ = bb_vector_.back().get();
 }
 
 BasicBlock* Graph::NewBasicBlock()
 {
     bb_vector_.emplace_back(new BasicBlock(bb_id_counter_++));
     return bb_vector_.back().get();
+}
+
+BasicBlock* Graph::ReleaseBasicBlock(IdType id)
+{
+    return bb_vector_.at(id).release();
+}
+
+IdType Graph::NewBasicBlock(BasicBlock* bb)
+{
+    bb_vector_.emplace_back(bb);
+    bb->SetId(bb_id_counter_++);
+    return bb_id_counter_;
 }
 
 void Graph::Dump()
@@ -122,4 +133,50 @@ void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
     }
 
     analyser_.InvalidateCfgDependentActivePasses();
+}
+
+void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)
+{
+    assert(first != nullptr);
+    assert(second != nullptr);
+
+    auto last_phi = first->GetLastPhi();
+    auto last_inst = first->GetLastInst();
+
+    last_phi->SetNext(second->TransferPhi());
+    last_inst->SetNext(second->TransferInst());
+
+    last_inst = last_inst->GetNext();
+    while (last_inst != nullptr) {
+        last_inst->SetBasicBlock(first);
+        last_inst = last_inst->GetNext();
+    }
+
+    last_phi = last_phi->GetNext();
+    while (last_phi != nullptr) {
+        last_phi->SetBasicBlock(first);
+        last_phi = last_phi->GetNext();
+    }
+}
+
+BasicBlock* Graph::SplitBasicBlock(Inst* inst_after)
+{
+    auto bb = inst_after->GetBasicBlock();
+    auto prev_last = bb->GetLastInst();
+    auto bb_new = NewBasicBlock();
+    auto next = inst_after->ReleaseNext();
+
+    if (next != nullptr) {
+        std::unique_ptr<Inst> split{ next };
+        bb_new->PushBackInst(std::move(split));
+        assert(inst_after->GetNext() == nullptr);
+        bb->SetLastInst(inst_after);
+        bb_new->SetLastInst(prev_last);
+    }
+
+    for (auto inst = bb_new->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
+        inst->SetBasicBlock(bb_new);
+    }
+
+    return bb_new;
 }

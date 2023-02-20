@@ -47,7 +47,7 @@ class GraphBuilder
         return id;
     }
 
-    IdType NewParameter(ArgNumType arg_num);
+    IdType NewParameter();
 
     template <typename T>
     IdType NewConst(T value)

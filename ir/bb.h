@@ -28,11 +28,12 @@ class BasicBlock : public marking::Markable
 
     GETTER(Predecesors, preds_);
     GETTER(Successors, succs_);
-    GETTER(LastInst, last_inst_);
-    GETTER(LastPhi, last_phi_);
-    GETTER(Id, id_);
+    GETTER_SETTER(LastInst, Inst*, last_inst_);
+    GETTER_SETTER(LastPhi, Inst*, last_phi_);
+    GETTER_SETTER(Id, IdType, id_);
     GETTER_SETTER(ImmDominator, BasicBlock*, imm_dominator_);
     GETTER(Loop, loop_);
+    GETTER(NumInst, num_instructions_);
 
     void SetLoop(Loop* loop, bool is_header = false)
     {
@@ -100,9 +101,19 @@ class BasicBlock : public marking::Markable
     void PushBackPhi(std::unique_ptr<Inst> inst);
     void PushBackPhi(Inst* inst);
 
-    void RemoveInst(Inst* inst);
-    void RemovePhi(Inst* inst);
-    void RemoveInst(const IdType inst_id);
+    void UnlinkInst(Inst* inst);
+
+    auto TransferInst()
+    {
+        last_inst_ = nullptr;
+        return first_inst_.release();
+    }
+
+    auto TransferPhi()
+    {
+        last_phi_ = nullptr;
+        return first_phi_.release();
+    }
 
     void Dump() const;
 
@@ -117,12 +128,14 @@ class BasicBlock : public marking::Markable
 
     BasicBlock* imm_dominator_{ nullptr };
 
-    const IdType id_;
+    IdType id_;
 
     std::unique_ptr<Inst> first_inst_{ nullptr };
     Inst* last_inst_{ nullptr };
     std::unique_ptr<Inst> first_phi_{ nullptr };
     Inst* last_phi_{ nullptr };
+
+    size_t num_instructions_{ 0 };
 };
 
 #endif

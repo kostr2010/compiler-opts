@@ -32,6 +32,7 @@ enum InstFlags : uint8_t
     EMPTY = 0b0,
     NO_DCE = 0b00000001,
     SYMMETRY = 0b00000010,
+    IS_CALL = 0b00000100,
 };
 
 enum class DataType : uint8_t
@@ -117,21 +118,25 @@ class Inst : public marking::Markable
 
   public:
     template <Opcode OPCODE>
-    using ToInstType = typename GetInstTypeT<OPCODE, InstTypes>::type;
+    using to_inst_type = typename GetInstTypeT<OPCODE, InstTypes>::type;
+
+    template <Opcode OPCODE>
+    struct has_dynamic_operands : std::is_base_of<VariableInputOp, to_inst_type<OPCODE> >
+    {};
+
+    static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
 
     template <typename InstType, typename = void>
-    struct GetNumInputs : std::integral_constant<size_t, std::numeric_limits<size_t>::max()>
+    struct get_num_inputs : std::integral_constant<size_t, MAX_INPUTS>
     {};
 
     template <typename InstType>
-    struct GetNumInputs<InstType, std::void_t<decltype(InstType::N_INPUTS)> >
+    struct get_num_inputs<InstType, std::void_t<decltype(InstType::N_INPUTS)> >
         : std::integral_constant<size_t, InstType::N_INPUTS>
     {};
 
     template <Opcode OPCODE, typename... Args>
     static std::unique_ptr<Inst> NewInst(Args&&... args);
-
-    static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
 
     GETTER_SETTER(Prev, Inst*, prev_);
     GETTER_SETTER(BasicBlock, BasicBlock*, bb_);
@@ -144,6 +149,12 @@ class Inst : public marking::Markable
     void SetInput(size_t idx, Inst* inst);
     void ReplaceInput(Inst* old_inst, Inst* new_inst);
     void ClearInput(Inst* old_inst);
+    size_t AddInput(Inst* inst, BasicBlock* bb);
+    size_t AddInput(const Input& input);
+
+    void ReserveInputs(size_t n);
+    void ClearInputs();
+    void RemoveInput(const Input& input);
 
     void AddUser(Inst* inst);
     void AddUser(Inst* inst, size_t idx);
@@ -151,16 +162,6 @@ class Inst : public marking::Markable
     void RemoveUser(const User& user);
     void RemoveUser(Inst* user);
     void ReplaceUser(const User& user_old, const User& user_new);
-
-    bool HasFlag(InstFlags flag) const
-    {
-        constexpr std::array<uint8_t, Opcode::N_OPCODES> FLAGS_MAP{
-#define GET_FLAGS(OP, TYPE, FLAGS, ...) FLAGS,
-            INSTRUCTION_LIST(GET_FLAGS)
-#undef GET_FLAGS
-        };
-        return FLAGS_MAP[opcode_] & flag;
-    }
 
     template <Opcode OPCODE, InstFlags FLAG>
     static constexpr bool HasFlag()
@@ -172,6 +173,10 @@ class Inst : public marking::Markable
         };
         return FLAGS_MAP[OPCODE] & FLAG;
     }
+
+    bool HasFlag(InstFlags flag) const;
+    bool HasDynamicOperands() const;
+    size_t GetNumInputs() const;
 
     Inst* GetNext() const
     {
@@ -206,6 +211,16 @@ class Inst : public marking::Markable
     bool IsParam() const
     {
         return opcode_ == Opcode::PARAM;
+    }
+
+    bool IsCall() const
+    {
+        return HasFlag(InstFlags::IS_CALL);
+    }
+
+    bool IsReturn() const
+    {
+        return (opcode_ == Opcode::RETURN) || (opcode_ == Opcode::RETURN_VOID);
     }
 
     bool IsCond() const
@@ -368,9 +383,6 @@ class CompareOp : public FixedInputOp<2>, public HasCond
 class ConstantOp : public Inst
 {
   public:
-    ConstantOp(Opcode) : Inst(Opcode::CONST)
-    {
-    }
     template <typename T>
     ConstantOp(Opcode, T val) : Inst(Opcode::CONST)
     {
@@ -387,10 +399,6 @@ class ConstantOp : public Inst
             SetDataType(DataType::NO_TYPE);
             assert(false);
         }
-    }
-    ConstantOp(Opcode, uint64_t val_raw, DataType type) : Inst(Opcode::CONST), val_(val_raw)
-    {
-        SetDataType(type);
     }
 
     uint64_t GetValRaw() const
@@ -448,36 +456,31 @@ class ParamOp : public Inst
     ArgNumType arg_n_{ ARG_N_INVALID };
 };
 
-class VariableInputInst : public Inst
+class VariableInputOp : public Inst
 {
   public:
-    VariableInputInst(Opcode opcode) : Inst(opcode)
+    VariableInputOp(Opcode opcode) : Inst(opcode)
     {
     }
-
-    void Dump() const override
-    {
-        Inst::Dump();
-    }
-
-    size_t AddInput(Inst* inst, BasicBlock* bb);
-    size_t AddInput(const Input& input);
-
-    void ClearInputs()
-    {
-        for (const auto& in : inputs_) {
-            in.GetInst()->RemoveUser(this);
-        }
-        inputs_.clear();
-    }
-
-    void RemoveInput(const Input& input);
 };
 
-class PhiOp : public VariableInputInst
+class CallOp : public VariableInputOp
 {
   public:
-    PhiOp(Opcode) : VariableInputInst(Opcode::PHI)
+    CallOp(Opcode opcode, Graph* callee) : VariableInputOp(opcode), callee_(callee)
+    {
+        assert(HasFlag(InstFlags::IS_CALL));
+    }
+    GETTER_SETTER(Callee, Graph*, callee_);
+
+  private:
+    Graph* callee_;
+};
+
+class PhiOp : public VariableInputOp
+{
+  public:
+    PhiOp(Opcode) : VariableInputOp(Opcode::PHI)
     {
     }
 };
@@ -508,8 +511,8 @@ class IfImmOp : public FixedInputOp<1>, public HasCond, public HasImm
 template <Opcode OPCODE, typename... Args>
 std::unique_ptr<Inst> Inst::NewInst(Args&&... args)
 {
-    return std::unique_ptr<Inst::ToInstType<OPCODE> >(
-        new Inst::ToInstType<OPCODE>(OPCODE, std::forward<Args>(args)...));
+    return std::unique_ptr<Inst::to_inst_type<OPCODE> >(
+        new Inst::to_inst_type<OPCODE>(OPCODE, std::forward<Args>(args)...));
 }
 
 #endif

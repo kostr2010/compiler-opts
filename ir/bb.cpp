@@ -33,8 +33,7 @@ void BasicBlock::RemoveSucc(BasicBlock* bb)
         return;
     }
 
-    succs_.erase(std::find_if(succs_.begin(), succs_.end(),
-                              [bb](BasicBlock* s) { return bb->GetId() == s->GetId(); }));
+    std::erase_if(succs_, [bb](BasicBlock* s) { return bb->GetId() == s->GetId(); });
 }
 
 void BasicBlock::AddPred(BasicBlock* bb)
@@ -69,8 +68,7 @@ void BasicBlock::RemovePred(BasicBlock* bb)
         return;
     }
 
-    preds_.erase(std::find_if(preds_.begin(), preds_.end(),
-                              [bb](BasicBlock* p) { return bb->GetId() == p->GetId(); }));
+    std::erase_if(preds_, [bb](BasicBlock* p) { return bb->GetId() == p->GetId(); });
 }
 
 void BasicBlock::ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new)
@@ -100,6 +98,8 @@ void BasicBlock::PushBackInst(std::unique_ptr<Inst> inst)
         last_inst_->SetNext(std::move(inst));
         last_inst_ = last_inst_->GetNext();
     }
+
+    ++num_instructions_;
 }
 
 void BasicBlock::PushFrontInst(std::unique_ptr<Inst> inst)
@@ -115,6 +115,8 @@ void BasicBlock::PushFrontInst(std::unique_ptr<Inst> inst)
         inst->SetNext(first_inst_.release());
         first_inst_ = std::move(inst);
     }
+
+    ++num_instructions_;
 }
 
 void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right)
@@ -133,6 +135,8 @@ void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right)
     inst->SetPrev(left);
     right->SetPrev(inst.get());
     left->SetNext(std::move(inst));
+
+    ++num_instructions_;
 }
 
 void BasicBlock::InsertInstAfter(std::unique_ptr<Inst> inst, Inst* after)
@@ -173,6 +177,8 @@ void BasicBlock::PushBackPhi(std::unique_ptr<Inst> inst)
         last_phi_->SetNext(std::move(inst));
         last_phi_ = last_phi_->GetNext();
     }
+
+    ++num_instructions_;
 }
 
 void BasicBlock::PushBackPhi(Inst* inst)
@@ -189,25 +195,16 @@ void BasicBlock::PushBackPhi(Inst* inst)
         last_phi_->SetNext(std::move(inst));
         last_phi_ = last_phi_->GetNext();
     }
+
+    ++num_instructions_;
 }
 
-void BasicBlock::RemoveInst(Inst* inst)
+void BasicBlock::UnlinkInst(Inst* inst)
 {
     assert(inst != nullptr);
-    assert(!inst->IsPhi());
 
     auto prev = inst->GetPrev();
     auto next = inst->GetNext();
-
-    for (const auto& i : inst->GetInputs()) {
-        if (i.GetInst() != nullptr) {
-            i.GetInst()->RemoveUser(inst);
-        }
-    }
-
-    for (const auto& u : inst->GetUsers()) {
-        u.GetInst()->ClearInput(inst);
-    }
 
     if (prev != nullptr && next != nullptr) {
         next->SetPrev(prev);
@@ -217,71 +214,27 @@ void BasicBlock::RemoveInst(Inst* inst)
             if (next != nullptr) {
                 next->SetPrev(nullptr);
             }
-            first_inst_.reset(inst->ReleaseNext());
+            if (inst->IsPhi()) {
+                first_phi_.reset(inst->ReleaseNext());
+            } else {
+                first_inst_.reset(inst->ReleaseNext());
+            }
         }
 
         if (next == nullptr) {
             if (prev != nullptr) {
                 prev->SetNext(nullptr);
             }
-            last_inst_ = prev;
-        }
-    }
-}
 
-void BasicBlock::RemovePhi(Inst* inst)
-{
-    assert(inst != nullptr);
-    assert(inst->IsPhi());
-
-    auto prev = inst->GetPrev();
-    auto next = inst->GetNext();
-
-    for (const auto& i : inst->GetInputs()) {
-        if (i.GetInst() != nullptr) {
-            i.GetInst()->RemoveUser(inst);
-        }
-    }
-
-    for (const auto& u : inst->GetUsers()) {
-        u.GetInst()->ClearInput(inst);
-    }
-
-    if (prev != nullptr && next != nullptr) {
-        next->SetPrev(prev);
-        prev->SetNext(inst->ReleaseNext());
-    } else {
-        if (prev == nullptr) {
-            if (next != nullptr) {
-                next->SetPrev(nullptr);
+            if (inst->IsPhi()) {
+                last_phi_ = prev;
+            } else {
+                last_inst_ = prev;
             }
-            first_phi_.reset(inst->ReleaseNext());
-        }
-
-        if (next == nullptr) {
-            if (prev != nullptr) {
-                prev->SetNext(nullptr);
-            }
-            last_phi_ = prev;
-        }
-    }
-}
-
-void BasicBlock::RemoveInst(const IdType inst_id)
-{
-    for (auto i = first_phi_.get(); i != nullptr; i = i->GetNext()) {
-        if (i->GetId() == inst_id) {
-            RemovePhi(i);
-            return;
         }
     }
 
-    for (auto i = first_inst_.get(); i != nullptr; i = i->GetNext()) {
-        if (i->GetId() == inst_id) {
-            RemoveInst(i);
-            return;
-        }
-    }
+    --num_instructions_;
 }
 
 void BasicBlock::Dump() const

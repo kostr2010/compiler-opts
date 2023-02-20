@@ -136,10 +136,10 @@ TEST(TestDCE, Example3)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(1U);
     auto C1 = b.NewConst(2U);
     auto C2 = b.NewConst(3U);
-    auto P0 = b.NewParameter(0);
 
     auto A = b.NewBlock();
     auto I0 = b.NewInst<Opcode::ADD>();
@@ -165,14 +165,12 @@ TEST(TestDCE, Example3)
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
     auto c0 = bb_start->GetFirstInst();
+    ASSERT_NE(c0, nullptr);
     ASSERT_EQ(c0->GetId(), C0);
     auto c1 = c0->GetNext();
     ASSERT_NE(c1, nullptr);
     ASSERT_EQ(c1->GetId(), C1);
-    auto p0 = c1->GetNext();
-    ASSERT_NE(p0, nullptr);
-    ASSERT_EQ(p0->GetId(), P0);
-    ASSERT_EQ(p0->GetNext(), nullptr);
+    ASSERT_EQ(c1->GetNext(), nullptr);
 
     auto bb_a = g.GetBasicBlock(A);
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
@@ -192,9 +190,6 @@ TEST(TestDCE, Example3)
     CheckInputs(c1, {});
     CheckUsers(c1, { { I3, 0 }, { I2, 1 } });
 
-    CheckInputs(p0, {});
-    CheckUsers(p0, {});
-
     CheckInputs(i2, { { C0, START }, { C1, START } });
     CheckUsers(i2, { { I3, 1 } });
 
@@ -211,10 +206,10 @@ TEST(TestDCE, Example4)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(1U);
     auto C1 = b.NewConst(2U);
     auto C2 = b.NewConst(3U);
-    auto P0 = b.NewParameter(0);
 
     auto A = b.NewBlock();
     auto I0 = b.NewInst<Opcode::ADD>();
@@ -253,15 +248,15 @@ TEST(TestDCE, Example4)
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
-    auto c0 = bb_start->GetFirstInst();
+    auto p0 = bb_start->GetFirstInst();
+    ASSERT_EQ(p0->GetId(), P0);
+    auto c0 = p0->GetNext();
+    ASSERT_NE(c0, nullptr);
     ASSERT_EQ(c0->GetId(), C0);
     auto c1 = c0->GetNext();
     ASSERT_NE(c1, nullptr);
     ASSERT_EQ(c1->GetId(), C1);
-    auto p0 = c1->GetNext();
-    ASSERT_NE(p0, nullptr);
-    ASSERT_EQ(p0->GetId(), P0);
-    ASSERT_EQ(p0->GetNext(), nullptr);
+    ASSERT_EQ(c1->GetNext(), nullptr);
 
     auto bb_a = g.GetBasicBlock(A);
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);

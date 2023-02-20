@@ -55,22 +55,24 @@ TEST(TestPeepholes, FoldADD_1)
     g.GetAnalyser()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
-    ASSERT_EQ(bb_start->GetFirstInst(), nullptr);
-
-    auto bb_a = g.GetBasicBlock(A);
-    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
-    auto c = bb_a->GetFirstInst();
+    ASSERT_NE(bb_start->GetFirstInst(), nullptr);
+    auto c = bb_start->GetFirstInst();
     ASSERT_EQ(c->GetOpcode(), Opcode::CONST);
     ASSERT_EQ(c->GetDataType(), DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 2U);
-    auto i1 = c->GetNext();
+    ASSERT_EQ(c->GetNext(), nullptr);
+
+    auto bb_a = g.GetBasicBlock(A);
+    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
+    auto i1 = bb_a->GetFirstInst();
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
+    ASSERT_EQ(i1->GetNext(), nullptr);
 
     CheckInputs(c, {});
     CheckUsers(c, { { I1, 0 } });
 
-    CheckInputs(i1, { { c->GetId(), A } });
+    CheckInputs(i1, { { c->GetId(), Graph::BB_START_ID } });
     CheckUsers(i1, {});
 }
 
@@ -100,22 +102,24 @@ TEST(TestPeepholes, FoldADD_2)
     g.GetAnalyser()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
-    ASSERT_EQ(bb_start->GetFirstInst(), nullptr);
+    ASSERT_NE(bb_start->GetFirstInst(), nullptr);
+    auto c = bb_start->GetFirstInst();
+    ASSERT_EQ(c->GetOpcode(), Opcode::CONST);
+    ASSERT_EQ(c->GetDataType(), DataType::INT);
+    ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 2U);
+    ASSERT_EQ(c->GetNext(), nullptr);
 
     auto bb_a = g.GetBasicBlock(A);
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
-    auto c = bb_a->GetFirstInst();
-    ASSERT_EQ(c->GetOpcode(), Opcode::CONST);
-    ASSERT_EQ(c->GetDataType(), DataType::INT);
-    ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 2);
-    auto i1 = c->GetNext();
+    auto i1 = bb_a->GetFirstInst();
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
+    ASSERT_EQ(i1->GetNext(), nullptr);
 
     CheckInputs(c, {});
     CheckUsers(c, { { I1, 0 } });
 
-    CheckInputs(i1, { { c->GetId(), A } });
+    CheckInputs(i1, { { c->GetId(), Graph::BB_START_ID } });
     CheckUsers(i1, {});
 }
 
@@ -129,7 +133,7 @@ TEST(TestPeepholes, MatchADD_zero_1)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -178,7 +182,7 @@ TEST(TestPeepholes, MatchADD_zero_2)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -229,8 +233,8 @@ TEST(TestPeepholes, MatchADD_after_sub_1)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
-    auto P1 = b.NewParameter(1);
+    auto P0 = b.NewParameter();
+    auto P1 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -256,11 +260,7 @@ TEST(TestPeepholes, MatchADD_after_sub_1)
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
-    auto p0 = bb_start->GetFirstInst();
-    ASSERT_NE(p0, nullptr);
-    ASSERT_EQ(p0->GetId(), P0);
-    ASSERT_NE(p0->GetNext(), nullptr);
-    auto p1 = p0->GetNext();
+    auto p1 = bb_start->GetFirstInst();
     ASSERT_NE(p1, nullptr);
     ASSERT_EQ(p1->GetId(), P1);
     ASSERT_EQ(p1->GetNext(), nullptr);
@@ -270,9 +270,6 @@ TEST(TestPeepholes, MatchADD_after_sub_1)
     auto i2 = bb_a->GetFirstInst();
     ASSERT_NE(i2, nullptr);
     ASSERT_EQ(i2->GetId(), I2);
-
-    CheckInputs(p0, {});
-    CheckUsers(p0, {});
 
     CheckInputs(p1, {});
     CheckUsers(p1, { { I2, 0 } });
@@ -293,8 +290,8 @@ TEST(TestPeepholes, MatchADD_after_sub_2)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
-    auto P1 = b.NewParameter(1);
+    auto P0 = b.NewParameter();
+    auto P1 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -323,11 +320,7 @@ TEST(TestPeepholes, MatchADD_after_sub_2)
     auto p0 = bb_start->GetFirstInst();
     ASSERT_NE(p0, nullptr);
     ASSERT_EQ(p0->GetId(), P0);
-    ASSERT_NE(p0->GetNext(), nullptr);
-    auto p1 = p0->GetNext();
-    ASSERT_NE(p1, nullptr);
-    ASSERT_EQ(p1->GetId(), P1);
-    ASSERT_EQ(p1->GetNext(), nullptr);
+    ASSERT_EQ(p0->GetNext(), nullptr);
 
     auto bb_a = g.GetBasicBlock(A);
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
@@ -337,9 +330,6 @@ TEST(TestPeepholes, MatchADD_after_sub_2)
 
     CheckInputs(p0, {});
     CheckUsers(p0, { { I2, 0 } });
-
-    CheckInputs(p1, {});
-    CheckUsers(p1, {});
 
     CheckInputs(i2, { { P0, START } });
     CheckUsers(i2, {});
@@ -357,8 +347,8 @@ TEST(TestPeepholes, MatchADD_after_sub_3)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
-    auto P1 = b.NewParameter(1);
+    auto P0 = b.NewParameter();
+    auto P1 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -390,11 +380,7 @@ TEST(TestPeepholes, MatchADD_after_sub_3)
     ASSERT_NE(p0, nullptr);
     ASSERT_EQ(p0->GetId(), P0);
     ASSERT_NE(p0->GetNext(), nullptr);
-    auto p1 = p0->GetNext();
-    ASSERT_NE(p1, nullptr);
-    ASSERT_EQ(p1->GetId(), P1);
-    ASSERT_NE(p1->GetNext(), nullptr);
-    auto c1 = p1->GetNext();
+    auto c1 = p0->GetNext();
     ASSERT_NE(c1, nullptr);
     ASSERT_EQ(c1->GetId(), C1);
     ASSERT_EQ(c1->GetNext(), nullptr);
@@ -412,9 +398,6 @@ TEST(TestPeepholes, MatchADD_after_sub_3)
 
     CheckInputs(p0, {});
     CheckUsers(p0, { { I_, 1 } });
-
-    CheckInputs(p1, {});
-    CheckUsers(p1, {});
 
     CheckInputs(c1, {});
     CheckUsers(c1, { { I_, 0 } });
@@ -436,7 +419,7 @@ TEST(TestPeepholes, MatchADD_same_value_1)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -493,7 +476,7 @@ TEST(TestPeepholes, MatchADD_fold_to_ADDI_1)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -550,7 +533,7 @@ TEST(TestPeepholes, MatchADD_fold_to_ADDI_2)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -623,23 +606,25 @@ TEST(TestPeepholes, FoldASHR)
     g.GetAnalyser()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
-    ASSERT_EQ(bb_start->GetFirstInst(), nullptr);
-
-    auto bb_a = g.GetBasicBlock(A);
-    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
-    auto i2 = bb_a->GetFirstInst();
+    ASSERT_NE(bb_start->GetFirstInst(), nullptr);
+    auto i2 = bb_start->GetFirstInst();
     ASSERT_NE(i2, nullptr);
     ASSERT_TRUE(i2->IsConst());
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetValInt(), 1);
-    auto i1 = i2->GetNext();
+    ASSERT_EQ(i2->GetNext(), nullptr);
+
+    auto bb_a = g.GetBasicBlock(A);
+    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
+    auto i1 = bb_a->GetFirstInst();
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
+    ASSERT_EQ(i1->GetNext(), nullptr);
 
     CheckInputs(i2, {});
     CheckUsers(i2, { { i1->GetId(), 0 } });
 
-    CheckInputs(i1, { { i2->GetId(), A } });
+    CheckInputs(i1, { { i2->GetId(), Graph::BB_START_ID } });
     CheckUsers(i1, {});
 }
 
@@ -653,7 +638,7 @@ TEST(TestPeepholes, MatchASHR_zero_0)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -685,6 +670,7 @@ TEST(TestPeepholes, MatchASHR_zero_0)
     auto i1 = bb_a->GetFirstInst();
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
+    ASSERT_EQ(i1->GetNext(), nullptr);
 
     CheckInputs(p0, {});
     CheckUsers(p0, { { I1, 0 } });
@@ -703,7 +689,7 @@ TEST(TestPeepholes, MatchASHR_zero_1)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -725,22 +711,24 @@ TEST(TestPeepholes, MatchASHR_zero_1)
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
-
-    auto bb_a = g.GetBasicBlock(A);
-    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
-    auto i2 = bb_a->GetFirstInst();
+    auto i2 = bb_start->GetFirstInst();
     ASSERT_NE(i2, nullptr);
     ASSERT_TRUE(i2->IsConst());
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetValInt(), 0);
-    auto i1 = i2->GetNext();
+    ASSERT_EQ(i2->GetNext(), nullptr);
+
+    auto bb_a = g.GetBasicBlock(A);
+    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
+    auto i1 = bb_a->GetFirstInst();
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
+    ASSERT_EQ(i1->GetNext(), nullptr);
 
     CheckInputs(i2, {});
     CheckUsers(i2, { { I1, 0 } });
 
-    CheckInputs(i1, { { i2->GetId(), A } });
+    CheckInputs(i1, { { i2->GetId(), Graph::BB_START_ID } });
     CheckUsers(i1, {});
 }
 
@@ -754,7 +742,7 @@ TEST(TestPeepholes, MatchASHR_fold_to_ASHRI)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(17);
 
@@ -827,22 +815,24 @@ TEST(TestPeepholes, FoldXOR_1)
     g.GetAnalyser()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
-    ASSERT_EQ(bb_start->GetFirstInst(), nullptr);
-
-    auto bb_a = g.GetBasicBlock(A);
-    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
-    auto c = bb_a->GetFirstInst();
+    ASSERT_NE(bb_start->GetFirstInst(), nullptr);
+    auto c = bb_start->GetFirstInst();
     ASSERT_EQ(c->GetOpcode(), Opcode::CONST);
     ASSERT_EQ(c->GetDataType(), DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 28);
-    auto i1 = c->GetNext();
+    ASSERT_EQ(c->GetNext(), nullptr);
+
+    auto bb_a = g.GetBasicBlock(A);
+    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
+    auto i1 = bb_a->GetFirstInst();
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
+    ASSERT_EQ(i1->GetNext(), nullptr);
 
     CheckInputs(c, {});
     CheckUsers(c, { { I1, 0 } });
 
-    CheckInputs(i1, { { c->GetId(), A } });
+    CheckInputs(i1, { { c->GetId(), Graph::BB_START_ID } });
     CheckUsers(i1, {});
 }
 
@@ -856,7 +846,7 @@ TEST(TestPeepholes, MatchXOR_same_value)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -878,22 +868,24 @@ TEST(TestPeepholes, MatchXOR_same_value)
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
-
-    auto bb_a = g.GetBasicBlock(A);
-    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
-    auto i2 = bb_a->GetFirstInst();
+    auto i2 = bb_start->GetFirstInst();
     ASSERT_NE(i2, nullptr);
     ASSERT_TRUE(i2->IsConst());
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetValInt(), 0);
-    auto i1 = i2->GetNext();
+    ASSERT_EQ(i2->GetNext(), nullptr);
+
+    auto bb_a = g.GetBasicBlock(A);
+    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
+    auto i1 = bb_a->GetFirstInst();
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
+    ASSERT_EQ(i1->GetNext(), nullptr);
 
     CheckInputs(i2, {});
     CheckUsers(i2, { { I1, 0 } });
 
-    CheckInputs(i1, { { i2->GetId(), A } });
+    CheckInputs(i1, { { i2->GetId(), Graph::BB_START_ID } });
     CheckUsers(i1, {});
 }
 
@@ -907,7 +899,7 @@ TEST(TestPeepholes, MatchXOR_zero)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -956,7 +948,7 @@ TEST(TestPeepholes, MatchXOR_zero_)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -1005,7 +997,7 @@ TEST(TestPeepholes, MatchXOR_fold_to_XORI)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 
@@ -1062,7 +1054,7 @@ TEST(TestPeepholes, MatchXOR_fold_to_XORI_)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
-    auto P0 = b.NewParameter(0);
+    auto P0 = b.NewParameter();
     auto C0 = b.NewConst(0);
     auto C1 = b.NewConst(-2);
 

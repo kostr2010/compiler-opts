@@ -19,7 +19,7 @@ TEST(BasicTests, Example1)
     Graph g;
     GraphBuilder b(&g);
 
-    auto p0 = b.NewParameter(0);
+    auto p0 = b.NewParameter();
 
     auto c0 = b.NewConst(1U); // res{1U}
     b.SetType(c0, DataType::INT);

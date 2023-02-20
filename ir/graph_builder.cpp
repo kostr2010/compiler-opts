@@ -19,12 +19,16 @@ void GraphBuilder::SetGraph(Graph* g)
     dfg_constructed = false;
 }
 
-IdType GraphBuilder::NewParameter(ArgNumType arg_num)
+IdType GraphBuilder::NewParameter()
 {
     assert(graph_ != nullptr);
     assert(graph_->GetStartBasicBlock() != nullptr);
+    if (graph_->GetStartBasicBlock()->GetLastInst() != nullptr) {
+        // assert that parameters are passed one after another
+        assert(graph_->GetStartBasicBlock()->GetLastInst()->IsParam());
+    }
 
-    auto inst = Inst::NewInst<Opcode::PARAM>(arg_num);
+    auto inst = Inst::NewInst<Opcode::PARAM>(graph_->GetStartBasicBlock()->GetNumInst());
 
     assert(inst != nullptr);
     auto id = inst->GetId();

@@ -5,23 +5,14 @@
 
 static void TransferUsers(Inst* from, Inst* to)
 {
+    assert(from != nullptr);
+    assert(to != nullptr);
+
     for (const auto& user : from->GetUsers()) {
         to->AddUser(user);
         user.GetInst()->ReplaceInput(from, to);
         from->RemoveUser(user);
     }
-}
-
-static void ReplaceWithConst(Inst* inst, uint64_t raw, DataType type)
-{
-    assert(inst != nullptr);
-    assert(inst->GetBasicBlock() != nullptr);
-
-    auto bb = inst->GetBasicBlock();
-    bb->PushFrontInst(Inst::NewInst<Opcode::CONST>(raw, type));
-    auto new_inst = bb->GetFirstInst();
-
-    TransferUsers(inst, new_inst);
 }
 
 // 1. BINOP v0, CONST or BINOP CONST, v0
@@ -30,12 +21,12 @@ static void ReplaceWithConst(Inst* inst, uint64_t raw, DataType type)
 template <Opcode OPCODE_FROM, Opcode OPCODE_TO>
 static bool FoldBinOpToBinImmOp(Inst* i)
 {
-    static_assert(std::is_same<Inst::ToInstType<OPCODE_TO>, BinaryImmOp>());
-    static_assert(std::is_same<Inst::ToInstType<OPCODE_FROM>, BinaryOp>());
+    static_assert(std::is_same<Inst::to_inst_type<OPCODE_TO>, BinaryImmOp>());
+    static_assert(std::is_same<Inst::to_inst_type<OPCODE_FROM>, BinaryOp>());
 
     assert(i != nullptr);
     assert(i->GetOpcode() == OPCODE_FROM);
-    assert(i->GetInputs().size() == Inst::GetNumInputs<BinaryOp>());
+    assert(i->GetInputs().size() == Inst::get_num_inputs<BinaryOp>());
     assert(i->GetInputs()[0].GetInst() != nullptr);
     assert(i->GetInputs()[1].GetInst() != nullptr);
 
@@ -96,6 +87,14 @@ bool Peepholes::RunPass()
     return true;
 }
 
+void Peepholes::ReplaceWithIntegralConst(Inst* inst, int64_t val)
+{
+    graph_->GetStartBasicBlock()->PushFrontInst(Inst::NewInst<Opcode::CONST>(val));
+    auto new_inst = graph_->GetStartBasicBlock()->GetFirstInst();
+
+    TransferUsers(inst, new_inst);
+}
+
 void Peepholes::MatchADD(Inst* i)
 {
     assert(i != nullptr);
@@ -138,7 +137,7 @@ bool Peepholes::FoldADD(Inst* i)
         auto val1 = static_cast<ConstantOp*>(inputs[0].GetInst())->GetValInt();
         auto val2 = static_cast<ConstantOp*>(inputs[1].GetInst())->GetValInt();
         auto res = val1 + val2;
-        ReplaceWithConst(i, (uint64_t)res, DataType::INT);
+        ReplaceWithIntegralConst(i, res);
         return true;
     }
 
@@ -285,7 +284,7 @@ bool Peepholes::FoldASHR(Inst* i)
         auto val1 = static_cast<ConstantOp*>(inputs[0].GetInst())->GetValInt();
         auto val2 = static_cast<ConstantOp*>(inputs[1].GetInst())->GetValInt();
         auto res = (val1 >> val2);
-        ReplaceWithConst(i, res, DataType::INT);
+        ReplaceWithIntegralConst(i, res);
         return true;
     }
 
@@ -329,7 +328,7 @@ bool Peepholes::MatchASHR_zero_1(Inst* i)
     auto input_1 = inputs[1].GetInst();
 
     if (input_0->IsConst() && (static_cast<ConstantOp*>(input_1)->GetValRaw() == 0)) {
-        ReplaceWithConst(i, 0, DataType::INT);
+        ReplaceWithIntegralConst(i, 0);
         return true;
     }
 
@@ -371,10 +370,10 @@ bool Peepholes::FoldXOR(Inst* i)
                         inputs[1].GetInst()->GetDataType() == DataType::INT);
 
     if (is_foldable && is_integral) {
-        auto val1 = static_cast<ConstantOp*>(inputs[0].GetInst())->GetValRaw();
-        auto val2 = static_cast<ConstantOp*>(inputs[1].GetInst())->GetValRaw();
-        uint64_t res = val1 ^ val2;
-        ReplaceWithConst(i, res, DataType::INT);
+        auto val1 = static_cast<ConstantOp*>(inputs[0].GetInst())->GetValInt();
+        auto val2 = static_cast<ConstantOp*>(inputs[1].GetInst())->GetValInt();
+        int64_t res = val1 ^ val2;
+        ReplaceWithIntegralConst(i, res);
         return true;
     }
 
@@ -396,7 +395,7 @@ bool Peepholes::MatchXOR_same_value(Inst* i)
     auto input_1 = inputs[1].GetInst();
 
     if (input_0->GetId() == input_1->GetId()) {
-        ReplaceWithConst(i, 0, DataType::INT);
+        ReplaceWithIntegralConst(i, 0);
         return true;
     }
 

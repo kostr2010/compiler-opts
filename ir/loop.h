@@ -39,7 +39,7 @@ class Loop
   private:
     IdType id_;
 
-    BasicBlock* header_;
+    BasicBlock* header_ = nullptr;
     BasicBlock* pre_header_ = nullptr;
 
     std::vector<BasicBlock*> back_edges_ = {};

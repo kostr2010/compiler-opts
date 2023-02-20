@@ -17,6 +17,8 @@ class Peepholes : public Pass
     bool RunPass() override;
 
   private:
+    void ReplaceWithIntegralConst(Inst* inst, int64_t val);
+
     void MatchADD(Inst* i);
     bool FoldADD(Inst* i);
 

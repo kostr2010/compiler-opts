@@ -5,7 +5,6 @@ void Inst::SetInput(size_t idx, Inst* inst)
 {
     assert(inst != nullptr);
     assert(idx < inputs_.size());
-    assert(!IsPhi());
 
     inst->users_.push_back(User(this, idx));
     inputs_[idx] = Input(inst, inst->GetBasicBlock());
@@ -42,12 +41,12 @@ void Inst::Dump() const
     std::cout << "]\n";
 }
 
-size_t VariableInputInst::AddInput(Inst* inst, BasicBlock* bb)
+size_t Inst::AddInput(Inst* inst, BasicBlock* bb)
 {
     assert(inst != nullptr);
     assert(bb != nullptr);
+    assert(HasDynamicOperands());
     assert(inputs_.size() + 1 < MAX_INPUTS);
-    assert(IsPhi());
 
     size_t idx = inputs_.size();
 
@@ -57,12 +56,12 @@ size_t VariableInputInst::AddInput(Inst* inst, BasicBlock* bb)
     return idx;
 }
 
-size_t VariableInputInst::AddInput(const Input& input)
+size_t Inst::AddInput(const Input& input)
 {
     assert(input.GetInst() != nullptr);
     assert(input.GetSourceBB() != nullptr);
+    assert(HasDynamicOperands());
     assert(inputs_.size() + 1 < MAX_INPUTS);
-    assert(IsPhi());
 
     size_t idx = inputs_.size();
 
@@ -72,12 +71,22 @@ size_t VariableInputInst::AddInput(const Input& input)
     return idx;
 }
 
-void VariableInputInst::RemoveInput(const Input& input)
+void Inst::ReserveInputs(size_t n)
 {
-    inputs_.erase(std::find_if(inputs_.begin(), inputs_.end(), [input](const Input& i) {
+    inputs_.reserve(n);
+}
+
+void Inst::ClearInputs()
+{
+    inputs_.clear();
+}
+
+void Inst::RemoveInput(const Input& input)
+{
+    std::erase_if(inputs_, [input](const Input& i) {
         return (i.GetSourceBB()->GetId() == input.GetSourceBB()->GetId() &&
                 i.GetInst()->GetId() == input.GetInst()->GetId());
-    }));
+    });
 }
 
 void Inst::ReplaceInput(Inst* old_inst, Inst* new_inst)
@@ -85,15 +94,14 @@ void Inst::ReplaceInput(Inst* old_inst, Inst* new_inst)
     assert(old_inst != nullptr);
     assert(new_inst != nullptr);
 
-    auto it = std::find_if(inputs_.begin(), inputs_.end(), [old_inst](const Input& i) {
-        return (i.GetInst() != nullptr) && (old_inst->GetId() == i.GetInst()->GetId());
-    });
-
-    if (it != inputs_.end()) {
-        if (!IsPhi()) {
-            it->SetSourceBB(new_inst->GetBasicBlock());
+    for (auto& input : inputs_) {
+        assert(input.GetInst() != nullptr);
+        if (old_inst->GetId() == input.GetInst()->GetId()) {
+            if (!IsPhi()) {
+                input.SetSourceBB(new_inst->GetBasicBlock());
+            }
+            input.SetInst(new_inst);
         }
-        it->SetInst(new_inst);
     }
 }
 
@@ -111,15 +119,45 @@ void Inst::ClearInput(Inst* old_inst)
     }
 }
 
+bool Inst::HasFlag(InstFlags flag) const
+{
+    constexpr std::array<uint8_t, Opcode::N_OPCODES> FLAGS_MAP{
+#define GET_FLAGS(OP, TYPE, FLAGS, ...) FLAGS,
+        INSTRUCTION_LIST(GET_FLAGS)
+#undef GET_FLAGS
+    };
+    return FLAGS_MAP[opcode_] & flag;
+}
+
+bool Inst::HasDynamicOperands() const
+{
+    constexpr std::array<uint8_t, Opcode::N_OPCODES> DYN_OPS{
+#define GET_FLAGS(OP, TYPE, FLAGS, ...) has_dynamic_operands<Opcode::OP>(),
+        INSTRUCTION_LIST(GET_FLAGS)
+#undef GET_FLAGS
+    };
+    return DYN_OPS[opcode_];
+}
+
+size_t Inst::GetNumInputs() const
+{
+    constexpr std::array<size_t, Opcode::N_OPCODES> NUM_INPUTS{
+#define GET_FLAGS(OP, TYPE, FLAGS, ...) get_num_inputs<TYPE>(),
+        INSTRUCTION_LIST(GET_FLAGS)
+#undef GET_FLAGS
+    };
+    return NUM_INPUTS[opcode_];
+}
+
 void Inst::AddUser(Inst* inst)
 {
-    assert(inst->IsPhi());
+    assert(inst->HasDynamicOperands());
     users_.emplace_back(inst);
 }
 
 void Inst::AddUser(Inst* inst, size_t idx)
 {
-    assert(!inst->IsPhi());
+    assert(!inst->HasDynamicOperands());
     users_.emplace_back(inst, idx);
 }
 
@@ -130,16 +168,13 @@ void Inst::AddUser(const User& user)
 
 void Inst::RemoveUser(const User& user)
 {
-    users_.erase(std::find_if(users_.begin(), users_.end(), [user](const User& u) {
-        return u.GetInst()->GetId() == user.GetInst()->GetId();
-    }));
+    std::erase_if(
+        users_, [user](const User& u) { return u.GetInst()->GetId() == user.GetInst()->GetId(); });
 }
 
 void Inst::RemoveUser(Inst* user)
 {
-    users_.erase(std::find_if(users_.begin(), users_.end(), [user](const User& u) {
-        return u.GetInst()->GetId() == user->GetId();
-    }));
+    std::erase_if(users_, [user](const User& u) { return u.GetInst()->GetId() == user->GetId(); });
 }
 
 void Inst::ReplaceUser(const User& user_old, const User& user_new)

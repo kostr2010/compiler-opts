@@ -30,6 +30,7 @@ class DCE : public Pass
   private:
     void Mark();
     void MarkRecursively(Inst* inst);
+    void RemoveInst(Inst* inst);
     void Sweep();
     void ClearMarks();
 };

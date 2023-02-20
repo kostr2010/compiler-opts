@@ -34,6 +34,23 @@ void DCE::MarkRecursively(Inst* inst)
     }
 }
 
+void DCE::RemoveInst(Inst* inst)
+{
+    assert(inst != nullptr);
+
+    for (const auto& i : inst->GetInputs()) {
+        if (i.GetInst() != nullptr) {
+            i.GetInst()->RemoveUser(inst);
+        }
+    }
+
+    for (const auto& u : inst->GetUsers()) {
+        u.GetInst()->ClearInput(inst);
+    }
+
+    inst->GetBasicBlock()->UnlinkInst(inst);
+}
+
 void DCE::Sweep()
 {
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
@@ -41,7 +58,7 @@ void DCE::Sweep()
         while (inst != nullptr) {
             auto next = inst->GetNext();
             if (!marking::Marker::GetMark<DCE, Marks::VISITED>(*(inst->GetMarkHolder()))) {
-                bb->RemoveInst(inst);
+                RemoveInst(inst);
             }
             inst = next;
         }
@@ -50,7 +67,7 @@ void DCE::Sweep()
         while (phi != nullptr) {
             auto next = phi->GetNext();
             if (!marking::Marker::GetMark<DCE, Marks::VISITED>(*(phi->GetMarkHolder()))) {
-                bb->RemovePhi(phi);
+                RemoveInst(phi);
             }
             phi = next;
         }

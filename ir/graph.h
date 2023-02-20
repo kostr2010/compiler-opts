@@ -40,8 +40,13 @@ class Graph
     void InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to);
     void InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before);
     void InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after);
+    void AppendBasicBlock(BasicBlock* first, BasicBlock* second);
+
+    BasicBlock* SplitBasicBlock(Inst* inst_after);
 
     BasicBlock* NewBasicBlock();
+    BasicBlock* ReleaseBasicBlock(IdType id);
+    IdType NewBasicBlock(BasicBlock* bb);
 
     void Dump();
 
@@ -54,7 +59,6 @@ class Graph
     void InitStartBlock();
 
     std::vector<std::unique_ptr<BasicBlock> > bb_vector_;
-    BasicBlock* bb_start_{ nullptr };
 
     IdType bb_id_counter_{};
 

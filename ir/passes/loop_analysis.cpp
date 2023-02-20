@@ -203,7 +203,7 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
 
     for (auto i = bb->GetFirstPhi(); i != nullptr; i = i->GetNext()) {
         assert(i->GetOpcode() == Opcode::PHI);
-        auto phi = static_cast<Inst::ToInstType<Opcode::PHI>*>(i);
+        auto phi = static_cast<Inst::to_inst_type<Opcode::PHI>*>(i);
         auto inputs = phi->GetInputs();
         auto it = std::find_if(inputs.begin(), inputs.end(), [bck](const Input& in) {
             return in.GetSourceBB()->GetId() == bck->GetId();
@@ -215,6 +215,9 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
             bck_input.GetInst()->RemoveUser(User(phi));
 
             inputs = phi->GetInputs();
+            for (const auto& in : inputs) {
+                in.GetInst()->RemoveUser(phi);
+            }
             phi->ClearInputs();
 
             Inst* source_inst = nullptr;
@@ -222,7 +225,7 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
                 pred->PushBackPhi(Inst::NewInst<Opcode::PHI>());
                 source_inst = pred->GetLastPhi();
                 for (const auto& input : inputs) {
-                    static_cast<Inst::ToInstType<Opcode::PHI>*>(source_inst)->AddInput(input);
+                    source_inst->AddInput(input);
                 }
             } else {
                 source_inst = inputs.front().GetInst();

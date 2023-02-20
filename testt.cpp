@@ -78,14 +78,14 @@ struct Inst
 
   public:
     template <Opcode OPCODE>
-    using ToInstType = typename GetInstTypeT<OPCODE, InstTypes>::type;
+    using to_inst_type = typename GetInstTypeT<OPCODE, InstTypes>::type;
 
     template <typename InstType, typename = void>
-    struct GetNumInputs : std::integral_constant<size_t, std::numeric_limits<size_t>::max()>
+    struct get_num_inputs : std::integral_constant<size_t, std::numeric_limits<size_t>::max()>
     {};
 
     template <typename InstType>
-    struct GetNumInputs<InstType, std::void_t<decltype(InstType::N_INPUTS)> >
+    struct get_num_inputs<InstType, std::void_t<decltype(InstType::N_INPUTS)> >
         : std::integral_constant<size_t, InstType::N_INPUTS>
     {};
 

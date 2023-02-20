@@ -1,17 +1,17 @@
 #define INSTRUCTION_LIST(_)                                                                       \
-    _(ADD, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(ADD, BinaryOp, InstFlags::SYMMETRY)                                                         \
     _(SUB, BinaryOp, InstFlags::EMPTY)                                                            \
-    _(MUL, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(MUL, BinaryOp, InstFlags::SYMMETRY)                                                         \
     _(DIV, BinaryOp, InstFlags::EMPTY)                                                            \
     _(MOD, BinaryOp, InstFlags::EMPTY)                                                            \
-    _(MIN, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
-    _(MAX, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(MIN, BinaryOp, InstFlags::SYMMETRY)                                                         \
+    _(MAX, BinaryOp, InstFlags::SYMMETRY)                                                         \
     _(SHL, BinaryOp, InstFlags::EMPTY)                                                            \
     _(SHR, BinaryOp, InstFlags::EMPTY)                                                            \
     _(ASHR, BinaryOp, InstFlags::EMPTY)                                                           \
-    _(AND, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
-    _(OR, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                       \
-    _(XOR, BinaryOp, InstFlags::EMPTY | InstFlags::SYMMETRY)                                      \
+    _(AND, BinaryOp, InstFlags::SYMMETRY)                                                         \
+    _(OR, BinaryOp, InstFlags::SYMMETRY)                                                          \
+    _(XOR, BinaryOp, InstFlags::SYMMETRY)                                                         \
     _(ADDI, BinaryImmOp, InstFlags::EMPTY)                                                        \
     _(SUBI, BinaryImmOp, InstFlags::EMPTY)                                                        \
     _(MULI, BinaryImmOp, InstFlags::EMPTY)                                                        \
@@ -28,10 +28,11 @@
     _(CMP, CompareOp, InstFlags::EMPTY)                                                           \
     /*_(CAST, CastOp )*/                                                                          \
     /*_(CHECK, CHECK )*/                                                                          \
-    /*_(CALL, CALL )*/                                                                            \
+    /*_(CALL_DYNAMIC, CallOp, InstFlags::IS_CALL | InstFlags::NO_DCE)*/                           \
+    _(CALL_STATIC, CallOp, InstFlags::IS_CALL)                                                    \
     _(PHI, PhiOp, InstFlags::EMPTY)                                                               \
     _(CONST, ConstantOp, InstFlags::EMPTY)                                                        \
-    _(PARAM, ParamOp, InstFlags::NO_DCE)                                                          \
+    _(PARAM, ParamOp, InstFlags::EMPTY)                                                           \
     _(RETURN, FixedInputOp1, InstFlags::NO_DCE)                                                   \
     _(RETURN_VOID, FixedInputOp0, InstFlags::NO_DCE)                                              \
     _(IF, IfOp, InstFlags::NO_DCE)                                                                \
@@ -49,6 +50,8 @@
     _(ParamOp)                                                                                    \
     _(FixedInputOp0)                                                                              \
     _(FixedInputOp1)                                                                              \
+    _(VariableInputOp)                                                                            \
+    _(CallOp)                                                                                     \
     _(PhiOp)                                                                                      \
     _(IfImmOp)                                                                                    \
     _(IfOp)
