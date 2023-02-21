@@ -93,7 +93,8 @@ void Inlining::UpdateDFGReturns(Inst* inst)
     assert(!rets.empty());
 
     // only one return type per function
-    if (rets.front()->GetOpcode() == Opcode::RETURN) {
+    switch (rets.front()->GetOpcode()) {
+    case Opcode::RETURN: {
         Inst* call_ret_res{ nullptr };
         if (rets.size() == 1) {
             assert(Inst::get_num_inputs<Inst::to_inst_type<Opcode::RETURN> >() ==
@@ -121,6 +122,14 @@ void Inlining::UpdateDFGReturns(Inst* inst)
         for (const auto& user : call_inst->GetUsers()) {
             user.GetInst()->ReplaceInput(call_inst, call_ret_res);
         }
+    } break;
+    case Opcode::RETURN_VOID: {
+        for (const auto& ret : rets) {
+            ret->GetBasicBlock()->UnlinkInst(ret);
+        }
+    } break;
+    default:
+        assert(false);
     }
 }
 
