@@ -18,16 +18,28 @@ void Inst::Dump() const
 #undef CREATE
     };
 
-    std::cout << "\tinst_id:....." << id_ << "\n";
-    std::cout << "\tinst_opcode:." << op_to_str.at(opcode_) << " (" << (int)opcode_ << ")\n";
-    std::cout << "\tinst users:\n\t\t[";
+    std::cout << "#\tinst_id:....." << id_ << "\n";
+    std::cout << "#\tinst_opcode:." << op_to_str.at(opcode_) << " (" << (int)opcode_ << ")\n";
+    std::cout << "#\tinst prev:...";
+    if (prev_ == nullptr) {
+        std::cout << "NULL\n";
+    } else {
+        std::cout << prev_->GetId() << "\n";
+    }
+    std::cout << "#\tinst next:...";
+    if (next_ == nullptr) {
+        std::cout << "NULL\n";
+    } else {
+        std::cout << next_->GetId() << "\n";
+    }
+    std::cout << "#\tinst users:\n#\t\t[";
 
     for (auto user : users_) {
         std::cout << user.GetInst()->GetId() << "(" << user.GetIdx() << ") ";
     }
     std::cout << "]\n";
 
-    std::cout << "\tinst inputs:\n\t\t[";
+    std::cout << "#\tinst inputs:\n#\t\t[";
     if (!IsPhi()) {
         for (auto input : inputs_) {
             std::cout << input.GetInst()->GetId() << " ";

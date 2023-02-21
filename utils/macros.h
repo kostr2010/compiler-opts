@@ -18,6 +18,8 @@
 
 #define LOG(msg) std::cerr << "LOG/[" << __FUNCTION__ << "] " << msg << "\n";
 
+#define DUMP(graph) graph.Dump(#graph)
+
 #define GETTER(func_name, field_name)                                                             \
     const auto Get##func_name() const                                                             \
     {                                                                                             \

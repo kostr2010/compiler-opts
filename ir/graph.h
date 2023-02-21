@@ -48,7 +48,7 @@ class Graph
     BasicBlock* ReleaseBasicBlock(IdType id);
     IdType NewBasicBlock(BasicBlock* bb);
 
-    void Dump();
+    void Dump(std::string name = "");
 
     Analyser* GetAnalyser()
     {

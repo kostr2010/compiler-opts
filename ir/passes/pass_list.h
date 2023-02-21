@@ -2,9 +2,11 @@
 #define __PASS_LIST_H_INCLUDED__
 
 #include "bfs.h"
+#include "dbe.h"
 #include "dce.h"
 #include "dfs.h"
 #include "dom_tree.h"
+#include "inlining.h"
 #include "loop_analysis.h"
 #include "peepholes.h"
 #include "po.h"
@@ -61,6 +63,7 @@ class PassList
     }
 };
 
-using ActivePasses = PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO, Peepholes, DCE>;
+using ActivePasses =
+    PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO, Peepholes, DCE, Inlining, DBE>;
 
 #endif

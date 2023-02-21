@@ -91,15 +91,13 @@ void BasicBlock::PushBackInst(std::unique_ptr<Inst> inst)
     assert(!inst->IsPhi());
 
     inst->SetBasicBlock(this);
-    if (first_inst_ == nullptr) {
+    if (last_inst_ == nullptr) {
         SetFirstInst(std::move(inst));
     } else {
         inst->SetPrev(last_inst_);
         last_inst_->SetNext(std::move(inst));
         last_inst_ = last_inst_->GetNext();
     }
-
-    ++num_instructions_;
 }
 
 void BasicBlock::PushFrontInst(std::unique_ptr<Inst> inst)
@@ -115,8 +113,6 @@ void BasicBlock::PushFrontInst(std::unique_ptr<Inst> inst)
         inst->SetNext(first_inst_.release());
         first_inst_ = std::move(inst);
     }
-
-    ++num_instructions_;
 }
 
 void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right)
@@ -135,8 +131,6 @@ void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right)
     inst->SetPrev(left);
     right->SetPrev(inst.get());
     left->SetNext(std::move(inst));
-
-    ++num_instructions_;
 }
 
 void BasicBlock::InsertInstAfter(std::unique_ptr<Inst> inst, Inst* after)
@@ -177,8 +171,6 @@ void BasicBlock::PushBackPhi(std::unique_ptr<Inst> inst)
         last_phi_->SetNext(std::move(inst));
         last_phi_ = last_phi_->GetNext();
     }
-
-    ++num_instructions_;
 }
 
 void BasicBlock::PushBackPhi(Inst* inst)
@@ -195,8 +187,6 @@ void BasicBlock::PushBackPhi(Inst* inst)
         last_phi_->SetNext(std::move(inst));
         last_phi_ = last_phi_->GetNext();
     }
-
-    ++num_instructions_;
 }
 
 void BasicBlock::UnlinkInst(Inst* inst)
@@ -233,8 +223,18 @@ void BasicBlock::UnlinkInst(Inst* inst)
             }
         }
     }
+}
 
-    --num_instructions_;
+Inst* BasicBlock::TransferInst()
+{
+    last_inst_ = nullptr;
+    return first_inst_.release();
+}
+
+Inst* BasicBlock::TransferPhi()
+{
+    last_phi_ = nullptr;
+    return first_phi_.release();
 }
 
 void BasicBlock::Dump() const
@@ -254,16 +254,49 @@ void BasicBlock::Dump() const
     }
     std::cout << "]\n";
 
+    if (IsEmpty()) {
+        std::cout << "#########################\n";
+        return;
+    }
+
+    std::cout << "# FIRST PHI: ";
+    if (first_phi_ != nullptr) {
+        std::cout << first_phi_->GetId() << "\n";
+    } else {
+        std::cout << "NULL\n";
+    }
+
+    std::cout << "# LAST PHI: ";
+    if (last_phi_ != nullptr) {
+        std::cout << last_phi_->GetId() << "\n";
+    } else {
+        std::cout << "NULL\n";
+    }
+
     std::cout << "# PHI:\n";
     for (auto inst = first_phi_.get(); inst != nullptr; inst = inst->GetNext()) {
         inst->Dump();
-        std::cout << "\n";
+        std::cout << "#\n";
+    }
+
+    std::cout << "# FIRST INST: ";
+    if (first_inst_ != nullptr) {
+        std::cout << first_inst_->GetId() << "\n";
+    } else {
+        std::cout << "NULL\n";
+    }
+
+    std::cout << "# LAST INST: ";
+    if (last_inst_ != nullptr) {
+        std::cout << last_inst_->GetId() << "\n";
+    } else {
+        std::cout << "NULL\n";
     }
 
     std::cout << "# INSTRUCTIONS:\n";
     for (auto inst = first_inst_.get(); inst != nullptr; inst = inst->GetNext()) {
         inst->Dump();
-        std::cout << "\n";
+        std::cout << "#\n";
     }
 
     std::cout << "#########################\n";
@@ -277,6 +310,12 @@ void BasicBlock::SetFirstInst(std::unique_ptr<Inst> inst)
 
     first_inst_ = std::move(inst);
     last_inst_ = first_inst_.get();
+}
+
+bool BasicBlock::IsEmpty() const
+{
+    return first_inst_.get() == nullptr && first_phi_.get() == nullptr && last_inst_ == nullptr &&
+           last_phi_ == nullptr;
 }
 
 bool BasicBlock::IsStartBlock() const

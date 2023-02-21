@@ -6,6 +6,7 @@ set(TESTS
     main.cpp
     dce_test.cpp
     peepholes_test.cpp
+    inlining_test.cpp
     )
 
 add_executable(gtests ${TESTS})

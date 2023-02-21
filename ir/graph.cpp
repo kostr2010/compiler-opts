@@ -28,7 +28,9 @@ BasicBlock* Graph::NewBasicBlock()
 
 BasicBlock* Graph::ReleaseBasicBlock(IdType id)
 {
-    return bb_vector_.at(id).release();
+    auto bb = bb_vector_.at(id).release();
+    bb_vector_.at(id).reset();
+    return bb;
 }
 
 IdType Graph::NewBasicBlock(BasicBlock* bb)
@@ -38,10 +40,14 @@ IdType Graph::NewBasicBlock(BasicBlock* bb)
     return bb_id_counter_;
 }
 
-void Graph::Dump()
+void Graph::Dump(std::string name)
 {
+    std::cout << "#########################\n";
+    std::cout << "# GRAPH: " << std::move(name) << "\n";
     for (const auto& bb : bb_vector_) {
-        bb->Dump();
+        if (bb != nullptr) {
+            bb->Dump();
+        }
     }
 }
 
@@ -140,22 +146,39 @@ void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)
     assert(first != nullptr);
     assert(second != nullptr);
 
-    auto last_phi = first->GetLastPhi();
-    auto last_inst = first->GetLastInst();
+    auto second_last_phi = second->GetLastPhi();
+    auto first_last_phi = first->GetLastPhi();
 
-    last_phi->SetNext(second->TransferPhi());
-    last_inst->SetNext(second->TransferInst());
+    // assert(first_last_phi != nullptr);
+    auto second_first_phi = second->TransferPhi();
+    if (second_first_phi != nullptr) {
+        std::unique_ptr<Inst> i{ second_first_phi };
+        first->PushBackPhi(std::move(i));
+        second_first_phi->SetPrev(first_last_phi);
+        first->SetLastPhi(second_last_phi);
 
-    last_inst = last_inst->GetNext();
-    while (last_inst != nullptr) {
-        last_inst->SetBasicBlock(first);
-        last_inst = last_inst->GetNext();
+        auto inst = second_first_phi;
+        while (inst != nullptr) {
+            inst->SetBasicBlock(first);
+            inst = inst->GetNext();
+        }
     }
 
-    last_phi = last_phi->GetNext();
-    while (last_phi != nullptr) {
-        last_phi->SetBasicBlock(first);
-        last_phi = last_phi->GetNext();
+    auto second_last_inst = second->GetLastInst();
+    auto first_last_inst = first->GetLastInst();
+
+    auto second_first_inst = second->TransferInst();
+    if (second_first_inst != nullptr) {
+        std::unique_ptr<Inst> i{ second_first_inst };
+        first->PushBackInst(std::move(i));
+        second_first_inst->SetPrev(first_last_inst);
+        first->SetLastInst(second_last_inst);
+
+        auto inst = second_first_inst;
+        while (inst != nullptr) {
+            inst->SetBasicBlock(first);
+            inst = inst->GetNext();
+        }
     }
 }
 
@@ -166,7 +189,10 @@ BasicBlock* Graph::SplitBasicBlock(Inst* inst_after)
     auto bb_new = NewBasicBlock();
     auto next = inst_after->ReleaseNext();
 
+    InsertBasicBlockAfter(bb_new, bb);
+
     if (next != nullptr) {
+        next->SetPrev(nullptr);
         std::unique_ptr<Inst> split{ next };
         bb_new->PushBackInst(std::move(split));
         assert(inst_after->GetNext() == nullptr);

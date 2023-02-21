@@ -15,10 +15,11 @@ add_library(ir SHARED
     ${PASSES_DIR}/dfs.cpp
     ${PASSES_DIR}/bfs.cpp
     ${PASSES_DIR}/dom_tree.cpp
-    # ${PASSES_DIR}/inlining.cpp
+    ${PASSES_DIR}/inlining.cpp
     ${PASSES_DIR}/loop_analysis.cpp
     ${PASSES_DIR}/peepholes.cpp
     ${PASSES_DIR}/dce.cpp
+    ${PASSES_DIR}/dbe.cpp
 )
 
 target_include_directories(ir PUBLIC ${CMAKE_SOURCE_DIR}/utils ${CMAKE_CURRENT_SOURCE_DIR})

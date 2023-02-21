@@ -23,12 +23,15 @@ IdType GraphBuilder::NewParameter()
 {
     assert(graph_ != nullptr);
     assert(graph_->GetStartBasicBlock() != nullptr);
-    if (graph_->GetStartBasicBlock()->GetLastInst() != nullptr) {
+    size_t cur_id = 0;
+    auto last_inst = graph_->GetStartBasicBlock()->GetLastInst();
+    if (last_inst != nullptr) {
         // assert that parameters are passed one after another
-        assert(graph_->GetStartBasicBlock()->GetLastInst()->IsParam());
+        assert(last_inst->IsParam());
+        cur_id = last_inst->GetId() + 1;
     }
 
-    auto inst = Inst::NewInst<Opcode::PARAM>(graph_->GetStartBasicBlock()->GetNumInst());
+    auto inst = Inst::NewInst<Opcode::PARAM>(cur_id);
 
     assert(inst != nullptr);
     auto id = inst->GetId();
@@ -148,16 +151,19 @@ void GraphBuilder::ConstructDFG()
         assert(!inst->IsPhi());
 
         size_t input_idx = 0;
-
         for (auto input_id : inputs) {
+            if (inst->IsTypeSensitive()) {
+                inst->CheckInputType();
+            }
+
             assert(inst_map_.find(input_id) != inst_map_.end());
-
-            inst->SetInput(input_idx, inst_map_.at(input_id));
+            auto input_inst = inst_map_.at(input_id);
+            if (inst->HasDynamicOperands()) {
+                inst->AddInput(input_inst, input_inst->GetBasicBlock());
+            } else {
+                inst->SetInput(input_idx, input_inst);
+            }
             ++input_idx;
-        }
-
-        if (inst->IsTypeSensitive()) {
-            inst->CheckInputType();
         }
     }
 

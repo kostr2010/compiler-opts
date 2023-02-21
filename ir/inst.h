@@ -282,7 +282,7 @@ class HasImm
 
     void Dump() const
     {
-        std::cout << "\timmediate: " << imm_ << "\n";
+        std::cout << "#\timmediate: " << imm_ << "\n";
     }
 
   private:
@@ -309,7 +309,7 @@ class HasCond
             { CondType::COND_L, "<" },
             { CondType::CONSD_G, ">" }
         };
-        std::cout << "\tcondition type: " << cond_to_str.at(cc_) << "\n";
+        std::cout << "#\tcondition type: " << cond_to_str.at(cc_) << "\n";
     }
 
   private:
@@ -427,7 +427,7 @@ class ConstantOp : public Inst
     void Dump() const override
     {
         Inst::Dump();
-        std::cout << "\tconst value: " << GetValRaw() << "\n";
+        std::cout << "#\tconst value: " << GetValRaw() << "\n";
     }
 
   private:
@@ -449,7 +449,7 @@ class ParamOp : public Inst
     void Dump() const override
     {
         Inst::Dump();
-        std::cout << "\tparam number: " << arg_n_ << "\n";
+        std::cout << "#\tparam number: " << arg_n_ << "\n";
     }
 
   private:

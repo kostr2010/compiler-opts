@@ -33,7 +33,6 @@ class BasicBlock : public marking::Markable
     GETTER_SETTER(Id, IdType, id_);
     GETTER_SETTER(ImmDominator, BasicBlock*, imm_dominator_);
     GETTER(Loop, loop_);
-    GETTER(NumInst, num_instructions_);
 
     void SetLoop(Loop* loop, bool is_header = false)
     {
@@ -77,6 +76,7 @@ class BasicBlock : public marking::Markable
         return false;
     }
 
+    bool IsEmpty() const;
     bool IsStartBlock() const;
     bool IsEndBlock() const;
 
@@ -102,18 +102,8 @@ class BasicBlock : public marking::Markable
     void PushBackPhi(Inst* inst);
 
     void UnlinkInst(Inst* inst);
-
-    auto TransferInst()
-    {
-        last_inst_ = nullptr;
-        return first_inst_.release();
-    }
-
-    auto TransferPhi()
-    {
-        last_phi_ = nullptr;
-        return first_phi_.release();
-    }
+    Inst* TransferInst();
+    Inst* TransferPhi();
 
     void Dump() const;
 
@@ -134,8 +124,6 @@ class BasicBlock : public marking::Markable
     Inst* last_inst_{ nullptr };
     std::unique_ptr<Inst> first_phi_{ nullptr };
     Inst* last_phi_{ nullptr };
-
-    size_t num_instructions_{ 0 };
 };
 
 #endif
