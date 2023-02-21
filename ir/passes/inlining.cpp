@@ -58,9 +58,9 @@ void Inlining::UpdateDFGParameters(Inst* inst)
     for (const auto& arg : call_inst->GetInputs()) {
         assert(param->IsParam());
 
-        // arg.GetInst()->RemoveUser(call_inst);
         for (const auto& user : param->GetUsers()) {
             user.GetInst()->ReplaceInput(param, arg.GetInst());
+            arg.GetInst()->AddUser(user);
         }
         param = param->GetNext();
     }
@@ -121,6 +121,7 @@ void Inlining::UpdateDFGReturns(Inst* inst)
 
         for (const auto& user : call_inst->GetUsers()) {
             user.GetInst()->ReplaceInput(call_inst, call_ret_res);
+            call_ret_res->AddUser(user);
         }
     } break;
     case Opcode::RETURN_VOID: {

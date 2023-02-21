@@ -19,6 +19,12 @@ void Inst::Dump() const
     };
 
     std::cout << "#\tinst_id:....." << id_ << "\n";
+    std::cout << "#\tbb_id:.......";
+    if (bb_ == nullptr) {
+        std::cout << "NULL\n";
+    } else {
+        std::cout << bb_->GetId() << "\n";
+    }
     std::cout << "#\tinst_opcode:." << op_to_str.at(opcode_) << " (" << (int)opcode_ << ")\n";
     std::cout << "#\tinst prev:...";
     if (prev_ == nullptr) {
