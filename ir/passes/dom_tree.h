@@ -13,7 +13,6 @@ class DomTree : public Pass
     DomTree(Graph* graph) : Pass(graph)
     {
     }
-    DEFAULT_DTOR(DomTree);
 
     bool RunPass() override;
 
@@ -23,8 +22,6 @@ class DomTree : public Pass
         Node(BasicBlock* block) : bb(block)
         {
         }
-        NO_DEFAULT_CTOR(Node);
-        DEFAULT_DTOR(Node);
 
         Node* ancestor = nullptr;
         Node* parent = nullptr;

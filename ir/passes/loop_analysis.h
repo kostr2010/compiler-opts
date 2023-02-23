@@ -31,7 +31,6 @@ class LoopAnalysis : public Pass
     {
         InitStartLoop();
     }
-    DEFAULT_DTOR(LoopAnalysis);
 
     bool RunPass() override;
 

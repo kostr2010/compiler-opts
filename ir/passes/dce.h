@@ -23,7 +23,6 @@ class DCE : public Pass
     DCE(Graph* graph) : Pass(graph)
     {
     }
-    DEFAULT_DTOR(DCE);
 
     bool RunPass() override;
 

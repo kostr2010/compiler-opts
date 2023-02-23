@@ -24,7 +24,6 @@ class PO : public Pass
     PO(Graph* graph) : Pass(graph)
     {
     }
-    DEFAULT_DTOR(PO);
 
     bool RunPass() override;
 

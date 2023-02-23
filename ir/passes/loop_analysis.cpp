@@ -144,22 +144,18 @@ void LoopAnalysis::SplitBackEdge(Loop* loop)
         auto bb = graph_->NewBasicBlock();
         loops_.emplace_back(new Loop(loops_.size(), bb, *edge));
         bb->SetLoop(loops_.back().get(), true);
-        (*edge)->ReplaceSucc(header, bb);
-        header->RemovePred(*edge);
         new_headers.push_back(bb);
     }
-    header->RemovePred(back_edges.at(0));
     loop->ClearBackEdges();
     loop->AddBackEdge(back_edges.at(0));
 
     auto prev_head = header;
     for (size_t i = 0; i < new_headers.size(); ++i) {
         graph_->InsertBasicBlockBefore(new_headers.at(i), prev_head);
-        graph_->AddEdge(back_edges.at(i), prev_head);
+        graph_->ReplaceSuccessor(back_edges.at(i), new_headers.at(i), prev_head);
         PropagatePhis(prev_head, new_headers.at(i));
         prev_head = new_headers.at(i);
     }
-    graph_->AddEdge(back_edges.back(), prev_head);
 }
 
 void LoopAnalysis::AddPreHeaders()
@@ -179,7 +175,7 @@ void LoopAnalysis::AddPreHeader(Loop* loop)
     assert(head != nullptr);
 
     for (const auto& bck : loop->GetBackEdges()) {
-        head->RemovePred(bck);
+        graph_->RemoveEdge(bck, head);
     }
 
     auto bb = graph_->NewBasicBlock();
@@ -187,7 +183,7 @@ void LoopAnalysis::AddPreHeader(Loop* loop)
     loop->SetPreHeader(bb);
 
     for (const auto& bck : loop->GetBackEdges()) {
-        head->AddPred(bck);
+        graph_->AddEdge(bck, head);
     }
 }
 

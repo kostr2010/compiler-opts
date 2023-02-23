@@ -12,7 +12,6 @@ class DBE : public Pass
     DBE(Graph* graph) : Pass(graph)
     {
     }
-    DEFAULT_DTOR(DBE);
 
     bool RunPass() override;
 

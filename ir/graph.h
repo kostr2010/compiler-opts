@@ -23,7 +23,6 @@ class Graph
     {
         InitStartBlock();
     }
-    DEFAULT_DTOR(Graph);
 
     BasicBlock* GetStartBasicBlock() const;
     BasicBlock* GetBasicBlock(IdType bb_id) const;
@@ -40,6 +39,7 @@ class Graph
     void InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to);
     void InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before);
     void InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after);
+    void ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ);
     void AppendBasicBlock(BasicBlock* first, BasicBlock* second);
 
     BasicBlock* SplitBasicBlock(Inst* inst_after);

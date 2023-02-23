@@ -141,6 +141,15 @@ void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
     analyser_.InvalidateCfgDependentActivePasses();
 }
 
+void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ)
+{
+    bb->ReplaceSucc(prev_succ, new_succ);
+    prev_succ->RemovePred(bb);
+    new_succ->AddPred(bb);
+
+    analyser_.InvalidateCfgDependentActivePasses();
+}
+
 void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)
 {
     assert(first != nullptr);

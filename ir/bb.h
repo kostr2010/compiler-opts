@@ -23,8 +23,6 @@ class BasicBlock : public marking::Markable
     BasicBlock(const IdType& id) : id_(id)
     {
     }
-    NO_DEFAULT_CTOR(BasicBlock);
-    DEFAULT_DTOR(BasicBlock);
 
     GETTER(Predecesors, preds_);
     GETTER(Successors, succs_);
@@ -80,19 +78,6 @@ class BasicBlock : public marking::Markable
     bool IsStartBlock() const;
     bool IsEndBlock() const;
 
-    void AddSucc(BasicBlock* bb);
-    bool IsInSucc(IdType bb_id) const;
-    bool IsInSucc(BasicBlock* bb) const;
-    void RemoveSucc(BasicBlock* bb);
-
-    void AddPred(BasicBlock* bb);
-    bool IsInPred(IdType bb_id) const;
-    bool IsInPred(BasicBlock* bb) const;
-    void RemovePred(BasicBlock* bb);
-
-    void ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new);
-    void ReplacePred(BasicBlock* bb_old, BasicBlock* bb_new);
-
     void PushBackInst(std::unique_ptr<Inst> inst);
     void PushFrontInst(std::unique_ptr<Inst> inst);
     void InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right);
@@ -108,6 +93,21 @@ class BasicBlock : public marking::Markable
     void Dump() const;
 
   private:
+    // only graph can manipulate CFG
+    friend Graph;
+    void AddSucc(BasicBlock* bb);
+    bool IsInSucc(IdType bb_id) const;
+    bool IsInSucc(BasicBlock* bb) const;
+    void RemoveSucc(BasicBlock* bb);
+
+    void AddPred(BasicBlock* bb);
+    bool IsInPred(IdType bb_id) const;
+    bool IsInPred(BasicBlock* bb) const;
+    void RemovePred(BasicBlock* bb);
+
+    void ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new);
+    void ReplacePred(BasicBlock* bb_old, BasicBlock* bb_new);
+
     void SetFirstInst(std::unique_ptr<Inst> inst);
 
     Loop* loop_ = nullptr;

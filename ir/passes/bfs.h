@@ -24,7 +24,6 @@ class BFS : public Pass
     BFS(Graph* graph) : Pass(graph)
     {
     }
-    DEFAULT_DTOR(BFS);
 
     bool RunPass() override;
 

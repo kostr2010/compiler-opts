@@ -15,8 +15,6 @@ class Loop
     explicit Loop(IdType id) : id_(id)
     {
     }
-    NO_DEFAULT_CTOR(Loop);
-    DEFAULT_DTOR(Loop);
 
     GETTER(Id, id_);
     GETTER(Header, header_);

@@ -13,7 +13,6 @@ class Inlining : public Pass
 {
   public:
     Inlining(Graph* graph);
-    DEFAULT_DTOR(Inlining);
 
     bool RunPass() override;
 

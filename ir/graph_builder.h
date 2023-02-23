@@ -19,7 +19,6 @@ class GraphBuilder
 {
   public:
     GraphBuilder(Graph* g);
-    DEFAULT_DTOR(GraphBuilder);
 
     template <Opcode OPCODE, typename... Args>
     IdType NewInst(Args&&... args)

@@ -17,7 +17,6 @@ class Analyser
     Analyser(Graph* graph) : passes_(std::move(ActivePasses::Allocate(graph)))
     {
     }
-    DEFAULT_DTOR(Analyser);
 
     template <typename PassT>
     PassT* GetPass()

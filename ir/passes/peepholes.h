@@ -12,7 +12,6 @@ class Peepholes : public Pass
     Peepholes(Graph* graph) : Pass(graph)
     {
     }
-    DEFAULT_DTOR(Peepholes);
 
     bool RunPass() override;
 

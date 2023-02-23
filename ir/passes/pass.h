@@ -12,7 +12,6 @@ class Pass
     Pass(Graph* g) : graph_{ g }
     {
     }
-    DEFAULT_DTOR(Pass);
     GETTER_SETTER(Valid, bool, is_valid_);
 
     virtual bool RunPass() = 0;
