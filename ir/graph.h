@@ -45,8 +45,12 @@ class Graph
     BasicBlock* SplitBasicBlock(Inst* inst_after);
 
     BasicBlock* NewBasicBlock();
-    BasicBlock* ReleaseBasicBlock(IdType id);
+    // used to accept BB's released by another graph. obtains ownership of a pointer
     IdType NewBasicBlock(BasicBlock* bb);
+    // used to transfer ownership of a block to another graph
+    BasicBlock* ReleaseBasicBlock(IdType id);
+    // null basic block, invalidate previous pointer
+    void DestroyBasicBlock(IdType id);
 
     void Dump(std::string name = "");
 

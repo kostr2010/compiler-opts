@@ -206,3 +206,12 @@ BasicBlock* Graph::SplitBasicBlock(Inst* inst_after)
 
     return bb_new;
 }
+
+void Graph::DestroyBasicBlock(IdType id)
+{
+    assert(id < bb_vector_.size());
+    assert(bb_vector_.at(id)->GetPredecesors().empty());
+    assert(bb_vector_.at(id)->GetSuccessors().empty());
+
+    bb_vector_.at(id).reset(nullptr);
+}

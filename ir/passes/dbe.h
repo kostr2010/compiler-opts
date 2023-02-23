@@ -17,6 +17,8 @@ class DBE : public Pass
     bool RunPass() override;
 
   private:
+    bool RemoveEmpty(BasicBlock* bb);
+    bool RemoveUnlinked(BasicBlock* bb);
 };
 
 #endif

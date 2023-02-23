@@ -164,18 +164,15 @@ void Inlining::InsertInlinedGraph(Inst* call)
 
     assert(call_block->GetSuccessors().size() == 1);
 
-    call_block->RemoveSucc(call_cont_block);
-    call_cont_block->RemovePred(call_block);
+    graph_->RemoveEdge(call_block, call_cont_block);
 
     assert(call_block->GetSuccessors().empty());
     assert(call_cont_block->GetPredecesors().empty());
 
-    call_block->AddSucc(callee_start_bb_);
     assert(callee_start_bb_->GetPredecesors().empty());
-    callee_start_bb_->AddPred(call_block);
+    graph_->AddEdge(call_block, callee_start_bb_);
 
     for (const auto& ret_bb : ret_bbs_) {
-        call_cont_block->AddPred(ret_bb);
-        ret_bb->AddSucc(call_cont_block);
+        graph_->AddEdge(ret_bb, call_cont_block);
     }
 }
