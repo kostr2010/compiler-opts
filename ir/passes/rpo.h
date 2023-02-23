@@ -16,11 +16,6 @@ class RPO : public Pass
         N_MARKS,
     };
 
-    static constexpr size_t GetNumMarks()
-    {
-        return Marks::N_MARKS;
-    }
-
     RPO(Graph* graph) : Pass(graph)
     {
     }
@@ -35,6 +30,13 @@ class RPO : public Pass
     void ClearMarks();
 
     std::vector<BasicBlock*> rpo_bb_{};
+};
+
+template <>
+struct PassTraits<RPO>
+{
+    using is_cfg_sensitive = std::integral_constant<bool, true>;
+    using num_marks = std::integral_constant<size_t, RPO::Marks::N_MARKS>;
 };
 
 #endif

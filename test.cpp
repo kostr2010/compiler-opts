@@ -19,13 +19,17 @@ static inline char IdToChar(IdType id)
 
 int main()
 {
-    // using ActivePasses = PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO>;
-    // std::cout << "DomTree " << marking::Marker::GetMarkOffset<DomTree>() << "\n";
-    // std::cout << "LoopAnalysis " << marking::Marker::GetMarkOffset<LoopAnalysis>() << "\n";
-    // std::cout << "DFS " << marking::Marker::GetMarkOffset<DFS>() << "\n";
-    // std::cout << "BFS " << marking::Marker::GetMarkOffset<BFS>() << "\n";
-    // std::cout << "RPO " << marking::Marker::GetMarkOffset<RPO>() << "\n";
-    // std::cout << "PO " << marking::Marker::GetMarkOffset<PO>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<DomTree>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<LoopAnalysis>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<DFS>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<BFS>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<RPO>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<PO>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<Peepholes>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<DCE>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<Inlining>() << "\n";
+    std::cout << marking::Marker::GetMarkOffset<DBE>() << "\n";
+
     return 0;
 }
 

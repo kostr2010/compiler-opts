@@ -81,7 +81,7 @@ void Graph::AddEdge(BasicBlock* from, BasicBlock* to)
     from->AddSucc(to);
     to->AddPred(from);
 
-    analyser_.InvalidateCfgDependentActivePasses();
+    analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::RemoveEdge(IdType from, IdType to)
@@ -100,7 +100,7 @@ void Graph::RemoveEdge(BasicBlock* from, BasicBlock* to)
     from->RemoveSucc(to);
     to->RemovePred(from);
 
-    analyser_.InvalidateCfgDependentActivePasses();
+    analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
@@ -108,7 +108,7 @@ void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
     from->ReplaceSucc(to, bb);
     to->ReplacePred(from, bb);
 
-    analyser_.InvalidateCfgDependentActivePasses();
+    analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
@@ -122,7 +122,7 @@ void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
     }
     AddEdge(bb, before);
 
-    analyser_.InvalidateCfgDependentActivePasses();
+    analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
@@ -138,7 +138,7 @@ void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
         AddEdge(after, bb);
     }
 
-    analyser_.InvalidateCfgDependentActivePasses();
+    analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ)
@@ -147,7 +147,7 @@ void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* 
     prev_succ->RemovePred(bb);
     new_succ->AddPred(bb);
 
-    analyser_.InvalidateCfgDependentActivePasses();
+    analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)

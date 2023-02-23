@@ -22,11 +22,6 @@ class LoopAnalysis : public Pass
         N_MARKS,
     };
 
-    static constexpr size_t GetNumMarks()
-    {
-        return Marks::N_MARKS;
-    }
-
     LoopAnalysis(Graph* graph) : Pass(graph)
     {
         InitStartLoop();
@@ -61,6 +56,13 @@ class LoopAnalysis : public Pass
 
     static constexpr size_t ROOT_LOOP_ID = 0;
     std::vector<std::unique_ptr<Loop> > loops_{};
+};
+
+template <>
+struct PassTraits<LoopAnalysis>
+{
+    using is_cfg_sensitive = std::integral_constant<bool, true>;
+    using num_marks = std::integral_constant<size_t, LoopAnalysis::Marks::N_MARKS>;
 };
 
 #endif

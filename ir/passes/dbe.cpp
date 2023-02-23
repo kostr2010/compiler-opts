@@ -4,7 +4,6 @@
 
 bool DBE::RunPass()
 {
-    graph_->GetAnalyser()->InvalidateCfgDependentActivePasses();
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         if (RemoveEmpty(bb)) {
             continue;

@@ -15,7 +15,7 @@
 template <typename... Types>
 class PassList
 {
-    static_assert((std::is_base_of<Pass, Types>() && ...));
+    static_assert((Pass::IsPass<Types>() && ...));
 
   private:
     template <typename Type, typename... Pack>
@@ -45,22 +45,17 @@ class PassList
     {};
 
   public:
-    NO_DEFAULT_CTOR(PassList);
-
     using Passes = std::tuple<Types...>;
+    using NumPasses = std::tuple_size<Passes>;
 
     template <typename Type>
     using HasPass = is_one_of<Type, Types...>;
+
     template <typename Type>
     using GetPassIdx = get_pass_idx<Type, 0, Types...>;
 
-    static auto Allocate(Graph* graph)
-    {
-        std::vector<std::unique_ptr<Pass> > vec{};
-        vec.reserve(sizeof...(Types));
-        (vec.emplace_back(new Types(graph)), ...);
-        return vec;
-    }
+    template <size_t IDX>
+    using GetPass = std::tuple_element<IDX, Passes>;
 };
 
 using ActivePasses =

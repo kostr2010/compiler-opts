@@ -1,11 +1,11 @@
 #include "analyser.h"
 
-void Analyser::InvalidateCfgDependentActivePasses()
+Analyser::Analyser(Graph* graph)
 {
-    GetPass<DFS>()->SetValid(false);
-    GetPass<BFS>()->SetValid(false);
-    GetPass<RPO>()->SetValid(false);
-    GetPass<PO>()->SetValid(false);
-    GetPass<DomTree>()->SetValid(false);
-    GetPass<LoopAnalysis>()->SetValid(false);
+    Allocate(graph, std::make_index_sequence<ActivePasses::NumPasses::value>{});
+}
+
+void Analyser::InvalidateCFGSensitiveActivePasses()
+{
+    InvalidateCFGSensitivePasses(std::make_index_sequence<ActivePasses::NumPasses::value>{});
 }

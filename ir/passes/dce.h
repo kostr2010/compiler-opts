@@ -15,11 +15,6 @@ class DCE : public Pass
         N_MARKS,
     };
 
-    static constexpr size_t GetNumMarks()
-    {
-        return Marks::N_MARKS;
-    }
-
     DCE(Graph* graph) : Pass(graph)
     {
     }
@@ -32,6 +27,13 @@ class DCE : public Pass
     void RemoveInst(Inst* inst);
     void Sweep();
     void ClearMarks();
+};
+
+template <>
+struct PassTraits<DCE>
+{
+    using is_cfg_sensitive = std::integral_constant<bool, true>;
+    using num_marks = std::integral_constant<size_t, DCE::Marks::N_MARKS>;
 };
 
 #endif

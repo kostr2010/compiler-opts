@@ -19,25 +19,22 @@ class Marker
 
     template <typename Type, size_t ACC, typename Head, class... Tail>
     struct get_mark_offset<Type, ACC, std::tuple<Head, Tail...> >
-        : get_mark_offset<Type, ACC + Head::GetNumMarks(), std::tuple<Tail...> >
-    {
-    };
+        : get_mark_offset<Type, ACC + typename PassTraits<Head>::num_marks(), std::tuple<Tail...> >
+    {};
 
     template <typename Type, size_t ACC, typename... Tail>
     struct get_mark_offset<Type, ACC, std::tuple<Type, Tail...> >
         : std::integral_constant<size_t, ACC>
-    {
-    };
+    {};
 
+  public:
     template <typename Type>
     using GetMarkOffset = get_mark_offset<Type, 0, ActivePasses::Passes>;
 
-  public:
     template <typename PassT, size_t N>
     static void SetMark(MarkHolder* mark)
     {
-        static_assert(ActivePasses::HasPass<PassT>());
-        static_assert(N < PassT::GetNumMarks());
+        static_assert(N < typename PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
         (*mark) |= (1ULL << (GetMarkOffset<PassT>() + N));
     }
@@ -45,8 +42,7 @@ class Marker
     template <typename PassT, size_t N>
     static void ClearMark(MarkHolder* mark)
     {
-        static_assert(ActivePasses::HasPass<PassT>());
-        static_assert(N < PassT::GetNumMarks());
+        static_assert(N < typename PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
         (*mark) &= ~(1ULL << (GetMarkOffset<PassT>() + N));
     }
@@ -54,8 +50,7 @@ class Marker
     template <typename PassT, size_t N>
     static bool GetMark(const MarkHolder& mark)
     {
-        static_assert(ActivePasses::HasPass<PassT>());
-        static_assert(N < PassT::GetNumMarks());
+        static_assert(N < typename PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
         return mark & (1ULL << (GetMarkOffset<PassT>() + N));
     }

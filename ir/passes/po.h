@@ -16,11 +16,6 @@ class PO : public Pass
         N_MARKS,
     };
 
-    static constexpr size_t GetNumMarks()
-    {
-        return Marks::N_MARKS;
-    }
-
     PO(Graph* graph) : Pass(graph)
     {
     }
@@ -35,6 +30,13 @@ class PO : public Pass
     void ClearMarks();
 
     std::vector<BasicBlock*> po_bb_{};
+};
+
+template <>
+struct PassTraits<PO>
+{
+    using is_cfg_sensitive = std::integral_constant<bool, true>;
+    using num_marks = std::integral_constant<size_t, PO::Marks::N_MARKS>;
 };
 
 #endif

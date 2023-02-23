@@ -454,11 +454,7 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     b.ConstructCFG();
     b.ConstructDFG();
 
-    g.Dump("before");
-
     auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
-
-    g.Dump("after");
 
     auto start_bb = g.GetStartBasicBlock();
 

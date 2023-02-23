@@ -16,11 +16,6 @@ class DFS : public Pass
         N_MARKS,
     };
 
-    static constexpr size_t GetNumMarks()
-    {
-        return Marks::N_MARKS;
-    }
-
     DFS(Graph* graph) : Pass(graph)
     {
     }
@@ -35,6 +30,13 @@ class DFS : public Pass
     void ClearMarks();
 
     std::vector<BasicBlock*> dfs_bb_{};
+};
+
+template <>
+struct PassTraits<DFS>
+{
+    using is_cfg_sensitive = std::integral_constant<bool, true>;
+    using num_marks = std::integral_constant<size_t, DFS::Marks::N_MARKS>;
 };
 
 #endif

@@ -8,21 +8,19 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 class Analyser
 {
   public:
-    Analyser(Graph* graph) : passes_(std::move(ActivePasses::Allocate(graph)))
-    {
-    }
+    Analyser(Graph* graph);
 
     template <typename PassT>
     PassT* GetPass()
     {
         static_assert(ActivePasses::HasPass<PassT>());
-
         return static_cast<PassT*>(passes_[ActivePasses::GetPassIdx<PassT>()].get());
     }
 
@@ -40,7 +38,6 @@ class Analyser
     bool RunPass()
     {
         static_assert(ActivePasses::HasPass<PassT>());
-
         return passes_[ActivePasses::GetPassIdx<PassT>()]->RunPass();
     }
 
@@ -50,10 +47,29 @@ class Analyser
         return GetPass<PassT>()->GetValid();
     }
 
-    void InvalidateCfgDependentActivePasses();
+    void InvalidateCFGSensitiveActivePasses();
 
   private:
-    const std::vector<std::unique_ptr<Pass> > passes_;
+    template <size_t... IDS>
+    void InvalidateCFGSensitivePasses(std::index_sequence<IDS...>)
+    {
+        (([&] {
+             using Type = ActivePasses::GetPass<IDS>::type;
+             if constexpr (PassTraits<Type>::is_cfg_sensitive::value) {
+                 GetPass<Type>()->SetValid(false);
+             }
+         }()),
+         ...);
+    }
+
+    template <size_t... IDS>
+    void Allocate(Graph* graph, std::index_sequence<IDS...>)
+    {
+        passes_.reserve(ActivePasses::NumPasses());
+        (passes_.emplace_back(new ActivePasses::GetPass<IDS>::type(graph)), ...);
+    }
+
+    std::vector<std::unique_ptr<Pass> > passes_;
 };
 
 #endif
