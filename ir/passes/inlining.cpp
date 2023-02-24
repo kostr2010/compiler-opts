@@ -16,7 +16,10 @@ bool Inlining::RunPass()
 
             switch (inst->GetOpcode()) {
             case Opcode::CALL_STATIC:
-                TryInlineStatic(inst);
+                using T = Inst::to_inst_type<Opcode::CALL_STATIC>*;
+                cur_call_ = inst;
+                callee_start_bb_ = static_cast<T>(cur_call_)->GetCallee()->GetStartBasicBlock();
+                TryInlineStatic();
                 break;
             // case Opcode::CALL_DYNAMIC:
             //     TryInlineDynamic();
@@ -25,37 +28,38 @@ bool Inlining::RunPass()
                 assert(false);
             }
 
-            ret_phi_.reset();
-            ret_bbs_.clear();
+            ResetState();
         }
     }
 
     return true;
 }
 
-void Inlining::TryInlineStatic(Inst* inst)
+void Inlining::ResetState()
 {
-    assert(inst->GetOpcode() == Opcode::CALL_STATIC);
-    auto call = static_cast<typename Inst::to_inst_type<Opcode::CALL_STATIC>*>(inst);
-
-    UpdateDFGParameters(inst);
-    UpdateDFGReturns(inst);
-    MoveConstants(call->GetCallee());
-    MoveCalleeBlocks(call->GetCallee());
-    InsertInlinedGraph(inst);
+    ret_bbs_.clear();
+    cur_call_ = nullptr;
+    callee_start_bb_ = nullptr;
 }
 
-void Inlining::UpdateDFGParameters(Inst* inst)
+void Inlining::TryInlineStatic()
 {
-    assert(inst->GetOpcode() == Opcode::CALL_STATIC);
+    assert(cur_call_ != nullptr);
+    assert(callee_start_bb_ != nullptr);
+    assert(cur_call_->GetOpcode() == Opcode::CALL_STATIC);
 
-    auto call_inst = static_cast<typename Inst::to_inst_type<Opcode::CALL_STATIC>*>(inst);
-    auto callee_start_block = call_inst->GetCallee()->GetStartBasicBlock();
+    UpdateDFGParameters();
+    UpdateDFGReturns();
+    MoveConstants();
+    MoveCalleeBlocks();
+    InsertInlinedGraph();
+}
 
-    assert(callee_start_block);
-
-    auto param = callee_start_block->GetFirstInst();
-    for (const auto& arg : call_inst->GetInputs()) {
+void Inlining::UpdateDFGParameters()
+{
+    auto param = callee_start_bb_->GetFirstInst();
+    for (const auto& arg : cur_call_->GetInputs()) {
+        // argument number mismatch
         assert(param->IsParam());
 
         for (const auto& user : param->GetUsers()) {
@@ -71,17 +75,12 @@ void Inlining::UpdateDFGParameters(Inst* inst)
 
 // move caller users to return input instruction(or PHI instructions for several return
 // instructions)
-void Inlining::UpdateDFGReturns(Inst* inst)
+void Inlining::UpdateDFGReturns()
 {
-    assert(inst->GetOpcode() == Opcode::CALL_STATIC);
-
-    auto call_inst = static_cast<typename Inst::to_inst_type<Opcode::CALL_STATIC>*>(inst);
-    auto callee_start_block = call_inst->GetCallee()->GetStartBasicBlock();
-
-    assert(callee_start_block);
+    auto call_inst = static_cast<typename Inst::to_inst_type<Opcode::CALL_STATIC>*>(cur_call_);
+    auto callee_blocks = call_inst->GetCallee()->GetAnalyser()->GetValidPass<RPO>()->GetBlocks();
 
     std::vector<Inst*> rets{};
-    auto callee_blocks = call_inst->GetCallee()->GetAnalyser()->GetValidPass<RPO>()->GetBlocks();
     for (const auto& bb : callee_blocks) {
         auto last_inst = bb->GetLastInst();
         if (last_inst->IsReturn()) {
@@ -134,26 +133,30 @@ void Inlining::UpdateDFGReturns(Inst* inst)
     }
 }
 
-void Inlining::MoveConstants(Graph* callee)
+void Inlining::MoveConstants()
 {
-    auto caller_start_bb = graph_->GetStartBasicBlock();
-    auto callee_start_bb = callee->GetStartBasicBlock();
-
-    graph_->AppendBasicBlock(caller_start_bb, callee_start_bb);
+    graph_->AppendBasicBlock(graph_->GetStartBasicBlock(), callee_start_bb_);
 }
 
-void Inlining::MoveCalleeBlocks(Graph* callee)
+void Inlining::MoveCalleeBlocks()
 {
-    callee_start_bb_ = callee->GetStartBasicBlock();
+    auto call_inst = static_cast<typename Inst::to_inst_type<Opcode::CALL_STATIC>*>(cur_call_);
+    auto callee = call_inst->GetCallee();
     for (const auto& bb : callee->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         graph_->NewBasicBlock(callee->ReleaseBasicBlock(bb->GetId()));
     }
 }
 
-void Inlining::InsertInlinedGraph(Inst* call)
+void Inlining::InsertInlinedGraph()
 {
-    auto call_cont_block = graph_->SplitBasicBlock(call);
-    auto call_block = call->GetBasicBlock();
+    auto call_cont_block = graph_->SplitBasicBlock(cur_call_);
+    auto call_block = cur_call_->GetBasicBlock();
+
+    // remove call instruction by hand
+    for (const auto& input : cur_call_->GetInputs()) {
+        input.GetInst()->RemoveUser(cur_call_);
+    }
+    call_block->UnlinkInst(cur_call_);
 
     assert(call_block->GetSuccessors() == std::vector<BasicBlock*>{ call_cont_block });
     assert(call_cont_block->GetPredecesors() == std::vector<BasicBlock*>{ call_block });
@@ -162,14 +165,12 @@ void Inlining::InsertInlinedGraph(Inst* call)
         call_cont_block->PushBackPhi(std::move(ret_phi_));
     }
 
-    assert(call_block->GetSuccessors().size() == 1);
-
     graph_->RemoveEdge(call_block, call_cont_block);
 
     assert(call_block->GetSuccessors().empty());
     assert(call_cont_block->GetPredecesors().empty());
-
     assert(callee_start_bb_->GetPredecesors().empty());
+
     graph_->AddEdge(call_block, callee_start_bb_);
 
     for (const auto& ret_bb : ret_bbs_) {

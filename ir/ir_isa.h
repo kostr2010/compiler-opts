@@ -29,7 +29,7 @@
     /*_(CAST, CastOp )*/                                                                          \
     /*_(CHECK, CHECK )*/                                                                          \
     /*_(CALL_DYNAMIC, CallOp, InstFlags::IS_CALL | InstFlags::NO_DCE)*/                           \
-    _(CALL_STATIC, CallOp, InstFlags::IS_CALL)                                                    \
+    _(CALL_STATIC, CallOp, InstFlags::IS_CALL | InstFlags::NO_DCE)                                \
     _(PHI, PhiOp, InstFlags::EMPTY)                                                               \
     _(CONST, ConstantOp, InstFlags::EMPTY)                                                        \
     _(PARAM, ParamOp, InstFlags::EMPTY)                                                           \

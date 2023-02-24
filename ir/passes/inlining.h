@@ -17,16 +17,18 @@ class Inlining : public Pass
     bool RunPass() override;
 
   private:
-    void TryInlineStatic(Inst* inst);
-    void UpdateDFGParameters(Inst* inst);
-    void UpdateDFGReturns(Inst* inst);
-    void MoveConstants(Graph* callee);
-    void MoveCalleeBlocks(Graph* callee);
-    void InsertInlinedGraph(Inst* call);
+    void ResetState();
+    void TryInlineStatic();
+    void UpdateDFGParameters();
+    void UpdateDFGReturns();
+    void MoveConstants();
+    void MoveCalleeBlocks();
+    void InsertInlinedGraph();
 
-    BasicBlock* callee_start_bb_;
-    std::vector<BasicBlock*> ret_bbs_;
-    std::unique_ptr<Inst> ret_phi_;
+    Inst* cur_call_{ nullptr };
+    BasicBlock* callee_start_bb_{ nullptr };
+    std::vector<BasicBlock*> ret_bbs_{};
+    std::unique_ptr<Inst> ret_phi_{ nullptr };
 };
 
 #endif
