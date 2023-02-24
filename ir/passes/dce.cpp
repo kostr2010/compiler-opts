@@ -12,7 +12,7 @@ bool DCE::RunPass()
 
 void DCE::Mark()
 {
-    for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
+    for (const auto& bb : graph_->GetAnalyser()->GetValidPass<PO>()->GetBlocks()) {
         for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
             if (inst->HasFlag(InstFlags::NO_DCE)) {
                 MarkRecursively(inst);
@@ -39,13 +39,7 @@ void DCE::RemoveInst(Inst* inst)
     assert(inst != nullptr);
 
     for (const auto& i : inst->GetInputs()) {
-        if (i.GetInst() != nullptr) {
-            i.GetInst()->RemoveUser(inst);
-        }
-    }
-
-    for (const auto& u : inst->GetUsers()) {
-        u.GetInst()->ClearInput(inst);
+        i.GetInst()->RemoveUser(inst);
     }
 
     inst->GetBasicBlock()->UnlinkInst(inst);
@@ -53,30 +47,30 @@ void DCE::RemoveInst(Inst* inst)
 
 void DCE::Sweep()
 {
-    for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
-        auto inst = bb->GetFirstInst();
+    for (const auto& bb : graph_->GetAnalyser()->GetValidPass<PO>()->GetBlocks()) {
+        auto inst = bb->GetLastInst();
         while (inst != nullptr) {
-            auto next = inst->GetNext();
+            auto prev = inst->GetPrev();
             if (!marking::Marker::GetMark<DCE, Marks::VISITED>(*(inst->GetMarkHolder()))) {
                 RemoveInst(inst);
             }
-            inst = next;
+            inst = prev;
         }
 
-        auto phi = bb->GetFirstPhi();
+        auto phi = bb->GetLastPhi();
         while (phi != nullptr) {
-            auto next = phi->GetNext();
+            auto prev = phi->GetPrev();
             if (!marking::Marker::GetMark<DCE, Marks::VISITED>(*(phi->GetMarkHolder()))) {
                 RemoveInst(phi);
             }
-            phi = next;
+            phi = prev;
         }
     }
 }
 
 void DCE::ClearMarks()
 {
-    for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
+    for (const auto& bb : graph_->GetAnalyser()->GetValidPass<PO>()->GetBlocks()) {
         for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
             marking::Marker::ClearMark<DCE, VISITED>(inst->GetMarkHolder());
         }
