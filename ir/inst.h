@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "flag.h"
 #include "ir_isa.h"
 #include "macros.h"
 #include "marker.h"
@@ -27,12 +28,18 @@ enum Opcode : uint8_t
         N_OPCODES
 };
 
-enum InstFlags : uint8_t
+using FlagType = uint8_t;
+using NoDCE = Flag<FlagType>;
+using Symmetry = NoDCE::Next;
+using IsCall = Symmetry::Next;
+using IsCheck = IsCall::Next;
+
+enum InstFlags : FlagType
 {
-    EMPTY = 0b0,
-    NO_DCE = 0b00000001,
-    SYMMETRY = 0b00000010,
-    IS_CALL = 0b00000100,
+    NO_DCE = NoDCE::Value(),
+    SYMMETRY = Symmetry::Value(),
+    IS_CALL = IsCall::Value(),
+    IS_CHECK = IsCheck::Value(),
 };
 
 enum class DataType : uint8_t

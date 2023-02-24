@@ -1,38 +1,38 @@
 #define INSTRUCTION_LIST(_)                                                                       \
     _(ADD, BinaryOp, InstFlags::SYMMETRY)                                                         \
-    _(SUB, BinaryOp, InstFlags::EMPTY)                                                            \
+    _(SUB, BinaryOp, {})                                                                          \
     _(MUL, BinaryOp, InstFlags::SYMMETRY)                                                         \
-    _(DIV, BinaryOp, InstFlags::EMPTY)                                                            \
-    _(MOD, BinaryOp, InstFlags::EMPTY)                                                            \
+    _(DIV, BinaryOp, {})                                                                          \
+    _(MOD, BinaryOp, {})                                                                          \
     _(MIN, BinaryOp, InstFlags::SYMMETRY)                                                         \
     _(MAX, BinaryOp, InstFlags::SYMMETRY)                                                         \
-    _(SHL, BinaryOp, InstFlags::EMPTY)                                                            \
-    _(SHR, BinaryOp, InstFlags::EMPTY)                                                            \
-    _(ASHR, BinaryOp, InstFlags::EMPTY)                                                           \
+    _(SHL, BinaryOp, {})                                                                          \
+    _(SHR, BinaryOp, {})                                                                          \
+    _(ASHR, BinaryOp, {})                                                                         \
     _(AND, BinaryOp, InstFlags::SYMMETRY)                                                         \
     _(OR, BinaryOp, InstFlags::SYMMETRY)                                                          \
     _(XOR, BinaryOp, InstFlags::SYMMETRY)                                                         \
-    _(ADDI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(SUBI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(MULI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(DIVI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(MODI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(MINI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(MAXI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(SHLI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(SHRI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(ASHRI, BinaryImmOp, InstFlags::EMPTY)                                                       \
-    _(ANDI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(ORI, BinaryImmOp, InstFlags::EMPTY)                                                         \
-    _(XORI, BinaryImmOp, InstFlags::EMPTY)                                                        \
-    _(CMP, CompareOp, InstFlags::EMPTY)                                                           \
+    _(ADDI, BinaryImmOp, {})                                                                      \
+    _(SUBI, BinaryImmOp, {})                                                                      \
+    _(MULI, BinaryImmOp, {})                                                                      \
+    _(DIVI, BinaryImmOp, {})                                                                      \
+    _(MODI, BinaryImmOp, {})                                                                      \
+    _(MINI, BinaryImmOp, {})                                                                      \
+    _(MAXI, BinaryImmOp, {})                                                                      \
+    _(SHLI, BinaryImmOp, {})                                                                      \
+    _(SHRI, BinaryImmOp, {})                                                                      \
+    _(ASHRI, BinaryImmOp, {})                                                                     \
+    _(ANDI, BinaryImmOp, {})                                                                      \
+    _(ORI, BinaryImmOp, {})                                                                       \
+    _(XORI, BinaryImmOp, {})                                                                      \
+    _(CMP, CompareOp, {})                                                                         \
+    _(CHECK_ZERO, FixedInputOp1, InstFlags::IS_CHECK | InstFlags::NO_DCE)                         \
     /*_(CAST, CastOp )*/                                                                          \
-    /*_(CHECK, CHECK )*/                                                                          \
     /*_(CALL_DYNAMIC, CallOp, InstFlags::IS_CALL | InstFlags::NO_DCE)*/                           \
     _(CALL_STATIC, CallOp, InstFlags::IS_CALL | InstFlags::NO_DCE)                                \
-    _(PHI, PhiOp, InstFlags::EMPTY)                                                               \
-    _(CONST, ConstantOp, InstFlags::EMPTY)                                                        \
-    _(PARAM, ParamOp, InstFlags::EMPTY)                                                           \
+    _(PHI, PhiOp, {})                                                                             \
+    _(CONST, ConstantOp, {})                                                                      \
+    _(PARAM, ParamOp, {})                                                                         \
     _(RETURN, FixedInputOp1, InstFlags::NO_DCE)                                                   \
     _(RETURN_VOID, FixedInputOp0, InstFlags::NO_DCE)                                              \
     _(IF, IfOp, InstFlags::NO_DCE)                                                                \
@@ -44,7 +44,6 @@
     _(BinaryImmOp)                                                                                \
     _(CompareOp)                                                                                  \
     /*_(CAST, CAST )*/                                                                            \
-    /*_(CHECK, CHECK )*/                                                                          \
     /*_(CALL, CALL )*/                                                                            \
     _(ConstantOp)                                                                                 \
     _(ParamOp)                                                                                    \

@@ -2,6 +2,7 @@
 #define __PASS_LIST_H_INCLUDED__
 
 #include "bfs.h"
+#include "check_elimination.h"
 #include "dbe.h"
 #include "dce.h"
 #include "dfs.h"
@@ -58,7 +59,7 @@ class PassList
     using GetPass = std::tuple_element<IDX, Passes>;
 };
 
-using ActivePasses =
-    PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO, Peepholes, DCE, Inlining, DBE>;
+using ActivePasses = PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO, Peepholes, DCE, Inlining,
+                              DBE, CheckElimination>;
 
 #endif
