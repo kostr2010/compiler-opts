@@ -45,7 +45,7 @@ constexpr auto concat(char const (&a)[N1], char const (&b)[N2])
 
 #include "ir/ir_isa.h"
 
-enum Opcode : uint8_t
+enum Inst::Opcode : uint8_t
 {
 #define OPCODES(op, ...) op,
     INSTRUCTION_LIST(OPCODES)
@@ -63,22 +63,22 @@ struct Inst
 #undef GET_TYPES
 
     template <size_t I, typename TUPLE>
-    struct GetInstTypeT;
+    struct get_inst_type_t;
 
     template <size_t I, typename Type, typename... Types>
-    struct GetInstTypeT<I, std::tuple<Type, Types...> >
-        : GetInstTypeT<I - 1, std::tuple<Types...> >
+    struct get_inst_type_t<I, std::tuple<Type, Types...> >
+        : get_inst_type_t<I - 1, std::tuple<Types...> >
     {};
 
     template <typename Type, typename... Types>
-    struct GetInstTypeT<0, std::tuple<Type, Types...> >
+    struct get_inst_type_t<0, std::tuple<Type, Types...> >
     {
         using type = Type;
     };
 
   public:
-    template <Opcode OPCODE>
-    using to_inst_type = typename GetInstTypeT<OPCODE, InstTypes>::type;
+    template <Inst::Opcode OPCODE>
+    using to_inst_type = typename get_inst_type_t<OPCODE, InstTypes>::type;
 
     template <typename InstType, typename = void>
     struct get_num_inputs : std::integral_constant<size_t, std::numeric_limits<size_t>::max()>

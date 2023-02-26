@@ -20,14 +20,14 @@ class GraphBuilder
   public:
     GraphBuilder(Graph* g);
 
-    template <Opcode OPCODE, typename... Args>
+    template <Inst::Opcode OPCODE, typename... Args>
     IdType NewInst(Args&&... args)
     {
         assert(graph_ != nullptr);
         assert(cur_bb_ != nullptr);
 
-        static_assert(OPCODE != Opcode::CONST);
-        static_assert(OPCODE != Opcode::PARAM);
+        static_assert(OPCODE != Inst::Opcode::CONST);
+        static_assert(OPCODE != Inst::Opcode::PARAM);
 
         std::unique_ptr<Inst> inst = Inst::NewInst<OPCODE>(std::forward<Args>(args)...);
 
@@ -54,7 +54,7 @@ class GraphBuilder
         assert(graph_ != nullptr);
         assert(graph_->GetStartBasicBlock() != nullptr);
 
-        auto inst = Inst::NewInst<Opcode::CONST>(value);
+        auto inst = Inst::NewInst<Inst::Opcode::CONST>(value);
 
         assert(inst != nullptr);
         auto id = inst->GetId();
@@ -83,9 +83,9 @@ class GraphBuilder
         }
     }
 
-    void SetType(IdType id, DataType t);
+    void SetType(IdType id, Inst::DataType t);
     void SetImm(IdType id, ImmType imm);
-    void SetCond(IdType id, CondType c);
+    void SetCond(IdType id, Inst::Cond c);
 
     void ConstructCFG();
     void ConstructDFG();

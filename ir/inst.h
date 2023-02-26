@@ -20,49 +20,6 @@
 #include "marker.h"
 #include "typedefs.h"
 
-enum Opcode : uint8_t
-{
-#define OPCODES(op, ...) op,
-    INSTRUCTION_LIST(OPCODES)
-#undef OPCODES
-        N_OPCODES
-};
-
-using FlagType = uint8_t;
-using NoDCE = Flag<FlagType>;
-using Symmetry = NoDCE::Next;
-using IsCall = Symmetry::Next;
-using IsCheck = IsCall::Next;
-
-enum InstFlags : FlagType
-{
-    NO_DCE = NoDCE::Value(),
-    SYMMETRY = Symmetry::Value(),
-    IS_CALL = IsCall::Value(),
-    IS_CHECK = IsCheck::Value(),
-};
-
-enum class DataType : uint8_t
-{
-    NO_TYPE,
-    INT,
-    FLOAT,
-    DOUBLE,
-    VOID,
-    ANY
-};
-
-enum class CondType : uint8_t
-{
-    COND_INVALID,
-    COND_EQ,
-    COND_NEQ,
-    COND_LEQ,
-    COND_GEQ,
-    COND_L,
-    CONSD_G
-};
-
 class Inst;
 class BasicBlock;
 class Input
@@ -105,49 +62,98 @@ INSTRUCTION_TYPES(FORWARD_DECL);
 
 class Inst : public marking::Markable
 {
+  protected:
+    static constexpr size_t MAX_INPUTS = std::numeric_limits<uint8_t>::max();
+
+  private:
 #define GET_TYPES(OP, T, ...) T,
     using InstTypes = std::tuple<INSTRUCTION_LIST(GET_TYPES) void>;
 #undef GET_TYPES
 
     template <size_t I, typename TUPLE>
-    struct GetInstTypeT;
+    struct get_inst_type_t;
 
     template <size_t I, typename Type, typename... Types>
-    struct GetInstTypeT<I, std::tuple<Type, Types...> >
-        : GetInstTypeT<I - 1, std::tuple<Types...> >
+    struct get_inst_type_t<I, std::tuple<Type, Types...> >
+        : get_inst_type_t<I - 1, std::tuple<Types...> >
     {};
 
     template <typename Type, typename... Types>
-    struct GetInstTypeT<0, std::tuple<Type, Types...> >
+    struct get_inst_type_t<0, std::tuple<Type, Types...> >
     {
         using type = Type;
     };
 
-  public:
-    template <Opcode OPCODE>
-    using to_inst_type = typename GetInstTypeT<OPCODE, InstTypes>::type;
-
-    template <Opcode OPCODE>
-    struct has_dynamic_operands : std::is_base_of<VariableInputOp, to_inst_type<OPCODE> >
-    {};
-
-    static constexpr size_t MAX_INPUTS = std::numeric_limits<size_t>::max();
-
     template <typename InstType, typename = void>
-    struct get_num_inputs : std::integral_constant<size_t, MAX_INPUTS>
-    {};
+    struct get_num_inputs_t : std::integral_constant<size_t, MAX_INPUTS>
+    {
+        static_assert(std::is_base_of<Inst, InstType>::value);
+    };
 
     template <typename InstType>
-    struct get_num_inputs<InstType, std::void_t<decltype(InstType::N_INPUTS)> >
+    struct get_num_inputs_t<InstType, std::void_t<decltype(InstType::N_INPUTS)> >
         : std::integral_constant<size_t, InstType::N_INPUTS>
-    {};
+    {
+        static_assert(std::is_base_of<Inst, InstType>::value);
+    };
 
-    template <Opcode OPCODE, typename... Args>
+    using FlagType = uint8_t;
+    using NoDCE = Flag<FlagType>;
+    using Symmetry = NoDCE::Next;
+    using Call = Symmetry::Next;
+    using Check = Call::Next;
+
+  public:
+    enum Flags : FlagType
+    {
+        NO_DCE = NoDCE::Value(),
+        SYMMETRY = Symmetry::Value(),
+        CALL = Call::Value(),
+        CHECK = Check::Value(),
+    };
+
+    enum Opcode : uint8_t
+    {
+#define OPCODES(op, ...) op,
+        INSTRUCTION_LIST(OPCODES)
+#undef OPCODES
+            N_OPCODES
+    };
+
+    enum class DataType : uint8_t
+    {
+        INT,
+        FLOAT,
+        DOUBLE,
+        VOID,
+        ANY
+    };
+
+    enum class Cond : uint8_t
+    {
+        EQ,
+        NEQ,
+        LEQ,
+        GEQ,
+        L,
+        G
+    };
+
+    template <typename InstType>
+    using get_num_inputs = get_num_inputs_t<InstType>;
+
+    template <Inst::Opcode OPCODE>
+    using to_inst_type = typename get_inst_type_t<OPCODE, InstTypes>::type;
+
+    template <Inst::Opcode OPCODE>
+    using has_dynamic_operands = std::is_base_of<VariableInputOp, to_inst_type<OPCODE> >;
+
+    template <Inst::Opcode OPCODE, typename... Args>
     static std::unique_ptr<Inst> NewInst(Args&&... args);
 
     GETTER_SETTER(Prev, Inst*, prev_);
     GETTER_SETTER(BasicBlock, BasicBlock*, bb_);
-    GETTER_SETTER(DataType, DataType, data_type_);
+    GETTER_SETTER(DataType, Inst::DataType, data_type_);
     GETTER(Inputs, inputs_);
     GETTER(Opcode, opcode_);
     GETTER(Users, users_);
@@ -170,10 +176,10 @@ class Inst : public marking::Markable
     void RemoveUser(Inst* user);
     void ReplaceUser(const User& user_old, const User& user_new);
 
-    template <Opcode OPCODE, InstFlags FLAG>
+    template <Inst::Opcode OPCODE, Inst::Flags FLAG>
     static constexpr bool HasFlag()
     {
-        constexpr std::array<uint8_t, Opcode::N_OPCODES> FLAGS_MAP{
+        constexpr std::array<uint8_t, Inst::Opcode::N_OPCODES> FLAGS_MAP{
 #define GET_FLAGS(OP, TYPE, FLAGS, ...) FLAGS,
             INSTRUCTION_LIST(GET_FLAGS)
 #undef GET_FLAGS
@@ -181,7 +187,7 @@ class Inst : public marking::Markable
         return FLAGS_MAP[OPCODE] & FLAG;
     }
 
-    bool HasFlag(InstFlags flag) const;
+    bool HasFlag(Inst::Flags flag) const;
     bool HasDynamicOperands() const;
     size_t GetNumInputs() const;
 
@@ -207,32 +213,33 @@ class Inst : public marking::Markable
 
     bool IsPhi() const
     {
-        return opcode_ == Opcode::PHI;
+        return opcode_ == Inst::Opcode::PHI;
     }
 
     bool IsConst() const
     {
-        return opcode_ == Opcode::CONST;
+        return opcode_ == Inst::Opcode::CONST;
     }
 
     bool IsParam() const
     {
-        return opcode_ == Opcode::PARAM;
+        return opcode_ == Inst::Opcode::PARAM;
     }
 
     bool IsCall() const
     {
-        return HasFlag(InstFlags::IS_CALL);
+        return HasFlag(Inst::Flags::CALL);
     }
 
     bool IsReturn() const
     {
-        return (opcode_ == Opcode::RETURN) || (opcode_ == Opcode::RETURN_VOID);
+        return (opcode_ == Inst::Opcode::RETURN) || (opcode_ == Inst::Opcode::RETURN_VOID);
     }
 
     bool IsCond() const
     {
-        return opcode_ == Opcode::IF || opcode_ == Opcode::IF_IMM || opcode_ == Opcode::CMP;
+        return opcode_ == Inst::Opcode::IF || opcode_ == Inst::Opcode::IF_IMM ||
+               opcode_ == Inst::Opcode::CMP;
     }
 
     bool IsTypeSensitive() const
@@ -249,7 +256,7 @@ class Inst : public marking::Markable
     virtual void Dump() const;
 
   protected:
-    explicit Inst(Opcode op) : id_(RecieveId()), opcode_(op)
+    explicit Inst(Inst::Opcode op) : id_(RecieveId()), opcode_(op)
     {
     }
 
@@ -261,8 +268,8 @@ class Inst : public marking::Markable
 
     inline bool IsNotTypeSensitive() const
     {
-        return opcode_ == Opcode::RETURN || opcode_ == Opcode::RETURN_VOID ||
-               opcode_ == Opcode::PARAM || opcode_ == Opcode::CONST;
+        return opcode_ == Inst::Opcode::RETURN || opcode_ == Inst::Opcode::RETURN_VOID ||
+               opcode_ == Inst::Opcode::PARAM || opcode_ == Inst::Opcode::CONST;
     }
 
     std::unique_ptr<Inst> next_{ nullptr };
@@ -270,8 +277,8 @@ class Inst : public marking::Markable
 
     const IdType id_{};
 
-    Opcode opcode_;
-    DataType data_type_ = DataType::NO_TYPE;
+    Inst::Opcode opcode_;
+    Inst::DataType data_type_ = Inst::DataType::VOID;
     BasicBlock* bb_{ nullptr };
 
     std::list<User> users_{};
@@ -299,34 +306,29 @@ class HasImm
 class HasCond
 {
   public:
-    explicit HasCond(CondType cc) : cc_(cc)
+    explicit HasCond(Inst::Cond cc) : cc_(cc)
     {
     }
 
-    GETTER_SETTER(Cond, CondType, cc_);
+    GETTER_SETTER(Cond, Inst::Cond, cc_);
 
     void Dump() const
     {
-        static const std::unordered_map<CondType, std::string> cond_to_str = {
-            { CondType::COND_INVALID, "invalid" },
-            { CondType::COND_EQ, "==" },
-            { CondType::COND_NEQ, "!=" },
-            { CondType::COND_LEQ, "<=" },
-            { CondType::COND_GEQ, ">=" },
-            { CondType::COND_L, "<" },
-            { CondType::CONSD_G, ">" }
+        static const std::unordered_map<Inst::Cond, std::string> cond_to_str = {
+            { Inst::Cond::EQ, "==" },  { Inst::Cond::NEQ, "!=" }, { Inst::Cond::LEQ, "<=" },
+            { Inst::Cond::GEQ, ">=" }, { Inst::Cond::L, "<" },    { Inst::Cond::G, ">" }
         };
         std::cout << "#\tcondition type: " << cond_to_str.at(cc_) << "\n";
     }
 
   private:
-    CondType cc_{ CondType::COND_INVALID };
+    Inst::Cond cc_;
 };
 template <size_t N>
 class FixedInputOp : public Inst
 {
   public:
-    FixedInputOp(Opcode op) : Inst(op)
+    FixedInputOp(Inst::Opcode op) : Inst(op)
     {
         inputs_.resize(N);
     }
@@ -337,7 +339,7 @@ class FixedInputOp : public Inst
 class FixedInputOp0 : public FixedInputOp<0>
 {
   public:
-    FixedInputOp0(Opcode op) : FixedInputOp(op)
+    FixedInputOp0(Inst::Opcode op) : FixedInputOp(op)
     {
     }
 };
@@ -345,7 +347,7 @@ class FixedInputOp0 : public FixedInputOp<0>
 class FixedInputOp1 : public FixedInputOp<1>
 {
   public:
-    FixedInputOp1(Opcode op) : FixedInputOp(op)
+    FixedInputOp1(Inst::Opcode op) : FixedInputOp(op)
     {
     }
 };
@@ -353,7 +355,7 @@ class FixedInputOp1 : public FixedInputOp<1>
 class BinaryOp : public FixedInputOp<2>
 {
   public:
-    BinaryOp(const Opcode op) : FixedInputOp(op)
+    BinaryOp(const Inst::Opcode op) : FixedInputOp(op)
     {
     }
 };
@@ -361,7 +363,7 @@ class BinaryOp : public FixedInputOp<2>
 class BinaryImmOp : public FixedInputOp<1>, public HasImm
 {
   public:
-    BinaryImmOp(Opcode op, ImmType imm = 0) : FixedInputOp(op), HasImm(imm)
+    BinaryImmOp(Inst::Opcode op, ImmType imm = 0) : FixedInputOp(op), HasImm(imm)
     {
     }
 
@@ -375,8 +377,7 @@ class BinaryImmOp : public FixedInputOp<1>, public HasImm
 class CompareOp : public FixedInputOp<2>, public HasCond
 {
   public:
-    CompareOp(Opcode, CondType cc = CondType::COND_INVALID)
-        : FixedInputOp(Opcode::CMP), HasCond(cc)
+    CompareOp(Inst::Opcode, Inst::Cond cc) : FixedInputOp(Inst::Opcode::CMP), HasCond(cc)
     {
     }
 
@@ -391,19 +392,19 @@ class ConstantOp : public Inst
 {
   public:
     template <typename T>
-    ConstantOp(Opcode, T val) : Inst(Opcode::CONST)
+    ConstantOp(Inst::Opcode, T val) : Inst(Inst::Opcode::CONST)
     {
         if constexpr (std::numeric_limits<T>::is_integer) {
-            SetDataType(DataType::INT);
+            SetDataType(Inst::DataType::INT);
             val_ = val;
         } else if constexpr (std::is_same_v<T, float>) {
-            SetDataType(DataType::FLOAT);
+            SetDataType(Inst::DataType::FLOAT);
             val_ = std::bit_cast<uint32_t, float>(val);
         } else if constexpr (std::is_same_v<T, double>) {
-            SetDataType(DataType::DOUBLE);
+            SetDataType(Inst::DataType::DOUBLE);
             val_ = std::bit_cast<uint64_t, double>(val);
         } else {
-            SetDataType(DataType::NO_TYPE);
+            SetDataType(Inst::DataType::VOID);
             assert(false);
         }
     }
@@ -415,19 +416,19 @@ class ConstantOp : public Inst
 
     int64_t GetValInt() const
     {
-        assert(GetDataType() == DataType::INT);
+        assert(GetDataType() == Inst::DataType::INT);
         return (int64_t)val_;
     }
 
     double GetValDouble() const
     {
-        assert(GetDataType() == DataType::DOUBLE);
+        assert(GetDataType() == Inst::DataType::DOUBLE);
         return std::bit_cast<float, uint32_t>((uint32_t)val_);
     }
 
     float GetValFloat() const
     {
-        assert(GetDataType() == DataType::FLOAT);
+        assert(GetDataType() == Inst::DataType::FLOAT);
         return std::bit_cast<double, uint64_t>(val_);
     }
 
@@ -444,14 +445,14 @@ class ConstantOp : public Inst
 class ParamOp : public Inst
 {
   public:
-    static constexpr ArgNumType ARG_N_INVALID = std::numeric_limits<ArgNumType>::max();
+    static constexpr size_t ARG_N_INVALID = std::numeric_limits<size_t>::max();
 
-    ParamOp(Opcode, ArgNumType arg_n = ARG_N_INVALID) : Inst(Opcode::PARAM)
+    ParamOp(Inst::Opcode, size_t arg_n = ARG_N_INVALID) : Inst(Inst::Opcode::PARAM)
     {
         arg_n_ = arg_n;
     }
 
-    GETTER_SETTER(ArgNumber, ArgNumType, arg_n_);
+    GETTER_SETTER(ArgNumber, size_t, arg_n_);
 
     void Dump() const override
     {
@@ -460,13 +461,13 @@ class ParamOp : public Inst
     }
 
   private:
-    ArgNumType arg_n_{ ARG_N_INVALID };
+    size_t arg_n_{ ARG_N_INVALID };
 };
 
 class VariableInputOp : public Inst
 {
   public:
-    VariableInputOp(Opcode opcode) : Inst(opcode)
+    VariableInputOp(Inst::Opcode opcode) : Inst(opcode)
     {
     }
 };
@@ -474,9 +475,9 @@ class VariableInputOp : public Inst
 class CallOp : public VariableInputOp
 {
   public:
-    CallOp(Opcode opcode, Graph* callee) : VariableInputOp(opcode), callee_(callee)
+    CallOp(Inst::Opcode opcode, Graph* callee) : VariableInputOp(opcode), callee_(callee)
     {
-        assert(HasFlag(InstFlags::IS_CALL));
+        assert(HasFlag(Inst::Flags::CALL));
     }
     GETTER_SETTER(Callee, Graph*, callee_);
 
@@ -487,7 +488,7 @@ class CallOp : public VariableInputOp
 class PhiOp : public VariableInputOp
 {
   public:
-    PhiOp(Opcode) : VariableInputOp(Opcode::PHI)
+    PhiOp(Inst::Opcode) : VariableInputOp(Inst::Opcode::PHI)
     {
     }
 };
@@ -495,7 +496,7 @@ class PhiOp : public VariableInputOp
 class IfOp : public FixedInputOp<2>, public HasCond
 {
   public:
-    IfOp(Opcode, CondType cc = CondType::COND_INVALID) : FixedInputOp(Opcode::IF), HasCond(cc)
+    IfOp(Inst::Opcode, Inst::Cond cc) : FixedInputOp(Inst::Opcode::IF), HasCond(cc)
     {
     }
 
@@ -509,13 +510,13 @@ class IfOp : public FixedInputOp<2>, public HasCond
 class IfImmOp : public FixedInputOp<1>, public HasCond, public HasImm
 {
   public:
-    IfImmOp(Opcode, ImmType imm = 0, CondType cc = CondType::COND_INVALID)
-        : FixedInputOp(Opcode::IF_IMM), HasCond(cc), HasImm(imm)
+    IfImmOp(Inst::Opcode, ImmType imm, Inst::Cond cc)
+        : FixedInputOp(Inst::Opcode::IF_IMM), HasCond(cc), HasImm(imm)
     {
     }
 };
 
-template <Opcode OPCODE, typename... Args>
+template <Inst::Opcode OPCODE, typename... Args>
 std::unique_ptr<Inst> Inst::NewInst(Args&&... args)
 {
     return std::unique_ptr<Inst::to_inst_type<OPCODE> >(

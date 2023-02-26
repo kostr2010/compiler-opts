@@ -39,8 +39,8 @@ TEST(TestDCE, Example1)
     auto C1 = b.NewConst(2U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, C0);
     b.SetInputs(I1, I0);
@@ -92,8 +92,8 @@ TEST(TestDCE, Example2)
     auto C1 = b.NewConst(2U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, C1);
     b.SetInputs(I1, I0);
@@ -142,11 +142,11 @@ TEST(TestDCE, Example3)
     auto C2 = b.NewConst(3U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::SUB>();
-    auto I2 = b.NewInst<Opcode::MUL>();
-    auto I3 = b.NewInst<Opcode::DIV>();
-    auto I4 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::SUB>();
+    auto I2 = b.NewInst<Inst::Opcode::MUL>();
+    auto I3 = b.NewInst<Inst::Opcode::DIV>();
+    auto I4 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C2, C1);
     b.SetInputs(I1, I0, C1);
@@ -212,19 +212,19 @@ TEST(TestDCE, Example4)
     auto C2 = b.NewConst(3U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::SUB>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::SUB>();
 
     auto B = b.NewBlock();
-    auto I2 = b.NewInst<Opcode::MUL>();
-    auto I3 = b.NewInst<Opcode::DIV>();
+    auto I2 = b.NewInst<Inst::Opcode::MUL>();
+    auto I3 = b.NewInst<Inst::Opcode::DIV>();
 
     auto C = b.NewBlock();
-    auto I4 = b.NewInst<Opcode::XOR>();
-    auto I5 = b.NewInst<Opcode::AND>();
-    auto I6 = b.NewInst<Opcode::PHI>();
-    auto I7 = b.NewInst<Opcode::PHI>();
-    auto I8 = b.NewInst<Opcode::RETURN>();
+    auto I4 = b.NewInst<Inst::Opcode::XOR>();
+    auto I5 = b.NewInst<Inst::Opcode::AND>();
+    auto I6 = b.NewInst<Inst::Opcode::PHI>();
+    auto I7 = b.NewInst<Inst::Opcode::PHI>();
+    auto I8 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, I0, C1);

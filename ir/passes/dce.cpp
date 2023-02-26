@@ -14,7 +14,7 @@ void DCE::Mark()
 {
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<PO>()->GetBlocks()) {
         for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
-            if (inst->HasFlag(InstFlags::NO_DCE)) {
+            if (inst->HasFlag(Inst::Flags::NO_DCE)) {
                 MarkRecursively(inst);
             }
         }

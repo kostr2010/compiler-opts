@@ -12,8 +12,8 @@ void Inst::SetInput(size_t idx, Inst* inst)
 
 void Inst::Dump() const
 {
-    static const std::unordered_map<Opcode, std::string> op_to_str{
-#define CREATE(OPCODE, ...) { Opcode::OPCODE, #OPCODE },
+    static const std::unordered_map<Inst::Opcode, std::string> op_to_str{
+#define CREATE(OPCODE, ...) { Inst::Opcode::OPCODE, #OPCODE },
         INSTRUCTION_LIST(CREATE)
 #undef CREATE
     };
@@ -137,9 +137,9 @@ void Inst::ClearInput(Inst* old_inst)
     }
 }
 
-bool Inst::HasFlag(InstFlags flag) const
+bool Inst::HasFlag(Inst::Flags flag) const
 {
-    constexpr std::array<uint8_t, Opcode::N_OPCODES> FLAGS_MAP{
+    constexpr std::array<uint8_t, Inst::Opcode::N_OPCODES> FLAGS_MAP{
 #define GET_FLAGS(OP, TYPE, FLAGS, ...) FLAGS,
         INSTRUCTION_LIST(GET_FLAGS)
 #undef GET_FLAGS
@@ -149,8 +149,8 @@ bool Inst::HasFlag(InstFlags flag) const
 
 bool Inst::HasDynamicOperands() const
 {
-    constexpr std::array<uint8_t, Opcode::N_OPCODES> DYN_OPS{
-#define GET_FLAGS(OP, TYPE, FLAGS, ...) has_dynamic_operands<Opcode::OP>(),
+    constexpr std::array<uint8_t, Inst::Opcode::N_OPCODES> DYN_OPS{
+#define GET_FLAGS(OP, TYPE, FLAGS, ...) has_dynamic_operands<Inst::Opcode::OP>(),
         INSTRUCTION_LIST(GET_FLAGS)
 #undef GET_FLAGS
     };
@@ -159,7 +159,7 @@ bool Inst::HasDynamicOperands() const
 
 size_t Inst::GetNumInputs() const
 {
-    constexpr std::array<size_t, Opcode::N_OPCODES> NUM_INPUTS{
+    constexpr std::array<size_t, Inst::Opcode::N_OPCODES> NUM_INPUTS{
 #define GET_FLAGS(OP, TYPE, FLAGS, ...) get_num_inputs<TYPE>(),
         INSTRUCTION_LIST(GET_FLAGS)
 #undef GET_FLAGS

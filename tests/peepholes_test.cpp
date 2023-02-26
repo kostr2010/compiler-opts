@@ -39,8 +39,8 @@ TEST(TestPeepholes, FoldADD_1)
     auto C1 = b.NewConst(2U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, C0);
     b.SetInputs(I1, I0);
@@ -57,8 +57,8 @@ TEST(TestPeepholes, FoldADD_1)
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
     auto c = bb_start->GetFirstInst();
-    ASSERT_EQ(c->GetOpcode(), Opcode::CONST);
-    ASSERT_EQ(c->GetDataType(), DataType::INT);
+    ASSERT_EQ(c->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_EQ(c->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 2U);
     ASSERT_EQ(c->GetNext(), nullptr);
 
@@ -86,8 +86,8 @@ TEST(TestPeepholes, FoldADD_2)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, C0);
     b.SetInputs(I1, I0);
@@ -104,8 +104,8 @@ TEST(TestPeepholes, FoldADD_2)
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
     auto c = bb_start->GetFirstInst();
-    ASSERT_EQ(c->GetOpcode(), Opcode::CONST);
-    ASSERT_EQ(c->GetDataType(), DataType::INT);
+    ASSERT_EQ(c->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_EQ(c->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 2U);
     ASSERT_EQ(c->GetNext(), nullptr);
 
@@ -138,9 +138,9 @@ TEST(TestPeepholes, MatchADD_zero_1)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>(); // -> ADDI
-    auto I1 = b.NewInst<Opcode::ADD>(); // -> v0
-    auto I2 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>(); // -> ADDI
+    auto I1 = b.NewInst<Inst::Opcode::ADD>(); // -> v0
+    auto I2 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, P0, C0);
@@ -187,9 +187,9 @@ TEST(TestPeepholes, MatchADD_zero_2)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>(); // -> ADDI
-    auto I1 = b.NewInst<Opcode::ADD>(); // -> v0
-    auto I2 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>(); // -> ADDI
+    auto I1 = b.NewInst<Inst::Opcode::ADD>(); // -> v0
+    auto I2 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, P0);
     b.SetInputs(I1, C0, P0);
@@ -239,10 +239,10 @@ TEST(TestPeepholes, MatchADD_after_sub_1)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::SUB>();
-    auto II = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::ADD>();
-    auto I2 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::SUB>();
+    auto II = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::ADD>();
+    auto I2 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P1, P0);
     b.SetInputs(I1, P0, I0);
@@ -296,10 +296,10 @@ TEST(TestPeepholes, MatchADD_after_sub_2)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::SUB>();
-    auto II = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::ADD>();
-    auto I2 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::SUB>();
+    auto II = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::ADD>();
+    auto I2 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P1, P0);
     b.SetInputs(I1, I0, P0);
@@ -353,11 +353,11 @@ TEST(TestPeepholes, MatchADD_after_sub_3)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I_ = b.NewInst<Opcode::SUB>();
-    auto I0 = b.NewInst<Opcode::SUB>();
-    auto II = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::ADD>();
-    auto I2 = b.NewInst<Opcode::RETURN>();
+    auto I_ = b.NewInst<Inst::Opcode::SUB>();
+    auto I0 = b.NewInst<Inst::Opcode::SUB>();
+    auto II = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::ADD>();
+    auto I2 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I_, C1, P0);
     b.SetInputs(I0, P1, I_);
@@ -424,8 +424,8 @@ TEST(TestPeepholes, MatchADD_same_value_1)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, P0);
     b.SetInputs(I1, I0);
@@ -450,7 +450,7 @@ TEST(TestPeepholes, MatchADD_same_value_1)
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
     auto i2 = bb_a->GetFirstInst();
     ASSERT_NE(i2, nullptr);
-    ASSERT_EQ(i2->GetOpcode(), Opcode::SHLI);
+    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::SHLI);
     ASSERT_EQ(static_cast<BinaryImmOp*>(i2)->GetImm(), 2);
     auto i1 = i2->GetNext();
     ASSERT_NE(i1, nullptr);
@@ -481,8 +481,8 @@ TEST(TestPeepholes, MatchADD_fold_to_ADDI_1)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, I0);
@@ -507,7 +507,7 @@ TEST(TestPeepholes, MatchADD_fold_to_ADDI_1)
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
     auto i2 = bb_a->GetFirstInst();
     ASSERT_NE(i2, nullptr);
-    ASSERT_EQ(i2->GetOpcode(), Opcode::ADDI);
+    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ADDI);
     ASSERT_EQ(static_cast<BinaryImmOp*>(i2)->GetImm(), -2);
     auto i1 = i2->GetNext();
     ASSERT_NE(i1, nullptr);
@@ -538,8 +538,8 @@ TEST(TestPeepholes, MatchADD_fold_to_ADDI_2)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ADD>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ADD>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, P0);
     b.SetInputs(I1, I0);
@@ -564,7 +564,7 @@ TEST(TestPeepholes, MatchADD_fold_to_ADDI_2)
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
     auto i2 = bb_a->GetFirstInst();
     ASSERT_NE(i2, nullptr);
-    ASSERT_EQ(i2->GetOpcode(), Opcode::ADDI);
+    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ADDI);
     ASSERT_EQ(static_cast<BinaryImmOp*>(i2)->GetImm(), -2);
     auto i1 = i2->GetNext();
     ASSERT_NE(i1, nullptr);
@@ -590,8 +590,8 @@ TEST(TestPeepholes, FoldASHR)
     auto C1 = b.NewConst(4);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ASHR>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ASHR>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, C0);
     b.SetInputs(I1, I0);
@@ -610,7 +610,7 @@ TEST(TestPeepholes, FoldASHR)
     auto i2 = bb_start->GetFirstInst();
     ASSERT_NE(i2, nullptr);
     ASSERT_TRUE(i2->IsConst());
-    ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), DataType::INT);
+    ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetValInt(), 1);
     ASSERT_EQ(i2->GetNext(), nullptr);
 
@@ -643,8 +643,8 @@ TEST(TestPeepholes, MatchASHR_zero_0)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ASHR>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ASHR>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C0);
     b.SetInputs(I1, I0);
@@ -694,8 +694,8 @@ TEST(TestPeepholes, MatchASHR_zero_1)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ASHR>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ASHR>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C0, P0);
     b.SetInputs(I1, I0);
@@ -714,7 +714,7 @@ TEST(TestPeepholes, MatchASHR_zero_1)
     auto i2 = bb_start->GetFirstInst();
     ASSERT_NE(i2, nullptr);
     ASSERT_TRUE(i2->IsConst());
-    ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), DataType::INT);
+    ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetValInt(), 0);
     ASSERT_EQ(i2->GetNext(), nullptr);
 
@@ -747,8 +747,8 @@ TEST(TestPeepholes, MatchASHR_fold_to_ASHRI)
     auto C1 = b.NewConst(17);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::ASHR>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::ASHR>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, I0);
@@ -773,7 +773,7 @@ TEST(TestPeepholes, MatchASHR_fold_to_ASHRI)
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
     auto i2 = bb_a->GetFirstInst();
     ASSERT_NE(i2, nullptr);
-    ASSERT_EQ(i2->GetOpcode(), Opcode::ASHRI);
+    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ASHRI);
     ASSERT_EQ(static_cast<BinaryImmOp*>(i2)->GetImm(), 17);
     auto i1 = i2->GetNext();
     ASSERT_NE(i1, nullptr);
@@ -799,8 +799,8 @@ TEST(TestPeepholes, FoldXOR_1)
     auto C1 = b.NewConst(17);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::XOR>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::XOR>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, C0);
     b.SetInputs(I1, I0);
@@ -817,8 +817,8 @@ TEST(TestPeepholes, FoldXOR_1)
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
     auto c = bb_start->GetFirstInst();
-    ASSERT_EQ(c->GetOpcode(), Opcode::CONST);
-    ASSERT_EQ(c->GetDataType(), DataType::INT);
+    ASSERT_EQ(c->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_EQ(c->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 28);
     ASSERT_EQ(c->GetNext(), nullptr);
 
@@ -851,8 +851,8 @@ TEST(TestPeepholes, MatchXOR_same_value)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::XOR>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::XOR>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, P0);
     b.SetInputs(I1, I0);
@@ -871,7 +871,7 @@ TEST(TestPeepholes, MatchXOR_same_value)
     auto i2 = bb_start->GetFirstInst();
     ASSERT_NE(i2, nullptr);
     ASSERT_TRUE(i2->IsConst());
-    ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), DataType::INT);
+    ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(i2)->GetValInt(), 0);
     ASSERT_EQ(i2->GetNext(), nullptr);
 
@@ -904,9 +904,9 @@ TEST(TestPeepholes, MatchXOR_zero)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::XOR>();
-    auto I1 = b.NewInst<Opcode::XOR>();
-    auto I2 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::XOR>();
+    auto I1 = b.NewInst<Inst::Opcode::XOR>();
+    auto I2 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, P0, C0);
@@ -953,9 +953,9 @@ TEST(TestPeepholes, MatchXOR_zero_)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::XOR>();
-    auto I1 = b.NewInst<Opcode::XOR>();
-    auto I2 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::XOR>();
+    auto I1 = b.NewInst<Inst::Opcode::XOR>();
+    auto I2 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, C0, P0);
@@ -1002,8 +1002,8 @@ TEST(TestPeepholes, MatchXOR_fold_to_XORI)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::XOR>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::XOR>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, I0);
@@ -1028,7 +1028,7 @@ TEST(TestPeepholes, MatchXOR_fold_to_XORI)
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
     auto i2 = bb_a->GetFirstInst();
     ASSERT_NE(i2, nullptr);
-    ASSERT_EQ(i2->GetOpcode(), Opcode::XORI);
+    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::XORI);
     ASSERT_EQ(static_cast<BinaryImmOp*>(i2)->GetImm(), -2);
     auto i1 = i2->GetNext();
     ASSERT_NE(i1, nullptr);
@@ -1059,8 +1059,8 @@ TEST(TestPeepholes, MatchXOR_fold_to_XORI_)
     auto C1 = b.NewConst(-2);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Opcode::XOR>();
-    auto I1 = b.NewInst<Opcode::RETURN>();
+    auto I0 = b.NewInst<Inst::Opcode::XOR>();
+    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, P0);
     b.SetInputs(I1, I0);
@@ -1085,7 +1085,7 @@ TEST(TestPeepholes, MatchXOR_fold_to_XORI_)
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
     auto i2 = bb_a->GetFirstInst();
     ASSERT_NE(i2, nullptr);
-    ASSERT_EQ(i2->GetOpcode(), Opcode::XORI);
+    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::XORI);
     ASSERT_EQ(static_cast<BinaryImmOp*>(i2)->GetImm(), -2);
     auto i1 = i2->GetNext();
     ASSERT_NE(i1, nullptr);

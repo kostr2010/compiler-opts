@@ -6,6 +6,5 @@
 
 typedef size_t IdType;
 typedef int ImmType;
-typedef size_t ArgNumType;
 
 #endif

@@ -4,5 +4,12 @@
 
 bool CheckElimination::RunPass()
 {
+    ResetState();
+
     return true;
+}
+
+void CheckElimination::ResetState()
+{
+    zero_checks_.clear();
 }

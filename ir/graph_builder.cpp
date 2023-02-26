@@ -31,7 +31,7 @@ IdType GraphBuilder::NewParameter()
         cur_id = last_inst->GetId() + 1;
     }
 
-    auto inst = Inst::NewInst<Opcode::PARAM>(cur_id);
+    auto inst = Inst::NewInst<Inst::Opcode::PARAM>(cur_id);
 
     assert(inst != nullptr);
     auto id = inst->GetId();
@@ -73,7 +73,7 @@ void GraphBuilder::SetInputs(IdType id, std::vector<std::pair<IdType, IdType> >&
     phi_inputs_map_.at(id) = std::move(inputs);
 }
 
-void GraphBuilder::SetType(IdType id, DataType t)
+void GraphBuilder::SetType(IdType id, Inst::DataType t)
 {
     auto inst = inst_map_[id];
     assert(inst != nullptr);
@@ -86,22 +86,22 @@ void GraphBuilder::SetImm(IdType id, ImmType imm)
     assert(inst != nullptr);
 
     switch (inst->GetOpcode()) {
-    case Opcode::ADDI:
-    case Opcode::SUBI:
-    case Opcode::MULI:
-    case Opcode::DIVI:
-    case Opcode::MODI:
-    case Opcode::MINI:
-    case Opcode::MAXI:
-    case Opcode::SHLI:
-    case Opcode::SHRI:
-    case Opcode::ASHRI:
-    case Opcode::ANDI:
-    case Opcode::ORI:
-    case Opcode::XORI:
+    case Inst::Opcode::ADDI:
+    case Inst::Opcode::SUBI:
+    case Inst::Opcode::MULI:
+    case Inst::Opcode::DIVI:
+    case Inst::Opcode::MODI:
+    case Inst::Opcode::MINI:
+    case Inst::Opcode::MAXI:
+    case Inst::Opcode::SHLI:
+    case Inst::Opcode::SHRI:
+    case Inst::Opcode::ASHRI:
+    case Inst::Opcode::ANDI:
+    case Inst::Opcode::ORI:
+    case Inst::Opcode::XORI:
         static_cast<BinaryImmOp*>(inst)->SetImm(imm);
         break;
-    case Opcode::IF_IMM:
+    case Inst::Opcode::IF_IMM:
         static_cast<IfImmOp*>(inst)->SetImm(imm);
         break;
     default:
@@ -109,20 +109,20 @@ void GraphBuilder::SetImm(IdType id, ImmType imm)
     }
 }
 
-void GraphBuilder::SetCond(IdType id, CondType c)
+void GraphBuilder::SetCond(IdType id, Inst::Cond c)
 {
     auto inst = inst_map_[id];
     assert(inst != nullptr);
     assert(inst->IsCond());
 
     switch (inst->GetOpcode()) {
-    case Opcode::IF:
+    case Inst::Opcode::IF:
         static_cast<IfOp*>(inst)->SetCond(c);
         break;
-    case Opcode::IF_IMM:
+    case Inst::Opcode::IF_IMM:
         static_cast<IfImmOp*>(inst)->SetCond(c);
         break;
-    case Opcode::CMP:
+    case Inst::Opcode::CMP:
         static_cast<CompareOp*>(inst)->SetCond(c);
         break;
     default:

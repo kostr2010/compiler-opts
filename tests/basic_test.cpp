@@ -22,21 +22,21 @@ TEST(BasicTests, Example1)
     auto p0 = b.NewParameter();
 
     auto c0 = b.NewConst(1U); // res{1U}
-    b.SetType(c0, DataType::INT);
+    b.SetType(c0, Inst::DataType::INT);
     auto c1 = b.NewConst(2U); // i{2U}
-    b.SetType(c1, DataType::INT);
+    b.SetType(c1, Inst::DataType::INT);
 
     auto b0 = b.NewBlock();
-    auto i0 = b.NewInst<Opcode::PHI>(); // i
-    auto i1 = b.NewInst<Opcode::PHI>(); // res
-    auto i2 = b.NewInst<Opcode::IF>(CondType::COND_LEQ);
+    auto i0 = b.NewInst<Inst::Opcode::PHI>(); // i
+    auto i1 = b.NewInst<Inst::Opcode::PHI>(); // res
+    auto i2 = b.NewInst<Inst::Opcode::IF>(Inst::Cond::LEQ);
 
     auto b1 = b.NewBlock();
-    auto i3 = b.NewInst<Opcode::MUL>();
-    auto i4 = b.NewInst<Opcode::ADDI>(10);
+    auto i3 = b.NewInst<Inst::Opcode::MUL>();
+    auto i4 = b.NewInst<Inst::Opcode::ADDI>(10);
 
     auto b2 = b.NewBlock();
-    auto i5 = b.NewInst<Opcode::RETURN>();
+    auto i5 = b.NewInst<Inst::Opcode::RETURN>();
 
     b.SetInputs(i0, { { c1, Graph::BB_START_ID }, { i4, b1 } });
     b.SetInputs(i2, i0, p0);

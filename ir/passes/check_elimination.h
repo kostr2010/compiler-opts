@@ -3,6 +3,9 @@
 
 #include "pass.h"
 
+#include <unordered_map>
+#include <vector>
+
 class BasicBlock;
 class Inst;
 
@@ -16,6 +19,9 @@ class CheckElimination : public Pass
     bool RunPass() override;
 
   private:
+    void ResetState();
+
+    std::vector<Inst*> zero_checks_{};
 };
 
 #endif

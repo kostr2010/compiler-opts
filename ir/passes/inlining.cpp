@@ -10,18 +10,18 @@ bool Inlining::RunPass()
 {
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
-            if (!inst->HasFlag(InstFlags::IS_CALL)) {
+            if (!inst->HasFlag(Inst::Flags::CALL)) {
                 continue;
             }
 
             switch (inst->GetOpcode()) {
-            case Opcode::CALL_STATIC:
-                using T = Inst::to_inst_type<Opcode::CALL_STATIC>*;
+            case Inst::Opcode::CALL_STATIC:
+                using T = Inst::to_inst_type<Inst::Opcode::CALL_STATIC>*;
                 cur_call_ = inst;
                 callee_start_bb_ = static_cast<T>(cur_call_)->GetCallee()->GetStartBasicBlock();
                 TryInlineStatic();
                 break;
-            // case Opcode::CALL_DYNAMIC:
+            // case Inst::Opcode::CALL_DYNAMIC:
             //     TryInlineDynamic();
             //     break;
             default:
@@ -46,7 +46,7 @@ void Inlining::TryInlineStatic()
 {
     assert(cur_call_ != nullptr);
     assert(callee_start_bb_ != nullptr);
-    assert(cur_call_->GetOpcode() == Opcode::CALL_STATIC);
+    assert(cur_call_->GetOpcode() == Inst::Opcode::CALL_STATIC);
 
     UpdateDFGParameters();
     UpdateDFGReturns();
@@ -77,7 +77,8 @@ void Inlining::UpdateDFGParameters()
 // instructions)
 void Inlining::UpdateDFGReturns()
 {
-    auto call_inst = static_cast<typename Inst::to_inst_type<Opcode::CALL_STATIC>*>(cur_call_);
+    auto call_inst =
+        static_cast<typename Inst::to_inst_type<Inst::Opcode::CALL_STATIC>*>(cur_call_);
     auto callee_blocks = call_inst->GetCallee()->GetAnalyser()->GetValidPass<RPO>()->GetBlocks();
 
     std::vector<Inst*> rets{};
@@ -93,22 +94,22 @@ void Inlining::UpdateDFGReturns()
 
     // only one return type per function
     switch (rets.front()->GetOpcode()) {
-    case Opcode::RETURN: {
+    case Inst::Opcode::RETURN: {
         Inst* call_ret_res{ nullptr };
         if (rets.size() == 1) {
-            assert(Inst::get_num_inputs<Inst::to_inst_type<Opcode::RETURN> >() ==
+            assert(Inst::get_num_inputs<Inst::to_inst_type<Inst::Opcode::RETURN> >() ==
                    rets.front()->GetInputs().size());
             call_ret_res = rets.front()->GetInputs().front().GetInst();
             call_ret_res->RemoveUser(rets.front());
             rets.front()->GetBasicBlock()->UnlinkInst(rets.front());
         } else {
-            ret_phi_ = std::move(Inst::NewInst<Opcode::PHI>());
+            ret_phi_ = std::move(Inst::NewInst<Inst::Opcode::PHI>());
             call_ret_res = ret_phi_.get();
 
             assert(call_ret_res != nullptr);
 
             for (const auto& ret : rets) {
-                assert(Inst::get_num_inputs<Inst::to_inst_type<Opcode::RETURN> >() ==
+                assert(Inst::get_num_inputs<Inst::to_inst_type<Inst::Opcode::RETURN> >() ==
                        ret->GetInputs().size());
                 // input is ret's input, but phi's bb is bb, where ret was
                 auto ret_input = ret->GetInputs().front().GetInst();
@@ -123,7 +124,7 @@ void Inlining::UpdateDFGReturns()
             call_ret_res->AddUser(user);
         }
     } break;
-    case Opcode::RETURN_VOID: {
+    case Inst::Opcode::RETURN_VOID: {
         for (const auto& ret : rets) {
             ret->GetBasicBlock()->UnlinkInst(ret);
         }
@@ -140,7 +141,8 @@ void Inlining::MoveConstants()
 
 void Inlining::MoveCalleeBlocks()
 {
-    auto call_inst = static_cast<typename Inst::to_inst_type<Opcode::CALL_STATIC>*>(cur_call_);
+    auto call_inst =
+        static_cast<typename Inst::to_inst_type<Inst::Opcode::CALL_STATIC>*>(cur_call_);
     auto callee = call_inst->GetCallee();
     for (const auto& bb : callee->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         graph_->NewBasicBlock(callee->ReleaseBasicBlock(bb->GetId()));

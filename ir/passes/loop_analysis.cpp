@@ -198,8 +198,8 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
     auto bck = loop->GetBackEdges().front();
 
     for (auto i = bb->GetFirstPhi(); i != nullptr; i = i->GetNext()) {
-        assert(i->GetOpcode() == Opcode::PHI);
-        auto phi = static_cast<Inst::to_inst_type<Opcode::PHI>*>(i);
+        assert(i->GetOpcode() == Inst::Opcode::PHI);
+        auto phi = static_cast<Inst::to_inst_type<Inst::Opcode::PHI>*>(i);
         auto inputs = phi->GetInputs();
         auto it = std::find_if(inputs.begin(), inputs.end(), [bck](const Input& in) {
             return in.GetSourceBB()->GetId() == bck->GetId();
@@ -218,7 +218,7 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
 
             Inst* source_inst = nullptr;
             if (inputs.size() > 1) {
-                pred->PushBackPhi(Inst::NewInst<Opcode::PHI>());
+                pred->PushBackPhi(Inst::NewInst<Inst::Opcode::PHI>());
                 source_inst = pred->GetLastPhi();
                 for (const auto& input : inputs) {
                     source_inst->AddInput(input);

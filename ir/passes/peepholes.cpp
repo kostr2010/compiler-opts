@@ -18,7 +18,7 @@ static void TransferUsers(Inst* from, Inst* to)
 // 1. BINOP v0, CONST or BINOP CONST, v0
 // ->
 // 1. BINOPIMM v0, CONST_VAL
-template <Opcode OPCODE_FROM, Opcode OPCODE_TO>
+template <Inst::Opcode OPCODE_FROM, Inst::Opcode OPCODE_TO>
 static bool FoldBinOpToBinImmOp(Inst* i)
 {
     static_assert(std::is_same<Inst::to_inst_type<OPCODE_TO>, BinaryImmOp>());
@@ -35,7 +35,7 @@ static bool FoldBinOpToBinImmOp(Inst* i)
     Inst* input_const = nullptr;
     Inst* input_param = nullptr;
 
-    if constexpr (Inst::HasFlag<OPCODE_FROM, InstFlags::SYMMETRY>()) {
+    if constexpr (Inst::HasFlag<OPCODE_FROM, Inst::Flags::SYMMETRY>()) {
         if (!inputs[0].GetInst()->IsConst() && !inputs[1].GetInst()->IsConst()) {
             return false;
         }
@@ -55,7 +55,7 @@ static bool FoldBinOpToBinImmOp(Inst* i)
 
     assert(input_const->IsConst());
     auto const_op = static_cast<ConstantOp*>(input_const);
-    assert(const_op->GetDataType() == DataType::INT);
+    assert(const_op->GetDataType() == Inst::DataType::INT);
 
     i->GetBasicBlock()->InsertInstAfter(Inst::NewInst<OPCODE_TO>(const_op->GetValInt()), i);
     i->GetNext()->SetInput(0, input_param);
@@ -69,13 +69,13 @@ bool Peepholes::RunPass()
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         for (auto i = bb->GetFirstInst(); i != nullptr; i = i->GetNext()) {
             switch (i->GetOpcode()) {
-            case Opcode::ADD:
+            case Inst::Opcode::ADD:
                 MatchADD(i);
                 break;
-            case Opcode::ASHR:
+            case Inst::Opcode::ASHR:
                 MatchASHR(i);
                 break;
-            case Opcode::XOR:
+            case Inst::Opcode::XOR:
                 MatchXOR(i);
                 break;
             default:
@@ -89,7 +89,7 @@ bool Peepholes::RunPass()
 
 void Peepholes::ReplaceWithIntegralConst(Inst* inst, int64_t val)
 {
-    graph_->GetStartBasicBlock()->PushFrontInst(Inst::NewInst<Opcode::CONST>(val));
+    graph_->GetStartBasicBlock()->PushFrontInst(Inst::NewInst<Inst::Opcode::CONST>(val));
     auto new_inst = graph_->GetStartBasicBlock()->GetFirstInst();
 
     TransferUsers(inst, new_inst);
@@ -98,7 +98,7 @@ void Peepholes::ReplaceWithIntegralConst(Inst* inst, int64_t val)
 void Peepholes::MatchADD(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ADD);
+    assert(i->GetOpcode() == Inst::Opcode::ADD);
 
     if (FoldADD(i)) {
         return;
@@ -116,7 +116,7 @@ void Peepholes::MatchADD(Inst* i)
         return;
     }
 
-    if (FoldBinOpToBinImmOp<Opcode::ADD, Opcode::ADDI>(i)) {
+    if (FoldBinOpToBinImmOp<Inst::Opcode::ADD, Inst::Opcode::ADDI>(i)) {
         return;
     }
 }
@@ -124,14 +124,14 @@ void Peepholes::MatchADD(Inst* i)
 bool Peepholes::FoldADD(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ADD);
+    assert(i->GetOpcode() == Inst::Opcode::ADD);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
 
     bool is_foldable = (inputs[0].GetInst()->IsConst() && inputs[1].GetInst()->IsConst());
-    bool is_integral = (inputs[0].GetInst()->GetDataType() == DataType::INT &&
-                        inputs[1].GetInst()->GetDataType() == DataType::INT);
+    bool is_integral = (inputs[0].GetInst()->GetDataType() == Inst::DataType::INT &&
+                        inputs[1].GetInst()->GetDataType() == Inst::DataType::INT);
 
     if (is_foldable && is_integral) {
         auto val1 = static_cast<ConstantOp*>(inputs[0].GetInst())->GetValInt();
@@ -150,7 +150,7 @@ bool Peepholes::FoldADD(Inst* i)
 bool Peepholes::MatchADD_zero(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ADD);
+    assert(i->GetOpcode() == Inst::Opcode::ADD);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
@@ -173,7 +173,7 @@ static bool TryMatchADD_after_sub(Inst* add, Inst* sub)
 {
     assert(add != nullptr);
     assert(sub != nullptr);
-    assert(sub->GetOpcode() == Opcode::SUB);
+    assert(sub->GetOpcode() == Inst::Opcode::SUB);
 
     auto add_input_0 = add->GetInputs()[0].GetInst();
     auto add_input_1 = add->GetInputs()[1].GetInst();
@@ -202,7 +202,7 @@ static bool TryMatchADD_after_sub(Inst* add, Inst* sub)
 bool Peepholes::MatchADD_after_sub(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ADD);
+    assert(i->GetOpcode() == Inst::Opcode::ADD);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
@@ -210,11 +210,11 @@ bool Peepholes::MatchADD_after_sub(Inst* i)
     auto input_0 = inputs[0].GetInst();
     auto input_1 = inputs[1].GetInst();
 
-    if (input_0->GetOpcode() == Opcode::SUB && TryMatchADD_after_sub(i, input_0)) {
+    if (input_0->GetOpcode() == Inst::Opcode::SUB && TryMatchADD_after_sub(i, input_0)) {
         return true;
     }
 
-    if (input_1->GetOpcode() == Opcode::SUB && TryMatchADD_after_sub(i, input_1)) {
+    if (input_1->GetOpcode() == Inst::Opcode::SUB && TryMatchADD_after_sub(i, input_1)) {
         return true;
     }
 
@@ -227,7 +227,7 @@ bool Peepholes::MatchADD_after_sub(Inst* i)
 bool Peepholes::MatchADD_same_value(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ADD);
+    assert(i->GetOpcode() == Inst::Opcode::ADD);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
@@ -237,7 +237,7 @@ bool Peepholes::MatchADD_same_value(Inst* i)
 
     if (input_0->GetId() == input_1->GetId()) {
         auto bb = i->GetBasicBlock();
-        bb->InsertInstAfter(Inst::NewInst<Opcode::SHLI>(2), i);
+        bb->InsertInstAfter(Inst::NewInst<Inst::Opcode::SHLI>(2), i);
         i->GetNext()->SetInput(0, input_0);
         TransferUsers(i, i->GetNext());
         return true;
@@ -249,7 +249,7 @@ bool Peepholes::MatchADD_same_value(Inst* i)
 void Peepholes::MatchASHR(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ASHR);
+    assert(i->GetOpcode() == Inst::Opcode::ASHR);
 
     if (FoldASHR(i)) {
         return;
@@ -263,7 +263,7 @@ void Peepholes::MatchASHR(Inst* i)
         return;
     }
 
-    if (FoldBinOpToBinImmOp<Opcode::ASHR, Opcode::ASHRI>(i)) {
+    if (FoldBinOpToBinImmOp<Inst::Opcode::ASHR, Inst::Opcode::ASHRI>(i)) {
         return;
     }
 }
@@ -271,14 +271,14 @@ void Peepholes::MatchASHR(Inst* i)
 bool Peepholes::FoldASHR(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ASHR);
+    assert(i->GetOpcode() == Inst::Opcode::ASHR);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
 
     bool is_foldable = (inputs[0].GetInst()->IsConst() && inputs[1].GetInst()->IsConst());
-    bool is_integral = (inputs[0].GetInst()->GetDataType() == DataType::INT &&
-                        inputs[1].GetInst()->GetDataType() == DataType::INT);
+    bool is_integral = (inputs[0].GetInst()->GetDataType() == Inst::DataType::INT &&
+                        inputs[1].GetInst()->GetDataType() == Inst::DataType::INT);
 
     if (is_foldable && is_integral) {
         auto val1 = static_cast<ConstantOp*>(inputs[0].GetInst())->GetValInt();
@@ -297,7 +297,7 @@ bool Peepholes::FoldASHR(Inst* i)
 bool Peepholes::MatchASHR_zero_0(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ASHR);
+    assert(i->GetOpcode() == Inst::Opcode::ASHR);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
@@ -319,7 +319,7 @@ bool Peepholes::MatchASHR_zero_0(Inst* i)
 bool Peepholes::MatchASHR_zero_1(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::ASHR);
+    assert(i->GetOpcode() == Inst::Opcode::ASHR);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
@@ -338,7 +338,7 @@ bool Peepholes::MatchASHR_zero_1(Inst* i)
 void Peepholes::MatchXOR(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::XOR);
+    assert(i->GetOpcode() == Inst::Opcode::XOR);
 
     if (FoldXOR(i)) {
         return;
@@ -352,7 +352,7 @@ void Peepholes::MatchXOR(Inst* i)
         return;
     }
 
-    if (FoldBinOpToBinImmOp<Opcode::XOR, Opcode::XORI>(i)) {
+    if (FoldBinOpToBinImmOp<Inst::Opcode::XOR, Inst::Opcode::XORI>(i)) {
         return;
     }
 }
@@ -360,14 +360,14 @@ void Peepholes::MatchXOR(Inst* i)
 bool Peepholes::FoldXOR(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::XOR);
+    assert(i->GetOpcode() == Inst::Opcode::XOR);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
 
     bool is_foldable = (inputs[0].GetInst()->IsConst() && inputs[1].GetInst()->IsConst());
-    bool is_integral = (inputs[0].GetInst()->GetDataType() == DataType::INT &&
-                        inputs[1].GetInst()->GetDataType() == DataType::INT);
+    bool is_integral = (inputs[0].GetInst()->GetDataType() == Inst::DataType::INT &&
+                        inputs[1].GetInst()->GetDataType() == Inst::DataType::INT);
 
     if (is_foldable && is_integral) {
         auto val1 = static_cast<ConstantOp*>(inputs[0].GetInst())->GetValInt();
@@ -386,7 +386,7 @@ bool Peepholes::FoldXOR(Inst* i)
 bool Peepholes::MatchXOR_same_value(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::XOR);
+    assert(i->GetOpcode() == Inst::Opcode::XOR);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
@@ -408,7 +408,7 @@ bool Peepholes::MatchXOR_same_value(Inst* i)
 bool Peepholes::MatchXOR_zero(Inst* i)
 {
     assert(i != nullptr);
-    assert(i->GetOpcode() == Opcode::XOR);
+    assert(i->GetOpcode() == Inst::Opcode::XOR);
 
     auto inputs = i->GetInputs();
     assert(inputs.size() == 2);
