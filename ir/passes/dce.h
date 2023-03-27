@@ -30,7 +30,7 @@ class DCE : public Pass
 };
 
 template <>
-struct PassTraits<DCE>
+struct Pass::PassTraits<DCE>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
     using num_marks = std::integral_constant<size_t, DCE::Marks::N_MARKS>;

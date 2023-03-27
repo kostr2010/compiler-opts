@@ -4,7 +4,7 @@
 
 bool PO::RunPass()
 {
-    ResetStructs();
+    ResetState();
     RunPass_(graph_->GetStartBasicBlock());
     ClearMarks();
     SetValid(true);
@@ -34,7 +34,7 @@ void PO::RunPass_(BasicBlock* cur_bb)
     po_bb_.push_back(cur_bb);
 }
 
-void PO::ResetStructs()
+void PO::ResetState()
 {
     po_bb_.clear();
 }

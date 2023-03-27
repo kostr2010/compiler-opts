@@ -25,14 +25,14 @@ class BFS : public Pass
     std::vector<BasicBlock*> GetBlocks();
 
   private:
-    void ResetStructs();
+    void ResetState();
     void ClearMarks();
 
     std::vector<BasicBlock*> bfs_bb_{};
 };
 
 template <>
-struct PassTraits<BFS>
+struct Pass::PassTraits<BFS>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
     using num_marks = std::integral_constant<size_t, BFS::Marks::N_MARKS>;

@@ -12,4 +12,6 @@ bool CheckElimination::RunPass()
 void CheckElimination::ResetState()
 {
     zero_checks_.clear();
+    null_checks_.clear();
+    size_checks_.clear();
 }

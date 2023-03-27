@@ -8,6 +8,7 @@
 #include "dfs.h"
 #include "dom_tree.h"
 #include "inlining.h"
+#include "linear_order.h"
 #include "loop_analysis.h"
 #include "peepholes.h"
 #include "po.h"
@@ -60,6 +61,6 @@ class PassList
 };
 
 using ActivePasses = PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO, Peepholes, DCE, Inlining,
-                              DBE, CheckElimination>;
+                              DBE, CheckElimination, LinearOrder>;
 
 #endif

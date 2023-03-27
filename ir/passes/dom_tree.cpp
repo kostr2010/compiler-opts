@@ -9,7 +9,7 @@ bool DomTree::RunPass()
 {
     graph_->ClearDominators();
 
-    ResetStructs();
+    ResetState();
     FillTree();
     ComputeSdoms();
     ComputeDoms();
@@ -111,7 +111,7 @@ void DomTree::FillTree_(Node* v)
     }
 }
 
-void DomTree::ResetStructs()
+void DomTree::ResetState()
 {
     tree_.clear();
     id_to_dfs_idx_.clear();

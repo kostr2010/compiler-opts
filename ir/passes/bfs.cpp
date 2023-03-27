@@ -6,7 +6,7 @@
 
 bool BFS::RunPass()
 {
-    ResetStructs();
+    ResetState();
 
     std::list<BasicBlock*> queue{};
 
@@ -42,7 +42,7 @@ std::vector<BasicBlock*> BFS::GetBlocks()
     return bfs_bb_;
 }
 
-void BFS::ResetStructs()
+void BFS::ResetState()
 {
     bfs_bb_.clear();
 }

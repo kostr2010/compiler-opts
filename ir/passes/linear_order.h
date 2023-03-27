@@ -1,5 +1,5 @@
-#ifndef __PASS_DFS_INCLUDED__
-#define __PASS_DFS_INCLUDED__
+#ifndef __PASS_LINEAR_ORDER_INCLUDED__
+#define __PASS_LINEAR_ORDER_INCLUDED__
 
 #include "pass.h"
 
@@ -7,7 +7,7 @@
 
 class BasicBlock;
 
-class DFS : public Pass
+class LinearOrder : public Pass
 {
   public:
     enum Marks
@@ -16,7 +16,7 @@ class DFS : public Pass
         N_MARKS,
     };
 
-    DFS(Graph* graph) : Pass(graph)
+    LinearOrder(Graph* graph) : Pass(graph)
     {
     }
 
@@ -29,14 +29,14 @@ class DFS : public Pass
     void ResetState();
     void ClearMarks();
 
-    std::vector<BasicBlock*> dfs_bb_{};
+    std::vector<BasicBlock*> linear_bb_{};
 };
 
 template <>
-struct Pass::PassTraits<DFS>
+struct Pass::PassTraits<LinearOrder>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
-    using num_marks = std::integral_constant<size_t, DFS::Marks::N_MARKS>;
+    using num_marks = std::integral_constant<size_t, LinearOrder::Marks::N_MARKS>;
 };
 
 #endif

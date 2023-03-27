@@ -26,14 +26,14 @@ class PO : public Pass
 
   private:
     void RunPass_(BasicBlock* cur_bb);
-    void ResetStructs();
+    void ResetState();
     void ClearMarks();
 
     std::vector<BasicBlock*> po_bb_{};
 };
 
 template <>
-struct PassTraits<PO>
+struct Pass::PassTraits<PO>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
     using num_marks = std::integral_constant<size_t, PO::Marks::N_MARKS>;

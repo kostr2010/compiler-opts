@@ -47,7 +47,7 @@ class LoopAnalysis : public Pass
     void PropagatePhis(BasicBlock* bb, BasicBlock* pred);
     void PopulateRootLoop();
     void BuildLoopTree();
-    void ResetStructs();
+    void ResetState();
     void ClearMarks();
     void InitStartLoop();
     void RecalculateLoopsReducibility();
@@ -59,7 +59,7 @@ class LoopAnalysis : public Pass
 };
 
 template <>
-struct PassTraits<LoopAnalysis>
+struct Pass::PassTraits<LoopAnalysis>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
     using num_marks = std::integral_constant<size_t, LoopAnalysis::Marks::N_MARKS>;

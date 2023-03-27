@@ -4,7 +4,7 @@
 
 bool RPO::RunPass()
 {
-    ResetStructs();
+    ResetState();
     RunPass_(graph_->GetStartBasicBlock());
     ClearMarks();
     SetValid(true);
@@ -33,7 +33,7 @@ void RPO::RunPass_(BasicBlock* cur_bb)
     }
 }
 
-void RPO::ResetStructs()
+void RPO::ResetState()
 {
     rpo_bb_.clear();
 }

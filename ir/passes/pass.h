@@ -14,6 +14,14 @@ class Pass
     template <typename P>
     using IsPass = std::is_base_of<Pass, P>;
 
+    template <typename T>
+    struct PassTraits
+    {
+        static_assert(Pass::IsPass<T>());
+        using is_cfg_sensitive = std::integral_constant<bool, false>;
+        using num_marks = std::integral_constant<size_t, 0>;
+    };
+
     Pass(Graph* g) : graph_{ g }
     {
     }
@@ -25,14 +33,6 @@ class Pass
     Graph* graph_;
 
     bool is_valid_ = false;
-};
-
-template <typename T>
-struct PassTraits
-{
-    static_assert(Pass::IsPass<T>());
-    using is_cfg_sensitive = std::integral_constant<bool, false>;
-    using num_marks = std::integral_constant<size_t, 0>;
 };
 
 #endif

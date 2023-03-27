@@ -4,7 +4,7 @@
 
 bool DFS::RunPass()
 {
-    ResetStructs();
+    ResetState();
     RunPass_(graph_->GetStartBasicBlock());
     ClearMarks();
     SetValid(true);
@@ -30,7 +30,7 @@ void DFS::RunPass_(BasicBlock* cur_bb)
     }
 }
 
-void DFS::ResetStructs()
+void DFS::ResetState()
 {
     dfs_bb_.clear();
 }

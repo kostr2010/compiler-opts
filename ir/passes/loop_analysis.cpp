@@ -5,7 +5,7 @@
 
 bool LoopAnalysis::RunPass()
 {
-    ResetStructs();
+    ResetState();
     graph_->GetAnalyser()->GetValidPass<DomTree>();
     CollectBackEdges(graph_->GetStartBasicBlock());
     SplitBackEdges();
@@ -255,7 +255,7 @@ void LoopAnalysis::BuildLoopTree()
     }
 }
 
-void LoopAnalysis::ResetStructs()
+void LoopAnalysis::ResetState()
 {
     id_to_dfs_idx_.clear();
     loops_.clear();

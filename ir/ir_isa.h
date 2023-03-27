@@ -27,6 +27,8 @@
     _(XORI, BinaryImmOp, {})                                                                      \
     _(CMP, CompareOp, {})                                                                         \
     _(CHECK_ZERO, FixedInputOp1, Inst::Flags::CHECK | Inst::Flags::NO_DCE)                        \
+    _(CHECK_NULL, FixedInputOp1, Inst::Flags::CHECK | Inst::Flags::NO_DCE)                        \
+    _(CHECK_SIZE, BinaryImmOp, Inst::Flags::CHECK | Inst::Flags::NO_DCE)                          \
     /*_(CAST, CastOp )*/                                                                          \
     /*_(CALL_DYNAMIC, CallOp, Inst::Flags::CALL | Inst::Flags::NO_DCE)*/                          \
     _(CALL_STATIC, CallOp, Inst::Flags::CALL | Inst::Flags::NO_DCE)                               \

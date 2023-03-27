@@ -44,14 +44,14 @@ class DomTree : public Pass
     void Link(Node* v, Node* w);
     Node* Eval(Node* v);
     void Compress(Node* v);
-    void ResetStructs();
+    void ResetState();
 
     std::unordered_map<IdType, size_t> id_to_dfs_idx_{};
     std::vector<Node> tree_{};
 };
 
 template <>
-struct PassTraits<DomTree>
+struct Pass::PassTraits<DomTree>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
     using num_marks = std::integral_constant<size_t, 0>;

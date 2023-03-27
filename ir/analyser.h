@@ -55,7 +55,7 @@ class Analyser
     {
         (([&] {
              using Type = ActivePasses::GetPass<IDS>::type;
-             if constexpr (PassTraits<Type>::is_cfg_sensitive::value) {
+             if constexpr (Pass::PassTraits<Type>::is_cfg_sensitive::value) {
                  GetPass<Type>()->SetValid(false);
              }
          }()),
