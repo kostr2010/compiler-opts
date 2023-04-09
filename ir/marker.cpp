@@ -7,4 +7,9 @@ MarkHolder* Markable::GetMarkHolder()
     return &bits;
 }
 
+MarkHolder Markable::PeekMarkHolder() const
+{
+    return bits;
+}
+
 };

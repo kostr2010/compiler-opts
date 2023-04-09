@@ -12,7 +12,7 @@ bool BFS::RunPass()
 
     auto bb = graph_->GetStartBasicBlock();
 
-    marking::Marker::SetMark<BFS, Marks::VISITED>(bb->GetMarkHolder());
+    marking::Marker::SetMark<BFS, Marks::VISITED>(bb);
     queue.push_back(bb);
 
     while (!queue.empty()) {
@@ -21,12 +21,11 @@ bool BFS::RunPass()
         queue.pop_front();
 
         for (auto b : bb->GetSuccessors()) {
-            auto bits = b->GetMarkHolder();
-            if (marking::Marker::GetMark<BFS, Marks::VISITED>(*bits)) {
+            if (marking::Marker::GetMark<BFS, Marks::VISITED>(b)) {
                 continue;
             }
 
-            marking::Marker::SetMark<BFS, Marks::VISITED>(bits);
+            marking::Marker::SetMark<BFS, Marks::VISITED>(b);
             queue.push_back(b);
         }
     }
@@ -50,6 +49,6 @@ void BFS::ResetState()
 void BFS::ClearMarks()
 {
     for (auto& bb : bfs_bb_) {
-        marking::Marker::ClearMark<DFS, Marks::VISITED>(bb->GetMarkHolder());
+        marking::Marker::ClearMark<DFS, Marks::VISITED>(bb);
     }
 }

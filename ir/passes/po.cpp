@@ -19,13 +19,11 @@ std::vector<BasicBlock*> PO::GetBlocks()
 
 void PO::RunPass_(BasicBlock* cur_bb)
 {
-    auto bits = cur_bb->GetMarkHolder();
-
-    if (marking::Marker::GetMark<PO, Marks::VISITED>(*bits)) {
+    if (marking::Marker::GetMark<PO, Marks::VISITED>(cur_bb)) {
         return;
     }
 
-    marking::Marker::SetMark<PO, Marks::VISITED>(bits);
+    marking::Marker::SetMark<PO, Marks::VISITED>(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
         RunPass_(succ);
@@ -42,6 +40,6 @@ void PO::ResetState()
 void PO::ClearMarks()
 {
     for (auto& bb : po_bb_) {
-        marking::Marker::ClearMark<PO, Marks::VISITED>(bb->GetMarkHolder());
+        marking::Marker::ClearMark<PO, Marks::VISITED>(bb);
     }
 }

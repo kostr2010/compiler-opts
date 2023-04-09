@@ -30,6 +30,6 @@ void LinearOrder::ResetState()
 void LinearOrder::ClearMarks()
 {
     for (auto& bb : linear_bb_) {
-        marking::Marker::ClearMark<LinearOrder, Marks::VISITED>(bb->GetMarkHolder());
+        marking::Marker::ClearMark<LinearOrder, Marks::VISITED>(bb);
     }
 }

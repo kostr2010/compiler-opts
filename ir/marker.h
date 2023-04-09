@@ -11,6 +11,18 @@ namespace marking {
 
 using MarkHolder = uint64_t;
 
+class Markable
+{
+  public:
+    DEFAULT_CTOR(Markable);
+
+    MarkHolder* GetMarkHolder();
+    MarkHolder PeekMarkHolder() const;
+
+  private:
+    MarkHolder bits{};
+};
+
 class Marker
 {
   private:
@@ -33,39 +45,28 @@ class Marker
     using GetMarkOffset = get_mark_offset<Type, 0, ActivePasses::Passes>;
 
     template <typename PassT, size_t N>
-    static void SetMark(MarkHolder* mark)
+    static void SetMark(Markable* mark)
     {
         static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        (*mark) |= (1ULL << (GetMarkOffset<PassT>() + N));
+        (*(mark->GetMarkHolder())) |= (1ULL << (GetMarkOffset<PassT>() + N));
     }
 
     template <typename PassT, size_t N>
-    static void ClearMark(MarkHolder* mark)
+    static void ClearMark(Markable* mark)
     {
         static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        (*mark) &= ~(1ULL << (GetMarkOffset<PassT>() + N));
+        (*(mark->GetMarkHolder())) &= ~(1ULL << (GetMarkOffset<PassT>() + N));
     }
 
     template <typename PassT, size_t N>
-    static bool GetMark(const MarkHolder& mark)
+    static bool GetMark(const Markable* mark)
     {
         static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        return mark & (1ULL << (GetMarkOffset<PassT>() + N));
+        return mark->PeekMarkHolder() & (1ULL << (GetMarkOffset<PassT>() + N));
     }
-};
-
-class Markable
-{
-  public:
-    DEFAULT_CTOR(Markable);
-
-    MarkHolder* GetMarkHolder();
-
-  private:
-    MarkHolder bits{};
 };
 
 };

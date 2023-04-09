@@ -19,13 +19,11 @@ std::vector<BasicBlock*> RPO::GetBlocks()
 
 void RPO::RunPass_(BasicBlock* cur_bb)
 {
-    auto bits = cur_bb->GetMarkHolder();
-
-    if (marking::Marker::GetMark<RPO, Marks::VISITED>(*bits)) {
+    if (marking::Marker::GetMark<RPO, Marks::VISITED>(cur_bb)) {
         return;
     }
 
-    marking::Marker::SetMark<RPO, Marks::VISITED>(bits);
+    marking::Marker::SetMark<RPO, Marks::VISITED>(cur_bb);
     rpo_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
@@ -41,6 +39,6 @@ void RPO::ResetState()
 void RPO::ClearMarks()
 {
     for (auto& bb : rpo_bb_) {
-        marking::Marker::ClearMark<RPO, Marks::VISITED>(bb->GetMarkHolder());
+        marking::Marker::ClearMark<RPO, Marks::VISITED>(bb);
     }
 }

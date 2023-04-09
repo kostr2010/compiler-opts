@@ -23,11 +23,11 @@ void DCE::Mark()
 
 void DCE::MarkRecursively(Inst* inst)
 {
-    if (marking::Marker::GetMark<DCE, Marks::VISITED>(*(inst->GetMarkHolder()))) {
+    if (marking::Marker::GetMark<DCE, Marks::VISITED>(inst)) {
         return;
     }
 
-    marking::Marker::SetMark<DCE, Marks::VISITED>(inst->GetMarkHolder());
+    marking::Marker::SetMark<DCE, Marks::VISITED>(inst);
 
     for (const auto& i : inst->GetInputs()) {
         MarkRecursively(i.GetInst());
@@ -51,7 +51,7 @@ void DCE::Sweep()
         auto inst = bb->GetLastInst();
         while (inst != nullptr) {
             auto prev = inst->GetPrev();
-            if (!marking::Marker::GetMark<DCE, Marks::VISITED>(*(inst->GetMarkHolder()))) {
+            if (!marking::Marker::GetMark<DCE, Marks::VISITED>(inst)) {
                 RemoveInst(inst);
             }
             inst = prev;
@@ -60,7 +60,7 @@ void DCE::Sweep()
         auto phi = bb->GetLastPhi();
         while (phi != nullptr) {
             auto prev = phi->GetPrev();
-            if (!marking::Marker::GetMark<DCE, Marks::VISITED>(*(phi->GetMarkHolder()))) {
+            if (!marking::Marker::GetMark<DCE, Marks::VISITED>(phi)) {
                 RemoveInst(phi);
             }
             phi = prev;
@@ -72,11 +72,11 @@ void DCE::ClearMarks()
 {
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<PO>()->GetBlocks()) {
         for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
-            marking::Marker::ClearMark<DCE, VISITED>(inst->GetMarkHolder());
+            marking::Marker::ClearMark<DCE, VISITED>(inst);
         }
 
         for (auto inst = bb->GetFirstPhi(); inst != nullptr; inst = inst->GetNext()) {
-            marking::Marker::ClearMark<DCE, VISITED>(inst->GetMarkHolder());
+            marking::Marker::ClearMark<DCE, VISITED>(inst);
         }
     }
 }
