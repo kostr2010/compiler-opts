@@ -23,6 +23,7 @@ target_include_directories(passes PUBLIC ${CMAKE_SOURCE_DIR}/utils ${CMAKE_CURRE
 add_library(ir SHARED
     bb.cpp
     graph_builder.cpp
+    graph_visitor.cpp
     graph.cpp
     inst.cpp
     loop.cpp

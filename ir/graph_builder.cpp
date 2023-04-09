@@ -133,7 +133,7 @@ void GraphBuilder::SetCond(IdType id, Inst::Cond c)
 void GraphBuilder::ConstructCFG()
 {
     for (auto& [bb_id, succs] : bb_succ_map_) {
-        // assert(succs.size() <= 2);
+        assert(succs.size() <= 2);
         auto bb = bb_map_.at(bb_id);
         for (auto succ : succs) {
             graph_->AddEdge(bb, bb_map_.at(succ));

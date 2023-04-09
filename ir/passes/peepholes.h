@@ -1,12 +1,13 @@
 #ifndef __PEEPHOLES_H_INCLUDED__
 #define __PEEPHOLES_H_INCLUDED__
 
+#include "graph_visitor.h"
 #include "pass.h"
 
 class BasicBlock;
 class Inst;
 
-class Peepholes : public Pass
+class Peepholes : public Pass, public GraphVisitor
 {
   public:
     Peepholes(Graph* graph) : Pass(graph)
@@ -18,7 +19,6 @@ class Peepholes : public Pass
   private:
     void ReplaceWithIntegralConst(Inst* inst, int64_t val);
 
-    void MatchADD(Inst* i);
     bool FoldADD(Inst* i);
 
     // ADD v0, 0
@@ -38,7 +38,6 @@ class Peepholes : public Pass
     // 1. SHLI v0, 2
     bool MatchADD_same_value(Inst* i);
 
-    void MatchASHR(Inst* i);
     bool FoldASHR(Inst* i);
 
     // 1. ASHR v0, 0
@@ -51,7 +50,6 @@ class Peepholes : public Pass
     // 1. CONST 0
     bool MatchASHR_zero_1(Inst* i);
 
-    void MatchXOR(Inst* i);
     bool FoldXOR(Inst* i);
 
     // 1. XOR v0, v0
@@ -63,6 +61,13 @@ class Peepholes : public Pass
     // ->
     // 1. v0
     bool MatchXOR_zero(Inst* i);
+
+  private:
+    static void VisitADD(GraphVisitor* v, Inst* inst);
+    static void VisitXOR(GraphVisitor* v, Inst* inst);
+    static void VisitASHR(GraphVisitor* v, Inst* inst);
+
+#include "graph_visitor.inc"
 };
 
 #endif

@@ -4,12 +4,13 @@
 #include <memory>
 #include <vector>
 
+#include "graph_visitor.h"
 #include "pass.h"
 
 class BasicBlock;
 class Inst;
 
-class Inlining : public Pass
+class Inlining : public Pass, public GraphVisitor
 {
   public:
     Inlining(Graph* graph);
@@ -29,6 +30,11 @@ class Inlining : public Pass
     BasicBlock* callee_start_bb_{ nullptr };
     std::vector<BasicBlock*> ret_bbs_{};
     std::unique_ptr<Inst> ret_phi_{ nullptr };
+
+  private:
+    static void VisitCALL_STATIC(GraphVisitor* v, Inst* inst);
+
+#include "graph_visitor.inc"
 };
 
 #endif

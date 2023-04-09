@@ -64,25 +64,11 @@ static bool FoldBinOpToBinImmOp(Inst* i)
     return true;
 }
 
+GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(Peepholes, RPO);
+
 bool Peepholes::RunPass()
 {
-    for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
-        for (auto i = bb->GetFirstInst(); i != nullptr; i = i->GetNext()) {
-            switch (i->GetOpcode()) {
-            case Inst::Opcode::ADD:
-                MatchADD(i);
-                break;
-            case Inst::Opcode::ASHR:
-                MatchASHR(i);
-                break;
-            case Inst::Opcode::XOR:
-                MatchXOR(i);
-                break;
-            default:
-                break;
-            }
-        }
-    }
+    VisitGraph();
 
     return true;
 }
@@ -95,28 +81,31 @@ void Peepholes::ReplaceWithIntegralConst(Inst* inst, int64_t val)
     TransferUsers(inst, new_inst);
 }
 
-void Peepholes::MatchADD(Inst* i)
+void Peepholes::VisitADD(GraphVisitor* v, Inst* inst)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == Inst::Opcode::ADD);
+    assert(inst != nullptr);
+    assert(inst->GetOpcode() == Inst::Opcode::ADD);
+    assert(v != nullptr);
 
-    if (FoldADD(i)) {
+    auto _this = static_cast<Peepholes*>(v);
+
+    if (_this->FoldADD(inst)) {
         return;
     }
 
-    if (MatchADD_zero(i)) {
+    if (_this->MatchADD_zero(inst)) {
         return;
     }
 
-    if (MatchADD_after_sub(i)) {
+    if (_this->MatchADD_after_sub(inst)) {
         return;
     }
 
-    if (MatchADD_same_value(i)) {
+    if (_this->MatchADD_same_value(inst)) {
         return;
     }
 
-    if (FoldBinOpToBinImmOp<Inst::Opcode::ADD, Inst::Opcode::ADDI>(i)) {
+    if (FoldBinOpToBinImmOp<Inst::Opcode::ADD, Inst::Opcode::ADDI>(inst)) {
         return;
     }
 }
@@ -246,24 +235,27 @@ bool Peepholes::MatchADD_same_value(Inst* i)
     return false;
 }
 
-void Peepholes::MatchASHR(Inst* i)
+void Peepholes::VisitASHR(GraphVisitor* v, Inst* inst)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == Inst::Opcode::ASHR);
+    assert(inst != nullptr);
+    assert(inst->GetOpcode() == Inst::Opcode::ASHR);
+    assert(v != nullptr);
 
-    if (FoldASHR(i)) {
+    auto _this = static_cast<Peepholes*>(v);
+
+    if (_this->FoldASHR(inst)) {
         return;
     }
 
-    if (MatchASHR_zero_0(i)) {
+    if (_this->MatchASHR_zero_0(inst)) {
         return;
     }
 
-    if (MatchASHR_zero_1(i)) {
+    if (_this->MatchASHR_zero_1(inst)) {
         return;
     }
 
-    if (FoldBinOpToBinImmOp<Inst::Opcode::ASHR, Inst::Opcode::ASHRI>(i)) {
+    if (FoldBinOpToBinImmOp<Inst::Opcode::ASHR, Inst::Opcode::ASHRI>(inst)) {
         return;
     }
 }
@@ -335,24 +327,26 @@ bool Peepholes::MatchASHR_zero_1(Inst* i)
     return false;
 }
 
-void Peepholes::MatchXOR(Inst* i)
+void Peepholes::VisitXOR(GraphVisitor* v, Inst* inst)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == Inst::Opcode::XOR);
+    assert(inst != nullptr);
+    assert(inst->GetOpcode() == Inst::Opcode::XOR);
+    assert(v != nullptr);
 
-    if (FoldXOR(i)) {
+    auto _this = static_cast<Peepholes*>(v);
+    if (_this->FoldXOR(inst)) {
         return;
     }
 
-    if (MatchXOR_same_value(i)) {
+    if (_this->MatchXOR_same_value(inst)) {
         return;
     }
 
-    if (MatchXOR_zero(i)) {
+    if (_this->MatchXOR_zero(inst)) {
         return;
     }
 
-    if (FoldBinOpToBinImmOp<Inst::Opcode::XOR, Inst::Opcode::XORI>(i)) {
+    if (FoldBinOpToBinImmOp<Inst::Opcode::XOR, Inst::Opcode::XORI>(inst)) {
         return;
     }
 }

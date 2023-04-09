@@ -2,37 +2,37 @@
 #include "bb.h"
 #include "graph.h"
 
+GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(Inlining, RPO);
+
 Inlining::Inlining(Graph* graph) : Pass(graph)
 {
 }
 
 bool Inlining::RunPass()
 {
-    for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
-        for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
-            if (!inst->HasFlag(Inst::Flags::CALL)) {
-                continue;
-            }
-
-            switch (inst->GetOpcode()) {
-            case Inst::Opcode::CALL_STATIC:
-                using T = Inst::to_inst_type<Inst::Opcode::CALL_STATIC>*;
-                cur_call_ = inst;
-                callee_start_bb_ = static_cast<T>(cur_call_)->GetCallee()->GetStartBasicBlock();
-                TryInlineStatic();
-                break;
-            // case Inst::Opcode::CALL_DYNAMIC:
-            //     TryInlineDynamic();
-            //     break;
-            default:
-                assert(false);
-            }
-
-            ResetState();
-        }
-    }
-
+    VisitGraph();
     return true;
+}
+
+void Inlining::VisitCALL_STATIC(GraphVisitor* v, Inst* inst)
+{
+    using T = Inst::to_inst_type<Inst::Opcode::CALL_STATIC>;
+
+    assert(v != nullptr);
+    assert(inst != nullptr);
+    assert(inst->GetOpcode() == Inst::Opcode::CALL_STATIC);
+
+    auto _this = static_cast<Inlining*>(v);
+
+    _this->cur_call_ = inst;
+    _this->callee_start_bb_ = static_cast<T*>(inst)->GetCallee()->GetStartBasicBlock();
+
+    _this->UpdateDFGParameters();
+    _this->UpdateDFGReturns();
+    _this->MoveConstants();
+    _this->MoveCalleeBlocks();
+    _this->InsertInlinedGraph();
+    _this->ResetState();
 }
 
 void Inlining::ResetState()
@@ -40,19 +40,6 @@ void Inlining::ResetState()
     ret_bbs_.clear();
     cur_call_ = nullptr;
     callee_start_bb_ = nullptr;
-}
-
-void Inlining::TryInlineStatic()
-{
-    assert(cur_call_ != nullptr);
-    assert(callee_start_bb_ != nullptr);
-    assert(cur_call_->GetOpcode() == Inst::Opcode::CALL_STATIC);
-
-    UpdateDFGParameters();
-    UpdateDFGReturns();
-    MoveConstants();
-    MoveCalleeBlocks();
-    InsertInlinedGraph();
 }
 
 void Inlining::UpdateDFGParameters()

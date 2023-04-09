@@ -2,6 +2,8 @@
 #include "bb.h"
 #include "graph.h"
 
+GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(CheckElimination, RPO);
+
 bool CheckElimination::RunPass()
 {
     ResetState();
