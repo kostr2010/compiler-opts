@@ -1,27 +1,12 @@
 #ifndef MARKER_H_INCLUDED
 #define MARKER_H_INCLUDED
 
-#include <cstdint>
-
+#include "default_passes.h"
 #include "macros.h"
-#include "passes/pass_list.h"
+#include "markable.h"
 #include "typedefs.h"
 
 namespace marking {
-
-using MarkHolder = uint64_t;
-
-class Markable
-{
-  public:
-    DEFAULT_CTOR(Markable);
-
-    MarkHolder* GetMarkHolder();
-    MarkHolder PeekMarkHolder() const;
-
-  private:
-    MarkHolder bits{};
-};
 
 class Marker
 {
@@ -42,7 +27,7 @@ class Marker
 
   public:
     template <typename Type>
-    using GetMarkOffset = get_mark_offset<Type, 0, ActivePasses::Passes>;
+    using GetMarkOffset = get_mark_offset<Type, 0, DefaultPasses::Passes>;
 
     template <typename PassT, size_t N>
     static void SetMark(Markable* mark)

@@ -17,11 +17,12 @@
 #include "flag.h"
 #include "ir_isa.h"
 #include "macros.h"
-#include "marker.h"
+#include "markable.h"
 #include "typedefs.h"
 
 class Inst;
 class BasicBlock;
+class Graph;
 class Input
 {
   public:

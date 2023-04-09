@@ -12,7 +12,7 @@
 #include "inst.h"
 #include "loop.h"
 #include "macros.h"
-#include "marker.h"
+#include "markable.h"
 #include "typedefs.h"
 
 class Graph;

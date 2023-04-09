@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "analyser.h"
-#include "inst.h"
 #include "ir_isa.h"
 #include "typedefs.h"
 

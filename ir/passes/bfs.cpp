@@ -1,6 +1,7 @@
 #include "bfs.h"
 #include "bb.h"
 #include "graph.h"
+#include "marker.h"
 
 #include <list>
 

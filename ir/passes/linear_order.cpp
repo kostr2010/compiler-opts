@@ -1,6 +1,7 @@
 #include "linear_order.h"
 #include "bb.h"
 #include "graph.h"
+#include "marker.h"
 
 bool LinearOrder::RunPass()
 {

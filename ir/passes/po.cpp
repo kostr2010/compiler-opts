@@ -1,6 +1,7 @@
 #include "po.h"
 #include "bb.h"
 #include "graph.h"
+#include "marker.h"
 
 bool PO::RunPass()
 {

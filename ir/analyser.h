@@ -1,8 +1,8 @@
 #ifndef __ANALYZER_H_INCLUDED__
 #define __ANALYZER_H_INCLUDED__
 
+#include "default_passes.h"
 #include "macros.h"
-#include "passes/pass_list.h"
 #include "typedefs.h"
 
 #include <cassert>
@@ -20,25 +20,25 @@ class Analyser
     template <typename PassT>
     PassT* GetPass()
     {
-        static_assert(ActivePasses::HasPass<PassT>());
-        return static_cast<PassT*>(passes_[ActivePasses::GetPassIdx<PassT>()].get());
+        static_assert(DefaultPasses::HasPass<PassT>());
+        return static_cast<PassT*>(passes_[DefaultPasses::GetPassIdx<PassT>()].get());
     }
 
     template <typename PassT>
     PassT* GetValidPass()
     {
-        static_assert(ActivePasses::HasPass<PassT>());
+        static_assert(DefaultPasses::HasPass<PassT>());
         if (!IsValid<PassT>()) {
             assert(RunPass<PassT>());
         }
-        return static_cast<PassT*>(passes_[ActivePasses::GetPassIdx<PassT>()].get());
+        return static_cast<PassT*>(passes_[DefaultPasses::GetPassIdx<PassT>()].get());
     }
 
     template <typename PassT>
     bool RunPass()
     {
-        static_assert(ActivePasses::HasPass<PassT>());
-        return passes_[ActivePasses::GetPassIdx<PassT>()]->RunPass();
+        static_assert(DefaultPasses::HasPass<PassT>());
+        return passes_[DefaultPasses::GetPassIdx<PassT>()]->RunPass();
     }
 
     template <typename PassT>
@@ -54,7 +54,7 @@ class Analyser
     void InvalidateCFGSensitivePasses(std::index_sequence<IDS...>)
     {
         (([&] {
-             using Type = ActivePasses::GetPass<IDS>::type;
+             using Type = DefaultPasses::GetPass<IDS>::type;
              if constexpr (Pass::PassTraits<Type>::is_cfg_sensitive::value) {
                  GetPass<Type>()->SetValid(false);
              }
@@ -65,8 +65,8 @@ class Analyser
     template <size_t... IDS>
     void Allocate(Graph* graph, std::index_sequence<IDS...>)
     {
-        passes_.reserve(ActivePasses::NumPasses());
-        (passes_.emplace_back(new ActivePasses::GetPass<IDS>::type(graph)), ...);
+        passes_.reserve(DefaultPasses::NumPasses());
+        (passes_.emplace_back(new DefaultPasses::GetPass<IDS>::type(graph)), ...);
     }
 
     std::vector<std::unique_ptr<Pass> > passes_;

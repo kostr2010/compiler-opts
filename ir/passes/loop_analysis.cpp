@@ -2,6 +2,7 @@
 #include "loop_analysis.h"
 #include "bb.h"
 #include "graph.h"
+#include "marker.h"
 
 bool LoopAnalysis::RunPass()
 {

@@ -1,6 +1,7 @@
 #include "dce.h"
 #include "bb.h"
 #include "graph.h"
+#include "marker.h"
 
 bool DCE::RunPass()
 {

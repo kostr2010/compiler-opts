@@ -1,6 +1,7 @@
 #include "rpo.h"
 #include "bb.h"
 #include "graph.h"
+#include "marker.h"
 
 bool RPO::RunPass()
 {
