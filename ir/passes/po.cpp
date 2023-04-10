@@ -1,13 +1,14 @@
 #include "po.h"
 #include "bb.h"
 #include "graph.h"
-#include "marker.h"
+#include "marker_factory.h"
 
 bool PO::RunPass()
 {
+    Markers markers = { marking::MarkerFactory::AcquireMarker() };
+
     ResetState();
-    RunPass_(graph_->GetStartBasicBlock());
-    ClearMarks();
+    RunPass_(graph_->GetStartBasicBlock(), markers);
     SetValid(true);
 
     return true;
@@ -18,14 +19,14 @@ std::vector<BasicBlock*> PO::GetBlocks()
     return po_bb_;
 }
 
-void PO::RunPass_(BasicBlock* cur_bb)
+void PO::RunPass_(BasicBlock* cur_bb, const Markers markers)
 {
-    if (marking::Marker::SetMark<PO, Marks::VISITED>(cur_bb)) {
+    if (cur_bb->SetMark(&markers[Marks::VISITED])) {
         return;
     }
 
     for (const auto succ : cur_bb->GetSuccessors()) {
-        RunPass_(succ);
+        RunPass_(succ, markers);
     }
 
     po_bb_.push_back(cur_bb);
@@ -34,11 +35,4 @@ void PO::RunPass_(BasicBlock* cur_bb)
 void PO::ResetState()
 {
     po_bb_.clear();
-}
-
-void PO::ClearMarks()
-{
-    for (auto& bb : po_bb_) {
-        marking::Marker::ClearMark<PO, Marks::VISITED>(bb);
-    }
 }

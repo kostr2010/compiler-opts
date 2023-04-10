@@ -26,7 +26,7 @@ static bool FoldBinOpToBinImmOp(Inst* i)
 
     assert(i != nullptr);
     assert(i->GetOpcode() == OPCODE_FROM);
-    assert(i->GetInputs().size() == Inst::get_num_inputs<BinaryOp>());
+    assert(i->GetNumInputs() == Inst::get_num_inputs<BinaryOp>());
     assert(i->GetInputs()[0].GetInst() != nullptr);
     assert(i->GetInputs()[1].GetInst() != nullptr);
 

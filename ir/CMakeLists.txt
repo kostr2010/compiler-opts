@@ -29,6 +29,8 @@ add_library(ir SHARED
     loop.cpp
     analyser.cpp
     markable.cpp
+    marker.cpp
+    marker_factory.cpp
 )
 
 target_link_libraries(ir passes)

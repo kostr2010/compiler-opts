@@ -85,8 +85,8 @@ void Inlining::UpdateDFGReturns()
         Inst* call_ret_res{ nullptr };
         if (rets.size() == 1) {
             assert(Inst::get_num_inputs<Inst::to_inst_type<Inst::Opcode::RETURN> >() ==
-                   rets.front()->GetInputs().size());
-            call_ret_res = rets.front()->GetInputs().front().GetInst();
+                   rets.front()->GetNumInputs());
+            call_ret_res = rets.front()->GetInput(0).GetInst();
             call_ret_res->RemoveUser(rets.front());
             rets.front()->GetBasicBlock()->UnlinkInst(rets.front());
         } else {
@@ -97,9 +97,9 @@ void Inlining::UpdateDFGReturns()
 
             for (const auto& ret : rets) {
                 assert(Inst::get_num_inputs<Inst::to_inst_type<Inst::Opcode::RETURN> >() ==
-                       ret->GetInputs().size());
+                       ret->GetNumInputs());
                 // input is ret's input, but phi's bb is bb, where ret was
-                auto ret_input = ret->GetInputs().front().GetInst();
+                auto ret_input = ret->GetInput(0).GetInst();
                 ret_phi_->AddInput(ret_input, ret->GetBasicBlock());
                 ret_input->RemoveUser(ret);
                 ret->GetBasicBlock()->UnlinkInst(ret);
@@ -148,7 +148,7 @@ void Inlining::InsertInlinedGraph()
     call_block->UnlinkInst(cur_call_);
 
     assert(call_block->GetSuccessors() == std::vector<BasicBlock*>{ call_cont_block });
-    assert(call_cont_block->GetPredecesors() == std::vector<BasicBlock*>{ call_block });
+    assert(call_cont_block->GetPredecessors() == std::vector<BasicBlock*>{ call_block });
 
     if (ret_phi_.get() != nullptr) {
         call_cont_block->PushBackPhi(std::move(ret_phi_));
@@ -156,9 +156,9 @@ void Inlining::InsertInlinedGraph()
 
     graph_->RemoveEdge(call_block, call_cont_block);
 
-    assert(call_block->GetSuccessors().empty());
-    assert(call_cont_block->GetPredecesors().empty());
-    assert(callee_start_bb_->GetPredecesors().empty());
+    assert(call_block->HasNoSuccessors());
+    assert(call_cont_block->HasNoPredecessors());
+    assert(callee_start_bb_->HasNoPredecessors());
 
     graph_->AddEdge(call_block, callee_start_bb_);
 

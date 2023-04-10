@@ -14,13 +14,20 @@ class Loop;
 class LoopAnalysis : public Pass
 {
   public:
-    enum Marks
+    enum MarksBckEdges
     {
         GREY = 0,
         BLACK,
-        GREEN,
-        N_MARKS,
+        N_MARKS_BACKEDGES,
     };
+    using MarkersBckEdges = marking::Markers<MarksBckEdges::N_MARKS_BACKEDGES>;
+
+    enum MarksPopulate
+    {
+        GREEN = 0,
+        N_MARKS_POPULATE,
+    };
+    using MarkersPopulate = marking::Markers<MarksPopulate::N_MARKS_POPULATE>;
 
     LoopAnalysis(Graph* graph) : Pass(graph)
     {
@@ -35,11 +42,10 @@ class LoopAnalysis : public Pass
     }
 
   private:
-    void CollectBackEdges(BasicBlock* bb);
-    void ClearLoopMarks(Loop* loop);
+    void CollectBackEdges(BasicBlock* bb, const MarkersBckEdges markers);
     void PopulateLoops();
     void PopulateLoop(Loop* loop);
-    void RunLoopSearch(Loop* cur_loop, BasicBlock* cur_bb);
+    void RunLoopSearch(Loop* cur_loop, BasicBlock* cur_bb, const MarkersPopulate markers);
     void SplitBackEdges();
     void SplitBackEdge(Loop* loop);
     void AddPreHeaders();
@@ -48,7 +54,6 @@ class LoopAnalysis : public Pass
     void PopulateRootLoop();
     void BuildLoopTree();
     void ResetState();
-    void ClearMarks();
     void InitStartLoop();
     void RecalculateLoopsReducibility();
 
@@ -62,7 +67,6 @@ template <>
 struct Pass::PassTraits<LoopAnalysis>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
-    using num_marks = std::integral_constant<size_t, LoopAnalysis::Marks::N_MARKS>;
 };
 
 #endif

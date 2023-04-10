@@ -22,9 +22,13 @@ class CheckElimination : public Pass, public GraphVisitor
   private:
     void ResetState();
 
-    std::vector<Inst*> zero_checks_{};
-    std::vector<Inst*> null_checks_{};
-    std::vector<Inst*> size_checks_{};
+    static void VisitCHECK_ZERO(GraphVisitor* v, Inst* inst);
+    static void VisitCHECK_NULL(GraphVisitor* v, Inst* inst);
+    static void VisitCHECK_SIZE(GraphVisitor* v, Inst* inst);
+
+    std::vector<Inst*> CHECK_ZERO_rpo_{};
+    std::vector<Inst*> CHECK_NULL_rpo_{};
+    std::vector<Inst*> CHECK_SIZE_rpo_{};
 
 #include "graph_visitor.inc"
 };

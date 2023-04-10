@@ -113,9 +113,9 @@ void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
 
 void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
 {
-    assert(!before->GetPredecesors().empty());
+    assert(!before->HasNoPredecessors());
 
-    for (const auto& pred : before->GetPredecesors()) {
+    for (const auto& pred : before->GetPredecessors()) {
         pred->ReplaceSucc(before, bb);
         before->RemovePred(pred);
         bb->AddPred(pred);
@@ -127,7 +127,7 @@ void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
 
 void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
 {
-    if (after->GetSuccessors().empty()) {
+    if (after->IsEndBlock()) {
         AddEdge(after, bb);
     } else {
         for (const auto& succ : after->GetSuccessors()) {
@@ -189,6 +189,8 @@ void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)
             inst = inst->GetNext();
         }
     }
+
+    analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
 BasicBlock* Graph::SplitBasicBlock(Inst* inst_after)
@@ -213,14 +215,18 @@ BasicBlock* Graph::SplitBasicBlock(Inst* inst_after)
         inst->SetBasicBlock(bb_new);
     }
 
+    analyser_.InvalidateCFGSensitiveActivePasses();
+
     return bb_new;
 }
 
 void Graph::DestroyBasicBlock(IdType id)
 {
     assert(id < bb_vector_.size());
-    assert(bb_vector_.at(id)->GetPredecesors().empty());
-    assert(bb_vector_.at(id)->GetSuccessors().empty());
+    assert(bb_vector_.at(id)->HasNoPredecessors());
+    assert(bb_vector_.at(id)->HasNoSuccessors());
 
     bb_vector_.at(id).reset(nullptr);
+
+    analyser_.InvalidateCFGSensitiveActivePasses();
 }

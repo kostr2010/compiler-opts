@@ -13,6 +13,7 @@
 #include "typedefs.h"
 
 class BasicBlock;
+class Inst;
 
 class Graph
 {

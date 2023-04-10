@@ -201,10 +201,10 @@ bool GraphBuilder::RunChecks()
     auto rpo = analyser->GetValidPass<RPO>()->GetBlocks();
     for (auto bb : rpo) {
         for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetPrev()) {
-            if (phi->GetInputs().size() > bb->GetPredecesors().size()) {
+            if (phi->GetNumInputs() > bb->GetNumPredecessors()) {
                 LOG_ERROR("BB: " << bb->GetId() << ", INST_ID: " << phi->GetId()
                                  << ", number of phi inputs > number of BB predecessors");
-                LOG(phi->GetInputs().size() << " " << bb->GetPredecesors().size() << "\n");
+                LOG(phi->GetNumInputs() << " " << bb->GetNumPredecessors() << "\n");
                 return false;
             }
 

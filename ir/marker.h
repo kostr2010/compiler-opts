@@ -1,70 +1,44 @@
 #ifndef MARKER_H_INCLUDED
 #define MARKER_H_INCLUDED
 
-#include "default_passes.h"
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+
 #include "macros.h"
-#include "markable.h"
-#include "typedefs.h"
 
 namespace marking {
 
+// RAII class for marking. acquired using MarkerFactory and released upon scope end
 class Marker
 {
-  private:
-    template <typename Type, size_t ACC, typename Tail>
-    struct get_mark_offset;
-
-    template <typename Type, size_t ACC, typename Head, class... Tail>
-    struct get_mark_offset<Type, ACC, std::tuple<Head, Tail...> >
-        : get_mark_offset<Type, ACC + typename Pass::PassTraits<Head>::num_marks(),
-                          std::tuple<Tail...> >
-    {};
-
-    template <typename Type, size_t ACC, typename... Tail>
-    struct get_mark_offset<Type, ACC, std::tuple<Type, Tail...> >
-        : std::integral_constant<size_t, ACC>
-    {};
+    friend class MarkerFactory;
 
   public:
-    template <typename Type>
-    using GetMarkOffset = get_mark_offset<Type, 0, DefaultPasses::Passes>;
+    using MarkerGenT = uint16_t;
+    using GenUnset = std::integral_constant<MarkerGenT, 0>;
+
+    GETTER(Gen, gen_);
+    GETTER(Slot, slot_);
+
+    ~Marker();
+
+    bool IsUnset() const;
 
   private:
-    template <typename PassT, size_t N>
-    using GetMarkBits =
-        std::integral_constant<MarkHolder, (MarkHolder)(1) << (GetMarkOffset<PassT>() + N)>;
+    Marker(size_t slot, MarkerGenT gen);
 
-  public:
-    template <typename PassT, size_t N>
-    static bool ProbeMark(const Markable* obj)
-    {
-        static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
-        static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        return obj->PeekMarkHolder() & GetMarkBits<PassT, N>();
-    }
+    void Unset();
 
-    // true if mark was set, false otherwise
-    template <typename PassT, size_t N>
-    static bool SetMark(Markable* obj)
-    {
-        static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
-        static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        bool was_set = ProbeMark<PassT, N>(obj);
-        *(obj->GetMarkHolder()) |= GetMarkBits<PassT, N>();
-        return was_set;
-    }
+    NO_COPY_SEMANTIC(Marker);
+    NO_MOVE_SEMANTIC(Marker);
 
-    // true if mark was set, false otherwise
-    template <typename PassT, size_t N>
-    static bool ClearMark(Markable* obj)
-    {
-        static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
-        static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        bool was_set = ProbeMark<PassT, N>(obj);
-        *(obj->GetMarkHolder()) &= ~GetMarkBits<PassT, N>();
-        return was_set;
-    }
+    size_t slot_;
+    MarkerGenT gen_;
 };
+
+template <size_t N>
+using Markers = Marker[N];
 
 };
 

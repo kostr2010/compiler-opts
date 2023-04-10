@@ -57,7 +57,7 @@ TEST(BasicTests, Example1)
     ASSERT_TRUE(g.GetStartBasicBlock() != nullptr);
 
     auto bb = g.GetStartBasicBlock();
-    auto bb_pred = bb->GetPredecesors();
+    auto bb_pred = bb->GetPredecessors();
     auto bb_succ = bb->GetSuccessors();
 
     ASSERT_TRUE(bb_pred.empty());
@@ -65,7 +65,7 @@ TEST(BasicTests, Example1)
     ASSERT_EQ(bb_succ[0]->GetId(), b0);
 
     bb = bb_succ[0];
-    bb_pred = bb->GetPredecesors();
+    bb_pred = bb->GetPredecessors();
     bb_succ = bb->GetSuccessors();
 
     ASSERT_EQ(bb->GetId(), b0);
@@ -78,7 +78,7 @@ TEST(BasicTests, Example1)
 
     bb = bb_succ[0];
     auto bb2 = bb_succ[1];
-    bb_pred = bb->GetPredecesors();
+    bb_pred = bb->GetPredecessors();
     bb_succ = bb->GetSuccessors();
 
     ASSERT_EQ(bb->GetId(), b1);
@@ -87,7 +87,7 @@ TEST(BasicTests, Example1)
     ASSERT_EQ(bb_pred.size(), 1);
     ASSERT_EQ(bb_pred[0]->GetId(), b0);
 
-    bb_pred = bb2->GetPredecesors();
+    bb_pred = bb2->GetPredecessors();
     bb_succ = bb2->GetSuccessors();
 
     ASSERT_EQ(bb2->GetId(), b2);

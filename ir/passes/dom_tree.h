@@ -54,7 +54,6 @@ template <>
 struct Pass::PassTraits<DomTree>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
-    using num_marks = std::integral_constant<size_t, 0>;
 };
 
 #endif

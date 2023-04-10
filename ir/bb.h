@@ -24,13 +24,45 @@ class BasicBlock : public marking::Markable
     {
     }
 
-    GETTER(Predecesors, preds_);
+    GETTER(Predecessors, preds_);
     GETTER(Successors, succs_);
     GETTER_SETTER(LastInst, Inst*, last_inst_);
     GETTER_SETTER(LastPhi, Inst*, last_phi_);
     GETTER_SETTER(Id, IdType, id_);
     GETTER_SETTER(ImmDominator, BasicBlock*, imm_dominator_);
     GETTER(Loop, loop_);
+
+    bool HasNoPredecessors()
+    {
+        return preds_.empty();
+    }
+
+    size_t GetNumPredecessors()
+    {
+        return preds_.size();
+    }
+
+    BasicBlock* GetPredecessor(size_t idx)
+    {
+        assert(idx < preds_.size());
+        return preds_[idx];
+    }
+
+    bool HasNoSuccessors()
+    {
+        return succs_.empty();
+    }
+
+    size_t GetNumSuccessors()
+    {
+        return succs_.size();
+    }
+
+    BasicBlock* GetSuccessor(size_t idx)
+    {
+        assert(idx < succs_.size());
+        return succs_[idx];
+    }
 
     void SetLoop(Loop* loop, bool is_header = false)
     {

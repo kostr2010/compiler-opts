@@ -2,6 +2,7 @@
 #define __PASS_H_INCLUDED__
 
 #include "macros.h"
+#include "marker.h"
 #include "typedefs.h"
 
 #include <type_traits>
@@ -19,7 +20,6 @@ class Pass
     {
         static_assert(Pass::IsPass<T>());
         using is_cfg_sensitive = std::integral_constant<bool, false>;
-        using num_marks = std::integral_constant<size_t, 0>;
     };
 
     Pass(Graph* g) : graph_{ g }

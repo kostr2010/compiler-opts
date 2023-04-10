@@ -20,7 +20,7 @@ static void CheckLoopContents(Loop* loop, std::set<IdType> expected)
 static void CheckPredecessors(BasicBlock* bb, std::set<IdType> expected)
 {
     std::vector<IdType> bb_res = {};
-    for (const auto& pred : bb->GetPredecesors()) {
+    for (const auto& pred : bb->GetPredecessors()) {
         bb_res.push_back(pred->GetId());
     }
 
@@ -141,17 +141,17 @@ TEST(TestLoopAnalysis, Example2)
     ASSERT_EQ(root->GetOuterLoop(), nullptr);
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
-    ASSERT_EQ(g.GetBasicBlock(A)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
     auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
 
-    ASSERT_EQ(g.GetBasicBlock(J)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(J)->GetNumSuccessors(), 1);
     auto C_ = g.GetBasicBlock(J)->GetSuccessors().at(0);
     CheckPredecessors(C_, { J, B });
     CheckSuccessors(C_, { C });
 
-    ASSERT_EQ(g.GetBasicBlock(D)->GetSuccessors().size(), 2);
+    ASSERT_EQ(g.GetBasicBlock(D)->GetNumSuccessors(), 2);
     auto E_ = g.GetBasicBlock(D)->GetSuccessors().at(0);
     ASSERT_NE(E_->GetId(), C);
     CheckPredecessors(E_, { D });
@@ -230,7 +230,7 @@ TEST(TestLoopAnalysis, Example3)
     ASSERT_EQ(root->GetOuterLoop(), nullptr);
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
-    ASSERT_EQ(g.GetBasicBlock(A)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
     auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
@@ -290,7 +290,7 @@ TEST(TestLoopAnalysis, Example4)
     ASSERT_EQ(root->GetOuterLoop(), nullptr);
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
-    ASSERT_EQ(g.GetBasicBlock(A)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
     auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
@@ -342,7 +342,7 @@ TEST(TestLoopAnalysis, Example5)
     ASSERT_EQ(root->GetOuterLoop(), nullptr);
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
-    ASSERT_EQ(g.GetBasicBlock(A)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
     auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
@@ -398,12 +398,12 @@ TEST(TestLoopAnalysis, Example6)
     ASSERT_EQ(root->GetOuterLoop(), nullptr);
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
-    ASSERT_EQ(g.GetBasicBlock(START)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(START)->GetNumSuccessors(), 1);
     auto A_ = g.GetBasicBlock(START)->GetSuccessors().at(0);
     CheckPredecessors(A_, { START });
     CheckSuccessors(A_, { A });
 
-    ASSERT_EQ(g.GetBasicBlock(A)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
     auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
@@ -458,80 +458,80 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
 
     auto start_bb = g.GetStartBasicBlock();
 
-    ASSERT_TRUE(start_bb->GetPredecesors().empty());
-    ASSERT_EQ(start_bb->GetSuccessors().size(), 1);
+    ASSERT_TRUE(start_bb->HasNoPredecessors());
+    ASSERT_EQ(start_bb->GetNumSuccessors(), 1);
 
-    ASSERT_EQ(g.GetBasicBlock(START)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(START)->GetNumSuccessors(), 1);
     auto H_ = g.GetBasicBlock(START)->GetSuccessors().at(0);
     CheckPredecessors(H_, { START });
-    ASSERT_EQ(H_->GetSuccessors().size(), 1);
+    ASSERT_EQ(H_->GetNumSuccessors(), 1);
     auto H = H_->GetSuccessors().at(0)->GetId();
     CheckSuccessors(H_, { H });
 
     auto bb = g.GetBasicBlock(H);
-    ASSERT_EQ(bb->GetPredecesors().size(), 2);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 2);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { A, H_->GetId() });
 
-    ASSERT_EQ(g.GetBasicBlock(H)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(H)->GetNumSuccessors(), 1);
     auto G_ = g.GetBasicBlock(H)->GetSuccessors().at(0);
     CheckSuccessors(bb, { G_->GetId() });
     CheckPredecessors(G_, { H });
-    ASSERT_EQ(G_->GetSuccessors().size(), 1);
+    ASSERT_EQ(G_->GetNumSuccessors(), 1);
     auto G = G_->GetSuccessors().at(0)->GetId();
     CheckSuccessors(G_, { G });
 
     bb = g.GetBasicBlock(G);
-    ASSERT_EQ(bb->GetPredecesors().size(), 2);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 2);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { B, G_->GetId() });
 
-    ASSERT_EQ(g.GetBasicBlock(G)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(G)->GetNumSuccessors(), 1);
     auto F_ = g.GetBasicBlock(G)->GetSuccessors().at(0);
     CheckSuccessors(bb, { F_->GetId() });
     CheckPredecessors(F_, { G });
-    ASSERT_EQ(F_->GetSuccessors().size(), 1);
+    ASSERT_EQ(F_->GetNumSuccessors(), 1);
     auto F = F_->GetSuccessors().at(0)->GetId();
     CheckSuccessors(F_, { F });
 
     bb = g.GetBasicBlock(F);
-    ASSERT_EQ(bb->GetPredecesors().size(), 2);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 2);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { C, F_->GetId() });
 
-    ASSERT_EQ(g.GetBasicBlock(F)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(F)->GetNumSuccessors(), 1);
     auto E_ = g.GetBasicBlock(F)->GetSuccessors().at(0);
     CheckSuccessors(bb, { E_->GetId() });
     CheckPredecessors(E_, { F });
     CheckSuccessors(E_, { E });
 
     bb = g.GetBasicBlock(E);
-    ASSERT_EQ(bb->GetPredecesors().size(), 2);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 2);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { D, E_->GetId() });
     CheckSuccessors(bb, { D });
 
     bb = g.GetBasicBlock(D);
-    ASSERT_EQ(bb->GetPredecesors().size(), 1);
-    ASSERT_EQ(bb->GetSuccessors().size(), 2);
+    ASSERT_EQ(bb->GetNumPredecessors(), 1);
+    ASSERT_EQ(bb->GetNumSuccessors(), 2);
     CheckPredecessors(bb, { E });
     CheckSuccessors(bb, { E, C });
 
     bb = g.GetBasicBlock(C);
-    ASSERT_EQ(bb->GetPredecesors().size(), 1);
-    ASSERT_EQ(bb->GetSuccessors().size(), 2);
+    ASSERT_EQ(bb->GetNumPredecessors(), 1);
+    ASSERT_EQ(bb->GetNumSuccessors(), 2);
     CheckPredecessors(bb, { D });
     CheckSuccessors(bb, { B, F });
 
     bb = g.GetBasicBlock(B);
-    ASSERT_EQ(bb->GetPredecesors().size(), 1);
-    ASSERT_EQ(bb->GetSuccessors().size(), 2);
+    ASSERT_EQ(bb->GetNumPredecessors(), 1);
+    ASSERT_EQ(bb->GetNumSuccessors(), 2);
     CheckPredecessors(bb, { C });
     CheckSuccessors(bb, { A, G });
 
     bb = g.GetBasicBlock(A);
-    ASSERT_EQ(bb->GetPredecesors().size(), 1);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 1);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { B });
     CheckSuccessors(bb, { H });
 
@@ -622,62 +622,62 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
 
     auto start_bb = g.GetStartBasicBlock();
 
-    ASSERT_TRUE(start_bb->GetPredecesors().empty());
-    ASSERT_EQ(start_bb->GetSuccessors().size(), 1);
+    ASSERT_TRUE(start_bb->HasNoPredecessors());
+    ASSERT_EQ(start_bb->GetNumSuccessors(), 1);
 
-    ASSERT_EQ(g.GetBasicBlock(START)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(START)->GetNumSuccessors(), 1);
     auto I = g.GetBasicBlock(START)->GetSuccessors().at(0);
     CheckPredecessors(I, { START });
-    ASSERT_EQ(I->GetSuccessors().size(), 1);
+    ASSERT_EQ(I->GetNumSuccessors(), 1);
     auto F = I->GetSuccessors().at(0)->GetId();
     CheckSuccessors(I, { F });
 
     auto bb = g.GetBasicBlock(F);
-    ASSERT_EQ(bb->GetPredecesors().size(), 2);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 2);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { I->GetId(), D });
 
-    ASSERT_EQ(g.GetBasicBlock(F)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(F)->GetNumSuccessors(), 1);
     auto H = g.GetBasicBlock(F)->GetSuccessors().at(0);
     CheckSuccessors(bb, { H->GetId() });
     CheckPredecessors(H, { F });
-    ASSERT_EQ(H->GetSuccessors().size(), 1);
+    ASSERT_EQ(H->GetNumSuccessors(), 1);
     auto E = H->GetSuccessors().at(0)->GetId();
     CheckSuccessors(H, { E });
 
     bb = g.GetBasicBlock(E);
-    ASSERT_EQ(bb->GetPredecesors().size(), 2);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 2);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { C, H->GetId() });
 
-    ASSERT_EQ(g.GetBasicBlock(E)->GetSuccessors().size(), 1);
+    ASSERT_EQ(g.GetBasicBlock(E)->GetNumSuccessors(), 1);
     auto G = g.GetBasicBlock(E)->GetSuccessors().at(0);
     CheckSuccessors(bb, { G->GetId() });
     CheckPredecessors(G, { E });
-    ASSERT_EQ(G->GetSuccessors().size(), 1);
+    ASSERT_EQ(G->GetNumSuccessors(), 1);
     CheckSuccessors(G, { A });
 
     bb = g.GetBasicBlock(A);
-    ASSERT_EQ(bb->GetPredecesors().size(), 2);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 2);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { G->GetId(), B });
     CheckSuccessors(bb, { B });
 
     bb = g.GetBasicBlock(B);
-    ASSERT_EQ(bb->GetPredecesors().size(), 1);
-    ASSERT_EQ(bb->GetSuccessors().size(), 2);
+    ASSERT_EQ(bb->GetNumPredecessors(), 1);
+    ASSERT_EQ(bb->GetNumSuccessors(), 2);
     CheckPredecessors(bb, { A });
     CheckSuccessors(bb, { A, C });
 
     bb = g.GetBasicBlock(C);
-    ASSERT_EQ(bb->GetPredecesors().size(), 1);
-    ASSERT_EQ(bb->GetSuccessors().size(), 2);
+    ASSERT_EQ(bb->GetNumPredecessors(), 1);
+    ASSERT_EQ(bb->GetNumSuccessors(), 2);
     CheckPredecessors(bb, { B });
     CheckSuccessors(bb, { E, D });
 
     bb = g.GetBasicBlock(D);
-    ASSERT_EQ(bb->GetPredecesors().size(), 1);
-    ASSERT_EQ(bb->GetSuccessors().size(), 1);
+    ASSERT_EQ(bb->GetNumPredecessors(), 1);
+    ASSERT_EQ(bb->GetNumSuccessors(), 1);
     CheckPredecessors(bb, { C });
     CheckSuccessors(bb, { F });
 

@@ -14,6 +14,7 @@ class DCE : public Pass
         VISITED = 0,
         N_MARKS,
     };
+    using Markers = marking::Markers<Marks::N_MARKS>;
 
     DCE(Graph* graph) : Pass(graph)
     {
@@ -22,10 +23,10 @@ class DCE : public Pass
     bool RunPass() override;
 
   private:
-    void Mark();
-    void MarkRecursively(Inst* inst);
+    void Mark(const Markers markers);
+    void MarkRecursively(Inst* inst, const Markers markers);
+    void Sweep(const Markers markers);
     void RemoveInst(Inst* inst);
-    void Sweep();
     void ClearMarks();
 };
 
@@ -33,7 +34,6 @@ template <>
 struct Pass::PassTraits<DCE>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
-    using num_marks = std::integral_constant<size_t, DCE::Marks::N_MARKS>;
 };
 
 #endif

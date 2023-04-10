@@ -15,6 +15,7 @@ class LinearOrder : public Pass
         VISITED = 0,
         N_MARKS,
     };
+    using Markers = marking::Markers<Marks::N_MARKS>;
 
     LinearOrder(Graph* graph) : Pass(graph)
     {
@@ -27,7 +28,6 @@ class LinearOrder : public Pass
   private:
     void RunPass_(BasicBlock* cur_bb);
     void ResetState();
-    void ClearMarks();
 
     std::vector<BasicBlock*> linear_bb_{};
 };
@@ -36,7 +36,6 @@ template <>
 struct Pass::PassTraits<LinearOrder>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
-    using num_marks = std::integral_constant<size_t, LinearOrder::Marks::N_MARKS>;
 };
 
 #endif

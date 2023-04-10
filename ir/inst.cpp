@@ -1,6 +1,13 @@
 #include "inst.h"
 #include "bb.h"
 
+Input Inst::GetInput(size_t idx)
+{
+    assert(idx < inputs_.size());
+
+    return inputs_[idx];
+}
+
 void Inst::SetInput(size_t idx, Inst* inst)
 {
     assert(inst != nullptr);
@@ -201,4 +208,94 @@ void Inst::ReplaceUser(const User& user_old, const User& user_new)
         users_.begin(), users_.end(),
         [user_old](const User& u) { return user_old.GetInst()->GetId() == u.GetInst()->GetId(); },
         user_new);
+}
+
+Inst* Inst::GetNext() const
+{
+    return next_.get();
+}
+
+void Inst::SetNext(std::unique_ptr<Inst> next)
+{
+    next_ = std::move(next);
+}
+
+void Inst::SetNext(Inst* next)
+{
+    next_.reset(next);
+}
+
+Inst* Inst::ReleaseNext()
+{
+    return next_.release();
+}
+
+bool Inst::IsPhi() const
+{
+    return opcode_ == Inst::Opcode::PHI;
+}
+
+bool Inst::IsConst() const
+{
+    return opcode_ == Inst::Opcode::CONST;
+}
+
+bool Inst::IsParam() const
+{
+    return opcode_ == Inst::Opcode::PARAM;
+}
+
+bool Inst::IsCall() const
+{
+    return HasFlag(Inst::Flags::CALL);
+}
+
+bool Inst::IsReturn() const
+{
+    return (opcode_ == Inst::Opcode::RETURN) || (opcode_ == Inst::Opcode::RETURN_VOID);
+}
+
+bool Inst::IsCond() const
+{
+    return opcode_ == Inst::Opcode::IF || opcode_ == Inst::Opcode::IF_IMM ||
+           opcode_ == Inst::Opcode::CMP;
+}
+
+bool Inst::Precedes(const Inst* inst) const
+{
+    assert(inst != nullptr);
+    assert(GetBasicBlock()->GetId() == inst->GetBasicBlock()->GetId());
+
+    if (this->GetId() == inst->GetId()) {
+        return true;
+    }
+
+    auto next = GetNext();
+    while (next != nullptr) {
+        if (next->GetId() == inst->GetId()) {
+            return true;
+        }
+        next = next->GetNext();
+    }
+
+    return false;
+}
+
+bool Inst::Dominates(const Inst* inst) const
+{
+    assert(inst != nullptr);
+
+    if (this->GetId() == inst->GetId()) {
+        return true;
+    }
+
+    auto bb = GetBasicBlock();
+    auto bb_inst = inst->GetBasicBlock();
+    auto in_same_bb = bb->GetId() == bb_inst->GetId();
+
+    if (in_same_bb) {
+        return Precedes(inst);
+    }
+
+    return bb->Dominates(bb_inst);
 }

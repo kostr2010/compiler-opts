@@ -1,7 +1,7 @@
 #include "bfs.h"
 #include "bb.h"
 #include "graph.h"
-#include "marker.h"
+#include "marker_factory.h"
 
 #include <list>
 
@@ -9,11 +9,12 @@ bool BFS::RunPass()
 {
     ResetState();
 
+    Markers markers = { marking::MarkerFactory::AcquireMarker() };
+
     std::list<BasicBlock*> queue{};
 
     auto bb = graph_->GetStartBasicBlock();
-
-    marking::Marker::SetMark<BFS, Marks::VISITED>(bb);
+    bb->SetMark(&markers[Marks::VISITED]);
     queue.push_back(bb);
 
     while (!queue.empty()) {
@@ -22,7 +23,7 @@ bool BFS::RunPass()
         queue.pop_front();
 
         for (auto b : bb->GetSuccessors()) {
-            if (marking::Marker::SetMark<BFS, Marks::VISITED>(b)) {
+            if (b->SetMark(&markers[Marks::VISITED])) {
                 continue;
             }
 
@@ -30,7 +31,6 @@ bool BFS::RunPass()
         }
     }
 
-    ClearMarks();
     SetValid(true);
 
     return true;
@@ -44,11 +44,4 @@ std::vector<BasicBlock*> BFS::GetBlocks()
 void BFS::ResetState()
 {
     bfs_bb_.clear();
-}
-
-void BFS::ClearMarks()
-{
-    for (auto& bb : bfs_bb_) {
-        marking::Marker::ClearMark<DFS, Marks::VISITED>(bb);
-    }
 }

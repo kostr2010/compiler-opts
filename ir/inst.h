@@ -160,6 +160,8 @@ class Inst : public marking::Markable
     GETTER(Users, users_);
     GETTER(Id, id_);
 
+    size_t GetNumInputs() const;
+    Input GetInput(size_t idx);
     void SetInput(size_t idx, Inst* inst);
     void ReplaceInput(Inst* old_inst, Inst* new_inst);
     void ClearInput(Inst* old_inst);
@@ -190,58 +192,21 @@ class Inst : public marking::Markable
 
     bool HasFlag(Inst::Flags flag) const;
     bool HasDynamicOperands() const;
-    size_t GetNumInputs() const;
 
-    Inst* GetNext() const
-    {
-        return next_.get();
-    }
+    Inst* GetNext() const;
+    void SetNext(std::unique_ptr<Inst> next);
+    void SetNext(Inst* next);
+    Inst* ReleaseNext();
 
-    void SetNext(std::unique_ptr<Inst> next)
-    {
-        next_ = std::move(next);
-    }
+    bool IsPhi() const;
+    bool IsConst() const;
+    bool IsParam() const;
+    bool IsCall() const;
+    bool IsReturn() const;
+    bool IsCond() const;
 
-    void SetNext(Inst* next)
-    {
-        next_.reset(next);
-    }
-
-    Inst* ReleaseNext()
-    {
-        return next_.release();
-    }
-
-    bool IsPhi() const
-    {
-        return opcode_ == Inst::Opcode::PHI;
-    }
-
-    bool IsConst() const
-    {
-        return opcode_ == Inst::Opcode::CONST;
-    }
-
-    bool IsParam() const
-    {
-        return opcode_ == Inst::Opcode::PARAM;
-    }
-
-    bool IsCall() const
-    {
-        return HasFlag(Inst::Flags::CALL);
-    }
-
-    bool IsReturn() const
-    {
-        return (opcode_ == Inst::Opcode::RETURN) || (opcode_ == Inst::Opcode::RETURN_VOID);
-    }
-
-    bool IsCond() const
-    {
-        return opcode_ == Inst::Opcode::IF || opcode_ == Inst::Opcode::IF_IMM ||
-               opcode_ == Inst::Opcode::CMP;
-    }
+    bool Precedes(const Inst* inst) const;
+    bool Dominates(const Inst* inst) const;
 
     bool IsTypeSensitive() const
     {

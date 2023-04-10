@@ -14,146 +14,38 @@
 #include <cstdint>
 #include <iostream>
 
-constexpr char* my_copy(char* dst, const char* src, size_t n)
+struct Base
 {
-    for (size_t i = 0; i < n; ++i) {
-        std::cout << "<" << src[i] << ">\n";
-        dst[i] = src[i];
-        if (dst[i] == '\0') {
-            std::cout << i + 1 << "&&\n";
-            return &dst[i + 1];
-        }
-    }
+    template <typename P>
+    using IsBase = std::is_base_of<Base, P>;
 
-    std::cout << "*\n";
-
-    return nullptr;
-}
-
-template <size_t N1, size_t N2>
-constexpr auto concat(char const (&a)[N1], char const (&b)[N2])
-{
-    std::array<char, N1 + N2 - 1> result = {};
-    std::cout << N1 + N2 - 1 << "\n";
-    char* next = my_copy(result.data(), a, N1 - 1);
-    std::cout << "> " << N1 - 1 << "\n";
-    char* nextdst = next ? next : &result[N1 - 1];
-    my_copy(nextdst, b, N2);
-    result.back() = '\0';
-    return result;
-}
-
-#include "ir/ir_isa.h"
-
-enum Inst::Opcode : uint8_t
-{
-#define OPCODES(op, ...) op,
-    INSTRUCTION_LIST(OPCODES)
-#undef OPCODES
-};
-
-#define FORWARD_DECL(T, ...) class T;
-INSTRUCTION_TYPES(FORWARD_DECL);
-#undef FORWARD_DECL
-
-struct Inst
-{
-#define GET_TYPES(OP, T, ...) T,
-    using InstTypes = std::tuple<INSTRUCTION_LIST(GET_TYPES) void>;
-#undef GET_TYPES
-
-    template <size_t I, typename TUPLE>
-    struct get_inst_type_t;
-
-    template <size_t I, typename Type, typename... Types>
-    struct get_inst_type_t<I, std::tuple<Type, Types...> >
-        : get_inst_type_t<I - 1, std::tuple<Types...> >
-    {};
-
-    template <typename Type, typename... Types>
-    struct get_inst_type_t<0, std::tuple<Type, Types...> >
+    template <typename T>
+    struct BaseTraits
     {
-        using type = Type;
+        using is_cfg_sensitive = std::integral_constant<bool, false>;
+        using num_marks = std::integral_constant<size_t, 0>;
     };
 
-  public:
-    template <Inst::Opcode OPCODE>
-    using to_inst_type = typename get_inst_type_t<OPCODE, InstTypes>::type;
-
-    template <typename InstType, typename = void>
-    struct get_num_inputs : std::integral_constant<size_t, std::numeric_limits<size_t>::max()>
-    {};
-
-    template <typename InstType>
-    struct get_num_inputs<InstType, std::void_t<decltype(InstType::N_INPUTS)> >
-        : std::integral_constant<size_t, InstType::N_INPUTS>
-    {};
-
-    int a{};
+    template <typename P>
+    using Markers = marking::Marker[P::BaseTraits::num_marks::value];
 };
 
-template <size_t N>
-class FixedInputOp : public Inst
-{
+// struct D : public Base
+// {
+//     template <>
+//     struct BaseTraits<D>
+//     {
+//         using is_cfg_sensitive = std::integral_constant<bool, true>;
+//         using num_marks = std::integral_constant<size_t, 1>;
+//     };
+// };
 
-  public:
-    FixedInputOp()
-    {
-    }
-
-  private:
-    friend Inst;
-    template <typename T>
-    friend struct Inst::GetNumInputs;
-    static constexpr size_t N_INPUTS = N;
-
-  public:
-};
-
-class FixedInputOp0 : public FixedInputOp<0>
-{
-  public:
-    FixedInputOp0() : FixedInputOp()
-    {
-    }
-};
-
-class FixedInputOp1 : public FixedInputOp<1>
-{
-  public:
-    FixedInputOp1() : FixedInputOp()
-    {
-    }
-};
-
-class kek : public FixedInputOp1
-{
-  public:
-    kek() : FixedInputOp1()
-    {
-    }
-};
-
-class kek2 : public FixedInputOp<2>
-{
-  public:
-    kek2()
-    {
-    }
-};
+// struct D2 : public Base
+// {};
 
 int main()
 {
-    auto t = concat("Hello, ", "world!");
-    for (const auto& c : t) {
-        std::cout << "<" << c << ">\n";
-    }
-
-    std::cout << Inst::GetNumInputs<kek2>() << "\n";
-    std::cout << Inst::GetNumInputs<kek>() << "\n";
-    std::cout << Inst::GetNumInputs<FixedInputOp1>() << "\n";
-    std::cout << Inst::GetNumInputs<FixedInputOp0>() << "\n";
-
+    // std::cout << D2::BaseTra
     return 0;
 }
 

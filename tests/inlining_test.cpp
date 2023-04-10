@@ -95,8 +95,8 @@ TEST(TestInlining, Example0)
     ASSERT_EQ(callee.GetStartBasicBlock(), nullptr);
 
     auto start = caller.GetStartBasicBlock();
-    ASSERT_TRUE(start->GetPredecesors().empty());
-    ASSERT_EQ(start->GetSuccessors().size(), 1);
+    ASSERT_TRUE(start->HasNoPredecessors());
+    ASSERT_EQ(start->GetNumSuccessors(), 1);
     ASSERT_EQ(start->GetFirstPhi(), nullptr);
     ASSERT_EQ(start->GetLastPhi(), nullptr);
     ASSERT_NE(start->GetFirstInst(), nullptr);
@@ -110,9 +110,9 @@ TEST(TestInlining, Example0)
     ASSERT_EQ(p0->GetUsers().size(), 1);
     ASSERT_TRUE(p0->GetInputs().empty());
 
-    auto a = start->GetSuccessors().front();
-    ASSERT_TRUE(a->GetSuccessors().empty());
-    ASSERT_EQ(a->GetPredecesors().size(), 1);
+    auto a = start->GetSuccessor(0);
+    ASSERT_TRUE(a->HasNoSuccessors());
+    ASSERT_EQ(a->GetNumPredecessors(), 1);
     ASSERT_EQ(a->GetFirstPhi(), nullptr);
     ASSERT_EQ(a->GetLastPhi(), nullptr);
     ASSERT_NE(a->GetFirstInst(), nullptr);
@@ -123,10 +123,10 @@ TEST(TestInlining, Example0)
     ASSERT_EQ(i0->GetOpcode(), Inst::Opcode::RETURN);
     ASSERT_EQ(i0->GetNext(), nullptr);
     ASSERT_FALSE(i0->GetInputs().empty());
-    ASSERT_EQ(i0->GetInputs().size(), 1);
+    ASSERT_EQ(i0->GetNumInputs(), 1);
 
     ASSERT_EQ(p0->GetUsers().front().GetInst()->GetId(), I0);
-    ASSERT_EQ(i0->GetInputs().front().GetInst()->GetId(), P0);
+    ASSERT_EQ(i0->GetInput(0).GetInst()->GetId(), P0);
     ASSERT_TRUE(i0->GetUsers().empty());
 }
 
@@ -217,8 +217,8 @@ TEST(TestInlining, Example1)
 
     // CFG
     auto start = caller.GetStartBasicBlock();
-    ASSERT_TRUE(start->GetPredecesors().empty());
-    ASSERT_EQ(start->GetSuccessors().size(), 1);
+    ASSERT_TRUE(start->HasNoPredecessors());
+    ASSERT_EQ(start->GetNumSuccessors(), 1);
     ASSERT_EQ(start->GetFirstPhi(), nullptr);
     ASSERT_EQ(start->GetLastPhi(), nullptr);
     ASSERT_NE(start->GetFirstInst(), nullptr);
@@ -241,10 +241,10 @@ TEST(TestInlining, Example1)
     ASSERT_EQ(c2->GetNext(), nullptr);
     ASSERT_EQ(C2, start->GetLastInst()->GetId());
 
-    ASSERT_EQ(start->GetSuccessors().size(), 1);
-    auto a = start->GetSuccessors().front();
-    ASSERT_EQ(a->GetPredecesors().size(), 1);
-    ASSERT_EQ(a->GetPredecesors().front()->GetId(), start->GetId());
+    ASSERT_EQ(start->GetNumSuccessors(), 1);
+    auto a = start->GetSuccessor(0);
+    ASSERT_EQ(a->GetNumPredecessors(), 1);
+    ASSERT_EQ(a->GetPredecessor(0)->GetId(), start->GetId());
     ASSERT_EQ(a->GetFirstPhi(), nullptr);
     ASSERT_EQ(a->GetLastPhi(), nullptr);
     ASSERT_NE(a->GetFirstInst(), nullptr);
@@ -254,11 +254,11 @@ TEST(TestInlining, Example1)
     ASSERT_EQ(i0->GetOpcode(), Inst::Opcode::IF);
     ASSERT_EQ(i0->GetNext(), nullptr);
     ASSERT_EQ(I0, a->GetLastInst()->GetId());
-    ASSERT_EQ(a->GetSuccessors().size(), 2);
+    ASSERT_EQ(a->GetNumSuccessors(), 2);
 
-    auto b = a->GetSuccessors().front();
-    ASSERT_EQ(b->GetPredecesors().size(), 1);
-    ASSERT_EQ(b->GetPredecesors().front()->GetId(), a->GetId());
+    auto b = a->GetSuccessor(0);
+    ASSERT_EQ(b->GetNumPredecessors(), 1);
+    ASSERT_EQ(b->GetPredecessor(0)->GetId(), a->GetId());
     ASSERT_EQ(b->GetFirstPhi(), nullptr);
     ASSERT_EQ(b->GetLastPhi(), nullptr);
     ASSERT_NE(b->GetFirstInst(), nullptr);
@@ -268,11 +268,11 @@ TEST(TestInlining, Example1)
     ASSERT_EQ(i1->GetOpcode(), Inst::Opcode::MUL);
     ASSERT_EQ(i1->GetNext(), nullptr);
     ASSERT_EQ(I1, b->GetLastInst()->GetId());
-    ASSERT_EQ(b->GetSuccessors().size(), 1);
+    ASSERT_EQ(b->GetNumSuccessors(), 1);
 
-    auto c = a->GetSuccessors().back();
-    ASSERT_EQ(c->GetPredecesors().size(), 1);
-    ASSERT_EQ(c->GetPredecesors().front()->GetId(), a->GetId());
+    auto c = a->GetSuccessor(1);
+    ASSERT_EQ(c->GetNumPredecessors(), 1);
+    ASSERT_EQ(c->GetPredecessor(0)->GetId(), a->GetId());
     ASSERT_EQ(c->GetFirstPhi(), nullptr);
     ASSERT_EQ(c->GetLastPhi(), nullptr);
     ASSERT_NE(c->GetFirstInst(), nullptr);
@@ -282,13 +282,13 @@ TEST(TestInlining, Example1)
     ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ADD);
     ASSERT_EQ(i2->GetNext(), nullptr);
     ASSERT_EQ(I2, c->GetLastInst()->GetId());
-    ASSERT_EQ(c->GetSuccessors().size(), 1);
+    ASSERT_EQ(c->GetNumSuccessors(), 1);
 
-    ASSERT_EQ(c->GetSuccessors().front()->GetId(), b->GetSuccessors().front()->GetId());
-    auto d = c->GetSuccessors().front();
-    ASSERT_EQ(d->GetPredecesors().size(), 2);
-    ASSERT_EQ(d->GetPredecesors().front()->GetId(), c->GetId());
-    ASSERT_EQ(d->GetPredecesors().back()->GetId(), b->GetId());
+    ASSERT_EQ(c->GetSuccessor(0)->GetId(), b->GetSuccessor(0)->GetId());
+    auto d = c->GetSuccessor(0);
+    ASSERT_EQ(d->GetNumPredecessors(), 2);
+    ASSERT_EQ(d->GetPredecessor(0)->GetId(), c->GetId());
+    ASSERT_EQ(d->GetPredecessor(1)->GetId(), b->GetId());
     ASSERT_EQ(d->GetFirstInst(), nullptr);
     ASSERT_EQ(d->GetLastInst(), nullptr);
     ASSERT_NE(d->GetFirstPhi(), nullptr);
@@ -298,11 +298,11 @@ TEST(TestInlining, Example1)
     ASSERT_EQ(i3->GetOpcode(), Inst::Opcode::PHI);
     ASSERT_EQ(i3->GetNext(), nullptr);
     ASSERT_EQ(I3, d->GetLastPhi()->GetId());
-    ASSERT_EQ(d->GetSuccessors().size(), 1);
+    ASSERT_EQ(d->GetNumSuccessors(), 1);
 
-    auto e = d->GetSuccessors().back();
-    ASSERT_EQ(e->GetPredecesors().size(), 1);
-    ASSERT_EQ(e->GetPredecesors().front()->GetId(), d->GetId());
+    auto e = d->GetSuccessor(0);
+    ASSERT_EQ(e->GetNumPredecessors(), 1);
+    ASSERT_EQ(e->GetPredecessor(0)->GetId(), d->GetId());
     ASSERT_EQ(e->GetFirstPhi(), nullptr);
     ASSERT_EQ(e->GetLastPhi(), nullptr);
     ASSERT_NE(e->GetFirstInst(), nullptr);
@@ -312,7 +312,7 @@ TEST(TestInlining, Example1)
     ASSERT_EQ(i4->GetOpcode(), Inst::Opcode::RETURN);
     ASSERT_EQ(i4->GetNext(), nullptr);
     ASSERT_EQ(I4, e->GetLastInst()->GetId());
-    ASSERT_TRUE(e->GetSuccessors().empty());
+    ASSERT_TRUE(e->HasNoSuccessors());
 
     // DFG
     CheckInputs(p0, {});
@@ -425,8 +425,8 @@ TEST(TestInlining, Example2)
 
     // CFG
     auto start = caller.GetStartBasicBlock();
-    ASSERT_TRUE(start->GetPredecesors().empty());
-    ASSERT_EQ(start->GetSuccessors().size(), 1);
+    ASSERT_TRUE(start->HasNoPredecessors());
+    ASSERT_EQ(start->GetNumSuccessors(), 1);
     ASSERT_EQ(start->GetFirstPhi(), nullptr);
     ASSERT_EQ(start->GetLastPhi(), nullptr);
     ASSERT_NE(start->GetFirstInst(), nullptr);
@@ -449,10 +449,10 @@ TEST(TestInlining, Example2)
     ASSERT_EQ(c2->GetNext(), nullptr);
     ASSERT_EQ(C2, start->GetLastInst()->GetId());
 
-    ASSERT_EQ(start->GetSuccessors().size(), 1);
-    auto a = start->GetSuccessors().front();
-    ASSERT_EQ(a->GetPredecesors().size(), 1);
-    ASSERT_EQ(a->GetPredecesors().front()->GetId(), start->GetId());
+    ASSERT_EQ(start->GetNumSuccessors(), 1);
+    auto a = start->GetSuccessor(0);
+    ASSERT_EQ(a->GetNumPredecessors(), 1);
+    ASSERT_EQ(a->GetPredecessor(0)->GetId(), start->GetId());
     ASSERT_EQ(a->GetFirstPhi(), nullptr);
     ASSERT_EQ(a->GetLastPhi(), nullptr);
     ASSERT_NE(a->GetFirstInst(), nullptr);
@@ -462,11 +462,11 @@ TEST(TestInlining, Example2)
     ASSERT_EQ(i0->GetOpcode(), Inst::Opcode::MUL);
     ASSERT_EQ(i0->GetNext(), nullptr);
     ASSERT_EQ(I0, a->GetLastInst()->GetId());
-    ASSERT_EQ(a->GetSuccessors().size(), 1);
+    ASSERT_EQ(a->GetNumSuccessors(), 1);
 
-    auto b = a->GetSuccessors().front();
-    ASSERT_EQ(b->GetPredecesors().size(), 2);
-    ASSERT_EQ(b->GetPredecesors().back()->GetId(), a->GetId());
+    auto b = a->GetSuccessor(0);
+    ASSERT_EQ(b->GetNumPredecessors(), 2);
+    ASSERT_EQ(b->GetPredecessor(1)->GetId(), a->GetId());
     ASSERT_EQ(b->GetFirstPhi(), nullptr);
     ASSERT_EQ(b->GetLastPhi(), nullptr);
     ASSERT_NE(b->GetFirstInst(), nullptr);
@@ -476,12 +476,12 @@ TEST(TestInlining, Example2)
     ASSERT_EQ(i1->GetOpcode(), Inst::Opcode::MUL);
     ASSERT_EQ(i1->GetNext(), nullptr);
     ASSERT_EQ(I1, b->GetLastInst()->GetId());
-    ASSERT_EQ(b->GetSuccessors().size(), 1);
+    ASSERT_EQ(b->GetNumSuccessors(), 1);
 
-    auto c = b->GetSuccessors().back();
-    ASSERT_EQ(b->GetPredecesors().front()->GetId(), c->GetId());
-    ASSERT_EQ(c->GetPredecesors().size(), 1);
-    ASSERT_EQ(c->GetPredecesors().front()->GetId(), b->GetId());
+    auto c = b->GetSuccessor(0);
+    ASSERT_EQ(b->GetPredecessor(0)->GetId(), c->GetId());
+    ASSERT_EQ(c->GetNumPredecessors(), 1);
+    ASSERT_EQ(c->GetPredecessor(0)->GetId(), b->GetId());
     ASSERT_EQ(c->GetFirstPhi(), nullptr);
     ASSERT_EQ(c->GetLastPhi(), nullptr);
     ASSERT_NE(c->GetFirstInst(), nullptr);
@@ -495,12 +495,12 @@ TEST(TestInlining, Example2)
     ASSERT_EQ(i3->GetOpcode(), Inst::Opcode::IF);
     ASSERT_EQ(i3->GetNext(), nullptr);
     ASSERT_EQ(I3, c->GetLastInst()->GetId());
-    ASSERT_EQ(c->GetSuccessors().size(), 2);
+    ASSERT_EQ(c->GetNumSuccessors(), 2);
 
-    ASSERT_EQ(c->GetSuccessors().front()->GetId(), b->GetId());
-    auto d = c->GetSuccessors().back();
-    ASSERT_EQ(d->GetPredecesors().size(), 1);
-    ASSERT_EQ(d->GetPredecesors().front()->GetId(), c->GetId());
+    ASSERT_EQ(c->GetSuccessor(0)->GetId(), b->GetId());
+    auto d = c->GetSuccessor(1);
+    ASSERT_EQ(d->GetNumPredecessors(), 1);
+    ASSERT_EQ(d->GetPredecessor(0)->GetId(), c->GetId());
     ASSERT_EQ(d->GetFirstPhi(), nullptr);
     ASSERT_EQ(d->GetLastPhi(), nullptr);
     ASSERT_NE(d->GetFirstInst(), nullptr);
@@ -510,7 +510,7 @@ TEST(TestInlining, Example2)
     ASSERT_EQ(i4->GetOpcode(), Inst::Opcode::RETURN);
     ASSERT_EQ(i4->GetNext(), nullptr);
     ASSERT_EQ(I4, d->GetLastInst()->GetId());
-    ASSERT_TRUE(d->GetSuccessors().empty());
+    ASSERT_TRUE(d->HasNoSuccessors());
 
     // DFG
     CheckInputs(p0, {});
@@ -622,8 +622,8 @@ TEST(TestInlining, Example3)
 
     // CFG
     auto start = caller.GetStartBasicBlock();
-    ASSERT_TRUE(start->GetPredecesors().empty());
-    ASSERT_EQ(start->GetSuccessors().size(), 1);
+    ASSERT_TRUE(start->HasNoPredecessors());
+    ASSERT_EQ(start->GetNumSuccessors(), 1);
     ASSERT_EQ(start->GetFirstPhi(), nullptr);
     ASSERT_EQ(start->GetLastPhi(), nullptr);
     ASSERT_NE(start->GetFirstInst(), nullptr);
@@ -646,10 +646,10 @@ TEST(TestInlining, Example3)
     ASSERT_EQ(c2->GetNext(), nullptr);
     ASSERT_EQ(C2, start->GetLastInst()->GetId());
 
-    ASSERT_EQ(start->GetSuccessors().size(), 1);
-    auto a = start->GetSuccessors().front();
-    ASSERT_EQ(a->GetPredecesors().size(), 1);
-    ASSERT_EQ(a->GetPredecesors().front()->GetId(), start->GetId());
+    ASSERT_EQ(start->GetNumSuccessors(), 1);
+    auto a = start->GetSuccessor(0);
+    ASSERT_EQ(a->GetNumPredecessors(), 1);
+    ASSERT_EQ(a->GetPredecessor(0)->GetId(), start->GetId());
     ASSERT_EQ(a->GetFirstPhi(), nullptr);
     ASSERT_EQ(a->GetLastPhi(), nullptr);
     ASSERT_NE(a->GetFirstInst(), nullptr);
@@ -663,11 +663,11 @@ TEST(TestInlining, Example3)
     ASSERT_EQ(i1->GetOpcode(), Inst::Opcode::IF);
     ASSERT_EQ(i1->GetNext(), nullptr);
     ASSERT_EQ(I1, a->GetLastInst()->GetId());
-    ASSERT_EQ(a->GetSuccessors().size(), 2);
+    ASSERT_EQ(a->GetNumSuccessors(), 2);
 
-    auto b = a->GetSuccessors().front();
-    ASSERT_EQ(b->GetPredecesors().size(), 1);
-    ASSERT_EQ(b->GetPredecesors().back()->GetId(), a->GetId());
+    auto b = a->GetSuccessor(0);
+    ASSERT_EQ(b->GetNumPredecessors(), 1);
+    ASSERT_EQ(b->GetPredecessor(0)->GetId(), a->GetId());
     ASSERT_EQ(b->GetFirstPhi(), nullptr);
     ASSERT_EQ(b->GetLastPhi(), nullptr);
     ASSERT_NE(b->GetFirstInst(), nullptr);
@@ -677,11 +677,11 @@ TEST(TestInlining, Example3)
     ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ADD);
     ASSERT_EQ(i2->GetNext(), nullptr);
     ASSERT_EQ(I2, b->GetLastInst()->GetId());
-    ASSERT_EQ(b->GetSuccessors().size(), 1);
+    ASSERT_EQ(b->GetNumSuccessors(), 1);
 
-    auto c = a->GetSuccessors().back();
-    ASSERT_EQ(c->GetPredecesors().size(), 1);
-    ASSERT_EQ(c->GetPredecesors().front()->GetId(), a->GetId());
+    auto c = a->GetSuccessor(1);
+    ASSERT_EQ(c->GetNumPredecessors(), 1);
+    ASSERT_EQ(c->GetPredecessor(0)->GetId(), a->GetId());
     ASSERT_EQ(c->GetFirstPhi(), nullptr);
     ASSERT_EQ(c->GetLastPhi(), nullptr);
     ASSERT_NE(c->GetFirstInst(), nullptr);
@@ -691,12 +691,12 @@ TEST(TestInlining, Example3)
     ASSERT_EQ(i3->GetOpcode(), Inst::Opcode::SUB);
     ASSERT_EQ(i3->GetNext(), nullptr);
     ASSERT_EQ(I3, c->GetLastInst()->GetId());
-    ASSERT_EQ(c->GetSuccessors().size(), 1);
+    ASSERT_EQ(c->GetNumSuccessors(), 1);
 
-    auto d = c->GetSuccessors().back();
-    ASSERT_EQ(d->GetPredecesors().size(), 2);
-    ASSERT_EQ(d->GetPredecesors().back()->GetId(), c->GetId());
-    ASSERT_EQ(d->GetPredecesors().front()->GetId(), b->GetId());
+    auto d = c->GetSuccessor(0);
+    ASSERT_EQ(d->GetNumPredecessors(), 2);
+    ASSERT_EQ(d->GetPredecessor(1)->GetId(), c->GetId());
+    ASSERT_EQ(d->GetPredecessor(0)->GetId(), b->GetId());
     ASSERT_NE(d->GetFirstPhi(), nullptr);
     ASSERT_NE(d->GetLastPhi(), nullptr);
     auto i4 = d->GetFirstPhi();
@@ -704,7 +704,7 @@ TEST(TestInlining, Example3)
     ASSERT_EQ(i4->GetOpcode(), Inst::Opcode::PHI);
     ASSERT_EQ(i4->GetNext(), nullptr);
     ASSERT_EQ(I4, d->GetLastPhi()->GetId());
-    ASSERT_TRUE(d->GetSuccessors().empty());
+    ASSERT_TRUE(d->HasNoSuccessors());
     ASSERT_NE(d->GetFirstInst(), nullptr);
     ASSERT_NE(d->GetLastInst(), nullptr);
     auto i5 = d->GetFirstInst();
@@ -712,7 +712,7 @@ TEST(TestInlining, Example3)
     ASSERT_EQ(i5->GetOpcode(), Inst::Opcode::RETURN);
     ASSERT_EQ(i5->GetNext(), nullptr);
     ASSERT_EQ(I5, d->GetLastInst()->GetId());
-    ASSERT_TRUE(d->GetSuccessors().empty());
+    ASSERT_TRUE(d->HasNoSuccessors());
 
     // DFG
     CheckInputs(p0, {});

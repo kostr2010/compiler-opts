@@ -2,14 +2,30 @@
 
 namespace marking {
 
-MarkHolder* Markable::GetMarkHolder()
+Markable::Markable()
 {
-    return &bits;
+    markers_.fill(Marker::GenUnset());
 }
 
-MarkHolder Markable::PeekMarkHolder() const
+bool Markable::ProbeMark(const Marker* marker)
 {
-    return bits;
+    return markers_[marker->GetSlot()] == marker->GetGen();
+}
+
+// true if mark was set, false otherwise
+bool Markable::SetMark(const Marker* marker)
+{
+    bool was_set = ProbeMark(marker);
+    markers_[marker->GetSlot()] = marker->GetGen();
+    return was_set;
+}
+
+// true if mark was set, false otherwise
+bool Markable::ClearMark(const Marker* marker)
+{
+    bool was_set = ProbeMark(marker);
+    markers_[marker->GetSlot()] = Marker::GenUnset();
+    return was_set;
 }
 
 };

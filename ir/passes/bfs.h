@@ -15,6 +15,7 @@ class BFS : public Pass
         VISITED = 0,
         N_MARKS,
     };
+    using Markers = marking::Markers<Marks::N_MARKS>;
 
     BFS(Graph* graph) : Pass(graph)
     {
@@ -26,7 +27,6 @@ class BFS : public Pass
 
   private:
     void ResetState();
-    void ClearMarks();
 
     std::vector<BasicBlock*> bfs_bb_{};
 };
@@ -35,7 +35,6 @@ template <>
 struct Pass::PassTraits<BFS>
 {
     using is_cfg_sensitive = std::integral_constant<bool, true>;
-    using num_marks = std::integral_constant<size_t, BFS::Marks::N_MARKS>;
 };
 
 #endif

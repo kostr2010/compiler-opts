@@ -1,13 +1,14 @@
 #include "rpo.h"
 #include "bb.h"
 #include "graph.h"
-#include "marker.h"
+#include "marker_factory.h"
 
 bool RPO::RunPass()
 {
+    Markers markers = { marking::MarkerFactory::AcquireMarker() };
+
     ResetState();
-    RunPass_(graph_->GetStartBasicBlock());
-    ClearMarks();
+    RunPass_(graph_->GetStartBasicBlock(), markers);
     SetValid(true);
 
     return true;
@@ -18,27 +19,20 @@ std::vector<BasicBlock*> RPO::GetBlocks()
     return rpo_bb_;
 }
 
-void RPO::RunPass_(BasicBlock* cur_bb)
+void RPO::RunPass_(BasicBlock* cur_bb, const Markers markers)
 {
-    if (marking::Marker::SetMark<RPO, Marks::VISITED>(cur_bb)) {
+    if (cur_bb->SetMark(&markers[Marks::VISITED])) {
         return;
     }
 
     rpo_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
-        RunPass_(succ);
+        RunPass_(succ, markers);
     }
 }
 
 void RPO::ResetState()
 {
     rpo_bb_.clear();
-}
-
-void RPO::ClearMarks()
-{
-    for (auto& bb : rpo_bb_) {
-        marking::Marker::ClearMark<RPO, Marks::VISITED>(bb);
-    }
 }
