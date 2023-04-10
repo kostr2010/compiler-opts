@@ -24,11 +24,9 @@ void DCE::Mark()
 
 void DCE::MarkRecursively(Inst* inst)
 {
-    if (marking::Marker::GetMark<DCE, Marks::VISITED>(inst)) {
+    if (marking::Marker::SetMark<DCE, Marks::VISITED>(inst)) {
         return;
     }
-
-    marking::Marker::SetMark<DCE, Marks::VISITED>(inst);
 
     for (const auto& i : inst->GetInputs()) {
         MarkRecursively(i.GetInst());
@@ -52,7 +50,7 @@ void DCE::Sweep()
         auto inst = bb->GetLastInst();
         while (inst != nullptr) {
             auto prev = inst->GetPrev();
-            if (!marking::Marker::GetMark<DCE, Marks::VISITED>(inst)) {
+            if (!marking::Marker::ProbeMark<DCE, Marks::VISITED>(inst)) {
                 RemoveInst(inst);
             }
             inst = prev;
@@ -61,7 +59,7 @@ void DCE::Sweep()
         auto phi = bb->GetLastPhi();
         while (phi != nullptr) {
             auto prev = phi->GetPrev();
-            if (!marking::Marker::GetMark<DCE, Marks::VISITED>(phi)) {
+            if (!marking::Marker::ProbeMark<DCE, Marks::VISITED>(phi)) {
                 RemoveInst(phi);
             }
             phi = prev;

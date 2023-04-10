@@ -20,11 +20,9 @@ std::vector<BasicBlock*> PO::GetBlocks()
 
 void PO::RunPass_(BasicBlock* cur_bb)
 {
-    if (marking::Marker::GetMark<PO, Marks::VISITED>(cur_bb)) {
+    if (marking::Marker::SetMark<PO, Marks::VISITED>(cur_bb)) {
         return;
     }
-
-    marking::Marker::SetMark<PO, Marks::VISITED>(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
         RunPass_(succ);

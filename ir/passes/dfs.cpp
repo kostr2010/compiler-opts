@@ -24,7 +24,7 @@ void DFS::RunPass_(BasicBlock* cur_bb)
     dfs_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
-        if (marking::Marker::GetMark<DFS, Marks::VISITED>(succ)) {
+        if (marking::Marker::ProbeMark<DFS, Marks::VISITED>(succ)) {
             continue;
         }
         RunPass_(succ);

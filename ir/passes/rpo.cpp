@@ -20,11 +20,10 @@ std::vector<BasicBlock*> RPO::GetBlocks()
 
 void RPO::RunPass_(BasicBlock* cur_bb)
 {
-    if (marking::Marker::GetMark<RPO, Marks::VISITED>(cur_bb)) {
+    if (marking::Marker::SetMark<RPO, Marks::VISITED>(cur_bb)) {
         return;
     }
 
-    marking::Marker::SetMark<RPO, Marks::VISITED>(cur_bb);
     rpo_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {

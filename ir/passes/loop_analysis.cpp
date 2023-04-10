@@ -27,7 +27,7 @@ void LoopAnalysis::CollectBackEdges(BasicBlock* bb)
     id_to_dfs_idx_[bb->GetId()] = id_to_dfs_idx_.size();
 
     for (const auto& succ : bb->GetSuccessors()) {
-        if (marking::Marker::GetMark<LoopAnalysis, Marks::GREY>(succ)) {
+        if (marking::Marker::ProbeMark<LoopAnalysis, Marks::GREY>(succ)) {
             auto loop = succ->GetLoop();
             bool need_new_loop = (loop == nullptr);
 
@@ -39,7 +39,7 @@ void LoopAnalysis::CollectBackEdges(BasicBlock* bb)
             }
         }
 
-        if (marking::Marker::GetMark<LoopAnalysis, Marks::BLACK>(succ)) {
+        if (marking::Marker::ProbeMark<LoopAnalysis, Marks::BLACK>(succ)) {
             continue;
         }
 
@@ -107,7 +107,7 @@ void LoopAnalysis::RunLoopSearch(Loop* cur_loop, BasicBlock* cur_bb)
     }
 
     for (const auto& bb : cur_bb->GetPredecesors()) {
-        if (!marking::Marker::GetMark<LoopAnalysis, Marks::GREEN>(bb)) {
+        if (!marking::Marker::ProbeMark<LoopAnalysis, Marks::GREEN>(bb)) {
             RunLoopSearch(cur_loop, bb);
         }
     }

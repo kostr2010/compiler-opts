@@ -22,11 +22,10 @@ bool BFS::RunPass()
         queue.pop_front();
 
         for (auto b : bb->GetSuccessors()) {
-            if (marking::Marker::GetMark<BFS, Marks::VISITED>(b)) {
+            if (marking::Marker::SetMark<BFS, Marks::VISITED>(b)) {
                 continue;
             }
 
-            marking::Marker::SetMark<BFS, Marks::VISITED>(b);
             queue.push_back(b);
         }
     }

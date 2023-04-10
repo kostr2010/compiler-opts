@@ -29,28 +29,40 @@ class Marker
     template <typename Type>
     using GetMarkOffset = get_mark_offset<Type, 0, DefaultPasses::Passes>;
 
+  private:
     template <typename PassT, size_t N>
-    static void SetMark(Markable* mark)
+    using GetMarkBits =
+        std::integral_constant<MarkHolder, (MarkHolder)(1) << (GetMarkOffset<PassT>() + N)>;
+
+  public:
+    template <typename PassT, size_t N>
+    static bool ProbeMark(const Markable* obj)
     {
         static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        (*(mark->GetMarkHolder())) |= (1ULL << (GetMarkOffset<PassT>() + N));
+        return obj->PeekMarkHolder() & GetMarkBits<PassT, N>();
     }
 
+    // true if mark was set, false otherwise
     template <typename PassT, size_t N>
-    static void ClearMark(Markable* mark)
+    static bool SetMark(Markable* obj)
     {
         static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        (*(mark->GetMarkHolder())) &= ~(1ULL << (GetMarkOffset<PassT>() + N));
+        bool was_set = ProbeMark<PassT, N>(obj);
+        *(obj->GetMarkHolder()) |= GetMarkBits<PassT, N>();
+        return was_set;
     }
 
+    // true if mark was set, false otherwise
     template <typename PassT, size_t N>
-    static bool GetMark(const Markable* mark)
+    static bool ClearMark(Markable* obj)
     {
         static_assert(N < typename Pass::PassTraits<PassT>::num_marks());
         static_assert((GetMarkOffset<PassT>() + N) < (sizeof(MarkHolder) * BITS_IN_BYTE));
-        return mark->PeekMarkHolder() & (1ULL << (GetMarkOffset<PassT>() + N));
+        bool was_set = ProbeMark<PassT, N>(obj);
+        *(obj->GetMarkHolder()) &= ~GetMarkBits<PassT, N>();
+        return was_set;
     }
 };
 
