@@ -5,6 +5,10 @@
 bool DBE::RunPass()
 {
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
+        if (bb->IsStartBlock()) {
+            continue;
+        }
+
         if (RemoveEmpty(bb)) {
             continue;
         }
@@ -19,6 +23,8 @@ bool DBE::RunPass()
 
 bool DBE::RemoveEmpty(BasicBlock* bb)
 {
+    assert(!bb->IsStartBlock());
+
     if (!bb->IsEmpty()) {
         return false;
     }
@@ -48,6 +54,8 @@ bool DBE::RemoveEmpty(BasicBlock* bb)
 
 bool DBE::RemoveUnlinked(BasicBlock* bb)
 {
+    assert(!bb->IsStartBlock());
+
     bool is_unlinked = bb->HasNoSuccessors() && bb->HasNoPredecessors();
     if (!is_unlinked) {
         return false;

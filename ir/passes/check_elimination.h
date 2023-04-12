@@ -20,15 +20,14 @@ class CheckElimination : public Pass, public GraphVisitor
     bool RunPass() override;
 
   private:
-    void ResetState();
+    void RemoveRedundantChecks();
+    void ResetStructs();
 
     static void VisitCHECK_ZERO(GraphVisitor* v, Inst* inst);
     static void VisitCHECK_NULL(GraphVisitor* v, Inst* inst);
-    static void VisitCHECK_SIZE(GraphVisitor* v, Inst* inst);
+    static void VisitCHECK_SIZE([[maybe_unused]] GraphVisitor* v, Inst* inst);
 
-    std::vector<Inst*> CHECK_ZERO_rpo_{};
-    std::vector<Inst*> CHECK_NULL_rpo_{};
-    std::vector<Inst*> CHECK_SIZE_rpo_{};
+    std::vector<Inst*> redundant_checks_;
 
 #include "graph_visitor.inc"
 };

@@ -161,17 +161,17 @@ class Inst : public marking::Markable
     GETTER(Id, id_);
 
     size_t GetNumInputs() const;
-    Input GetInput(size_t idx);
+    Input GetInput(size_t idx) const;
     void SetInput(size_t idx, Inst* inst);
     void ReplaceInput(Inst* old_inst, Inst* new_inst);
     void ClearInput(Inst* old_inst);
     size_t AddInput(Inst* inst, BasicBlock* bb);
     size_t AddInput(const Input& input);
 
-    void ReserveInputs(size_t n);
     void ClearInputs();
     void RemoveInput(const Input& input);
 
+    size_t GetNumUsers() const;
     void AddUser(Inst* inst);
     void AddUser(Inst* inst, size_t idx);
     void AddUser(const User& user);
@@ -202,6 +202,7 @@ class Inst : public marking::Markable
     bool IsConst() const;
     bool IsParam() const;
     bool IsCall() const;
+    bool IsCheck() const;
     bool IsReturn() const;
     bool IsCond() const;
 
@@ -373,6 +374,27 @@ class ConstantOp : public Inst
             SetDataType(Inst::DataType::VOID);
             assert(false);
         }
+    }
+
+    static bool Compare(const Inst* i1, const Inst* i2)
+    {
+        assert(i1->IsConst());
+        assert(i2->IsConst());
+        using T = Inst::to_inst_type<Inst::Opcode::CONST>;
+
+        return (static_cast<const T*>(i1)->GetDataType() ==
+                static_cast<const T*>(i2)->GetDataType()) &&
+               (static_cast<const T*>(i1)->GetValRaw() == static_cast<const T*>(i2)->GetValRaw());
+    }
+
+    bool IsZero()
+    {
+        return GetValRaw() == 0;
+    }
+
+    bool IsNull()
+    {
+        return GetValRaw() == 0;
     }
 
     uint64_t GetValRaw() const

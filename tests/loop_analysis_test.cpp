@@ -728,7 +728,7 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     auto i6 = i5->GetNext();
     auto i7 = g.GetBasicBlock(F)->GetFirstPhi();
 
-    ASSERT_EQ(c0->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c0->IsConst());
     CheckInputs(c0, {});
     CheckUsers(c0, { { i7->GetId(), -1 },
                      { i6->GetId(), -1 },

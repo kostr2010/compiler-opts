@@ -229,15 +229,15 @@ TEST(TestInlining, Example1)
     ASSERT_NE(p0->GetNext(), nullptr);
     auto c0 = p0->GetNext();
     auto C0 = c0->GetId();
-    ASSERT_EQ(c0->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c0->IsConst());
     ASSERT_NE(c0->GetNext(), nullptr);
     auto c1 = c0->GetNext();
     auto C1 = c1->GetId();
-    ASSERT_EQ(c1->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c1->IsConst());
     ASSERT_NE(c1->GetNext(), nullptr);
     auto c2 = c1->GetNext();
     auto C2 = c2->GetId();
-    ASSERT_EQ(c2->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c2->IsConst());
     ASSERT_EQ(c2->GetNext(), nullptr);
     ASSERT_EQ(C2, start->GetLastInst()->GetId());
 
@@ -437,15 +437,15 @@ TEST(TestInlining, Example2)
     ASSERT_NE(p0->GetNext(), nullptr);
     auto c0 = p0->GetNext();
     auto C0 = c0->GetId();
-    ASSERT_EQ(c0->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c0->IsConst());
     ASSERT_NE(c0->GetNext(), nullptr);
     auto c1 = c0->GetNext();
     auto C1 = c1->GetId();
-    ASSERT_EQ(c1->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c1->IsConst());
     ASSERT_NE(c1->GetNext(), nullptr);
     auto c2 = c1->GetNext();
     auto C2 = c2->GetId();
-    ASSERT_EQ(c2->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c2->IsConst());
     ASSERT_EQ(c2->GetNext(), nullptr);
     ASSERT_EQ(C2, start->GetLastInst()->GetId());
 
@@ -634,15 +634,15 @@ TEST(TestInlining, Example3)
     ASSERT_NE(p0->GetNext(), nullptr);
     auto c0 = p0->GetNext();
     auto C0 = c0->GetId();
-    ASSERT_EQ(c0->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c0->IsConst());
     ASSERT_NE(c0->GetNext(), nullptr);
     auto c1 = c0->GetNext();
     auto C1 = c1->GetId();
-    ASSERT_EQ(c1->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c1->IsConst());
     ASSERT_NE(c1->GetNext(), nullptr);
     auto c2 = c1->GetNext();
     auto C2 = c2->GetId();
-    ASSERT_EQ(c2->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c2->IsConst());
     ASSERT_EQ(c2->GetNext(), nullptr);
     ASSERT_EQ(C2, start->GetLastInst()->GetId());
 

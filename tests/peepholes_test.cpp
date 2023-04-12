@@ -57,7 +57,7 @@ TEST(TestPeepholes, FoldADD_1)
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
     auto c = bb_start->GetFirstInst();
-    ASSERT_EQ(c->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c->IsConst());
     ASSERT_EQ(c->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 2U);
     ASSERT_EQ(c->GetNext(), nullptr);
@@ -104,7 +104,7 @@ TEST(TestPeepholes, FoldADD_2)
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
     auto c = bb_start->GetFirstInst();
-    ASSERT_EQ(c->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c->IsConst());
     ASSERT_EQ(c->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 2U);
     ASSERT_EQ(c->GetNext(), nullptr);
@@ -817,7 +817,7 @@ TEST(TestPeepholes, FoldXOR_1)
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
     auto c = bb_start->GetFirstInst();
-    ASSERT_EQ(c->GetOpcode(), Inst::Opcode::CONST);
+    ASSERT_TRUE(c->IsConst());
     ASSERT_EQ(c->GetDataType(), Inst::DataType::INT);
     ASSERT_EQ(static_cast<ConstantOp*>(c)->GetValInt(), 28);
     ASSERT_EQ(c->GetNext(), nullptr);

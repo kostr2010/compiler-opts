@@ -1,9 +1,9 @@
 #include "inst.h"
 #include "bb.h"
 
-Input Inst::GetInput(size_t idx)
+Input Inst::GetInput(size_t idx) const
 {
-    assert(idx < inputs_.size());
+    assert(idx < GetNumInputs());
 
     return inputs_[idx];
 }
@@ -11,7 +11,7 @@ Input Inst::GetInput(size_t idx)
 void Inst::SetInput(size_t idx, Inst* inst)
 {
     assert(inst != nullptr);
-    assert(idx < inputs_.size());
+    assert(idx < GetNumInputs());
 
     inst->users_.push_back(User(this, idx));
     inputs_[idx] = Input(inst, inst->GetBasicBlock());
@@ -71,9 +71,9 @@ size_t Inst::AddInput(Inst* inst, BasicBlock* bb)
     assert(inst != nullptr);
     assert(bb != nullptr);
     assert(HasDynamicOperands());
-    assert(inputs_.size() + 1 < MAX_INPUTS);
+    assert(GetNumInputs() + 1 < MAX_INPUTS);
 
-    size_t idx = inputs_.size();
+    size_t idx = GetNumInputs();
 
     inst->AddUser(this);
     inputs_.emplace_back(Input(inst, bb));
@@ -86,9 +86,9 @@ size_t Inst::AddInput(const Input& input)
     assert(input.GetInst() != nullptr);
     assert(input.GetSourceBB() != nullptr);
     assert(HasDynamicOperands());
-    assert(inputs_.size() + 1 < MAX_INPUTS);
+    assert(GetNumInputs() + 1 < MAX_INPUTS);
 
-    size_t idx = inputs_.size();
+    size_t idx = GetNumInputs();
 
     input.GetInst()->AddUser(this);
     inputs_.push_back(input);
@@ -96,18 +96,17 @@ size_t Inst::AddInput(const Input& input)
     return idx;
 }
 
-void Inst::ReserveInputs(size_t n)
-{
-    inputs_.reserve(n);
-}
-
 void Inst::ClearInputs()
 {
+    assert(HasDynamicOperands());
+
     inputs_.clear();
 }
 
 void Inst::RemoveInput(const Input& input)
 {
+    assert(HasDynamicOperands());
+
     std::erase_if(inputs_, [input](const Input& i) {
         return (i.GetSourceBB()->GetId() == input.GetSourceBB()->GetId() &&
                 i.GetInst()->GetId() == input.GetInst()->GetId());
@@ -132,6 +131,7 @@ void Inst::ReplaceInput(Inst* old_inst, Inst* new_inst)
 
 void Inst::ClearInput(Inst* old_inst)
 {
+    assert(!HasDynamicOperands());
     assert(old_inst != nullptr);
 
     auto it = std::find_if(inputs_.begin(), inputs_.end(), [old_inst](const Input& i) {
@@ -166,12 +166,12 @@ bool Inst::HasDynamicOperands() const
 
 size_t Inst::GetNumInputs() const
 {
-    constexpr std::array<size_t, Inst::Opcode::N_OPCODES> NUM_INPUTS{
-#define GET_FLAGS(OP, TYPE, FLAGS, ...) get_num_inputs<TYPE>(),
-        INSTRUCTION_LIST(GET_FLAGS)
-#undef GET_FLAGS
-    };
-    return NUM_INPUTS[opcode_];
+    return inputs_.size();
+}
+
+size_t Inst::GetNumUsers() const
+{
+    return users_.size();
 }
 
 void Inst::AddUser(Inst* inst)
@@ -248,6 +248,11 @@ bool Inst::IsParam() const
 bool Inst::IsCall() const
 {
     return HasFlag(Inst::Flags::CALL);
+}
+
+bool Inst::IsCheck() const
+{
+    return HasFlag(Inst::Flags::CHECK);
 }
 
 bool Inst::IsReturn() const
