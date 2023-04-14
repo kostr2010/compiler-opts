@@ -28,6 +28,18 @@ static void CheckInputs(Inst* inst, std::set<std::pair<IdType, IdType> > expecte
 
 TEST(TestCheckElimination, TestSameCheckSameInput)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -81,6 +93,18 @@ TEST(TestCheckElimination, TestSameCheckSameInput)
 
 TEST(TestCheckElimination, TestSameCheckDiffInput)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -152,6 +176,18 @@ TEST(TestCheckElimination, TestSameCheckDiffInput)
 
 TEST(TestCheckElimination, TestDiffCheckSameInput)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -214,6 +250,18 @@ TEST(TestCheckElimination, TestDiffCheckSameInput)
 
 TEST(TestCheckElimination, TestDiffCheckDiffInput)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -285,6 +333,24 @@ TEST(TestCheckElimination, TestDiffCheckDiffInput)
 
 TEST(TestCheckElimination, TestMultipleSameCheckSameInput)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   B   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -353,6 +419,24 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInput)
 
 TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
 {
+    /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
+    +---+     +-------+
+    | C | <-- |   A   |
+    +---+     +-------+
+                |
+                |
+                v
+              +-------+
+              |   B   |
+              +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -439,6 +523,24 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
 
 TEST(TestCheckElimination, TestCheckSizeEquivalence)
 {
+    /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
+    +---+     +-------+
+    | C | <-- |   A   |
+    +---+     +-------+
+                |
+                |
+                v
+              +-------+
+              |   B   |
+              +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -548,6 +650,18 @@ TEST(TestCheckElimination, TestCheckSizeEquivalence)
 
 TEST(TestCheckElimination, TestRemoveRedundantChecks)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -640,6 +754,18 @@ TEST(TestCheckElimination, TestRemoveRedundantChecks)
 
 TEST(TestCheckElimination, TestWithPeepholes)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -672,6 +798,18 @@ TEST(TestCheckElimination, TestWithPeepholes)
 
 TEST(TestCheckElimination, TestNoRemoveNotEquivalent)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 

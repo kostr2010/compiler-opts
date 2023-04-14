@@ -16,9 +16,28 @@ TEST(BasicTests, Example1)
     //     return res;
     // }
 
+    /*
+               +-------+
+               | START |
+               +-------+
+                 |
+                 |
+                 v
+    +----+     +-------+
+    | b2 | <-- |  b0   | <+
+    +----+     +-------+  |
+                 |        |
+                 |        |
+                 v        |
+               +-------+  |
+               |  b1   | -+
+               +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
+    auto START = Graph::BB_START_ID;
     auto p0 = b.NewParameter();
 
     auto c0 = b.NewConst(1U); // res{1U}
@@ -38,14 +57,14 @@ TEST(BasicTests, Example1)
     auto b2 = b.NewBlock();
     auto i5 = b.NewInst<Inst::Opcode::RETURN>();
 
-    b.SetInputs(i0, { { c1, Graph::BB_START_ID }, { i4, b1 } });
+    b.SetInputs(i0, { { c1, START }, { i4, b1 } });
     b.SetInputs(i2, i0, p0);
-    b.SetInputs(i1, { { c0, Graph::BB_START_ID }, { i3, b1 } });
+    b.SetInputs(i1, { { c0, START }, { i3, b1 } });
     b.SetInputs(i3, i1, i0);
     b.SetInputs(i4, i0);
     b.SetInputs(i5, i1);
 
-    b.SetSuccessors(Graph::BB_START_ID, { b0 });
+    b.SetSuccessors(START, { b0 });
     b.SetSuccessors(b0, { b1, b2 });
     b.SetSuccessors(b1, { b0 });
     b.SetSuccessors(b2, {});

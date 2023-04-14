@@ -11,8 +11,46 @@ static inline char IdToChar(IdType id)
 
 TEST(TestRPO, Example1)
 {
+    /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
+              +-------+
+              |   A   |
+              +-------+
+                |
+                |
+                v
+    +---+     +-------+
+    | C | <-- |   B   |
+    +---+     +-------+
+      |         |
+      |         |
+      |         v
+      |       +-------+     +---+
+      |       |   F   | --> | G |
+      |       +-------+     +---+
+      |         |             |
+      |         |             |
+      |         v             |
+      |       +-------+       |
+      |       |   E   |       |
+      |       +-------+       |
+      |         |             |
+      |         |             |
+      |         v             |
+      |       +-------+       |
+      +-----> |   D   | <-----+
+              +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
+
+    auto START = Graph::BB_START_ID;
 
     auto A = b.NewBlock();
     auto B = b.NewBlock();
@@ -22,7 +60,7 @@ TEST(TestRPO, Example1)
     auto F = b.NewBlock();
     auto G = b.NewBlock();
 
-    b.SetSuccessors(Graph::BB_START_ID, { A });
+    b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
     b.SetSuccessors(B, { C, F });
     b.SetSuccessors(C, { D });
@@ -48,8 +86,76 @@ TEST(TestRPO, Example1)
 
 TEST(TestRPO, Example2)
 {
+    /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
+              +-------+
+              |   A   |
+              +-------+
+                |
+                |
+                v
+              +-------+
+      +-----> |   B   | -+
+      |       +-------+  |
+      |         |        |
+      |         |        |
+      |         v        |
+      |       +-------+  |
+      |       |   J   |  |
+      |       +-------+  |
+      |         |        |
+      |         |        |
+      |         v        |
+      |       +-------+  |
+      |    +> |   C   | <+
+      |    |  +-------+
+      |    |    |
+      |    |    |
+      |    |    v
+      |    |  +-------+
+      |    +- |   D   |
+      |       +-------+
+      |         |
+      |         |
+      |         v
+      |       +-------+
+      |       |   E   | <+
+      |       +-------+  |
+      |         |        |
+      |         |        |
+      |         v        |
+      |       +-------+  |
+      |       |   F   | -+
+      |       +-------+
+      |         |
+      |         |
+      |         v
+    +---+     +-------+
+    | H | <-- |   G   |
+    +---+     +-------+
+                |
+                |
+                v
+              +-------+
+              |   I   |
+              +-------+
+                |
+                |
+                v
+              +-------+
+              |   K   |
+              +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
+
+    auto START = Graph::BB_START_ID;
 
     auto A = b.NewBlock();
     auto B = b.NewBlock();
@@ -63,7 +169,7 @@ TEST(TestRPO, Example2)
     auto J = b.NewBlock();
     auto K = b.NewBlock();
 
-    b.SetSuccessors(Graph::BB_START_ID, { A });
+    b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
     b.SetSuccessors(B, { C, J });
     b.SetSuccessors(C, { D });
@@ -93,8 +199,57 @@ TEST(TestRPO, Example2)
 
 TEST(TestRPO, Example3)
 {
+    /*
+
+           +----------------------------+
+           |                            |
+           |                 +-------+  |
+           |                 | START |  |
+           |                 +-------+  |
+           |                   |        |
+           |                   |        |
+           |                   v        |
+           |                 +-------+  |
+           |                 |   A   |  |
+           |                 +-------+  |
+           |                   |        |
+           |                   |        |
+           |                   v        |
+         +---+     +---+     +-------+  |
+         | F | <-- | E | <-- |   B   | <+
+         +---+     +---+     +-------+
+           |         |         |
+           |         |         |
+           v         |         v
+         +---+       |       +-------+
+      +- | H |       |       |   C   | <+
+      |  +---+       |       +-------+  |
+      |    |         |         |        |
+      |    |         |         |        |
+      |    |         |         v        |
+      |    |         |       +-------+  |
+      |    |         +-----> |   D   |  |
+      |    |                 +-------+  |
+      |    |                   |        |
+      |    |                   |        |
+      |    |                   v        |
+      |    |                 +-------+  |
+      |    +---------------> |   G   | -+
+      |                      +-------+
+      |                        |
+      |                        |
+      |                        v
+      |                      +-------+
+      |                      |   I   |
+      |                      +-------+
+      |                        ^
+      +------------------------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
+
+    auto START = Graph::BB_START_ID;
 
     auto A = b.NewBlock();
     auto B = b.NewBlock();
@@ -106,7 +261,7 @@ TEST(TestRPO, Example3)
     auto H = b.NewBlock();
     auto I = b.NewBlock();
 
-    b.SetSuccessors(Graph::BB_START_ID, { A });
+    b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
     b.SetSuccessors(B, { E, C });
     b.SetSuccessors(C, { D });

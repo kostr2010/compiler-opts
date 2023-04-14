@@ -31,6 +31,18 @@ static void CheckInputs(Inst* inst, std::set<std::pair<IdType, IdType> > expecte
 
 TEST(TestDCE, Example1)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -84,6 +96,18 @@ TEST(TestDCE, Example1)
 
 TEST(TestDCE, Example2)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -132,6 +156,18 @@ TEST(TestDCE, Example2)
 
 TEST(TestDCE, Example3)
 {
+    /*
+    +-------+
+    | START |
+    +-------+
+      |
+      |
+      v
+    +-------+
+    |   A   |
+    +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
@@ -202,6 +238,24 @@ TEST(TestDCE, Example3)
 
 TEST(TestDCE, Example4)
 {
+    /*
+    +---+     +-------+
+    | B | <-- | START |
+    +---+     +-------+
+      |         |
+      |         |
+      |         v
+      |       +-------+
+      |       |   A   |
+      |       +-------+
+      |         |
+      |         |
+      |         v
+      |       +-------+
+      +-----> |   C   |
+              +-------+
+    */
+
     Graph g;
     GraphBuilder b(&g);
 
