@@ -5,7 +5,7 @@
 
 bool LinearOrder::RunPass()
 {
-    // Markers markers = { marking::MarkerFactory::AcquireMarker() };
+    Markers markers = { marking::MarkerFactory::AcquireMarker() };
 
     ResetState();
     RunPass_(graph_->GetStartBasicBlock());

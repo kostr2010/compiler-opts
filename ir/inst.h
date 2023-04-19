@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "flag.h"
+#include "bit_flag.h"
 #include "ir_isa.h"
 #include "macros.h"
 #include "markable.h"
@@ -99,7 +99,7 @@ class Inst : public marking::Markable
     };
 
     using FlagType = uint8_t;
-    using NoDCE = Flag<FlagType>;
+    using NoDCE = BitFlag<FlagType>;
     using Symmetry = NoDCE::Next;
     using Call = Symmetry::Next;
     using Check = Call::Next;
@@ -107,10 +107,10 @@ class Inst : public marking::Markable
   public:
     enum Flags : FlagType
     {
-        NO_DCE = NoDCE::Value(),
-        SYMMETRY = Symmetry::Value(),
-        CALL = Call::Value(),
-        CHECK = Check::Value(),
+        NO_DCE = NoDCE(),
+        SYMMETRY = Symmetry(),
+        CALL = Call(),
+        CHECK = Check(),
     };
 
     enum Opcode : uint8_t
