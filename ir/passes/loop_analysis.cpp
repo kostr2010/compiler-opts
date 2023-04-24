@@ -2,7 +2,7 @@
 #include "loop_analysis.h"
 #include "bb.h"
 #include "graph.h"
-#include "marker_factory.h"
+#include "marker/marker_factory.h"
 
 #include <algorithm>
 
@@ -11,8 +11,8 @@ bool LoopAnalysis::RunPass()
     ResetState();
     graph_->GetAnalyser()->GetValidPass<DomTree>();
 
-    MarkersBckEdges markers_bck = { marking::MarkerFactory::AcquireMarker(),
-                                    marking::MarkerFactory::AcquireMarker() };
+    MarkersBckEdges markers_bck = { marker::MarkerFactory::AcquireMarker(),
+                                    marker::MarkerFactory::AcquireMarker() };
 
     CollectBackEdges(graph_->GetStartBasicBlock(), markers_bck);
     SplitBackEdges();
@@ -67,7 +67,7 @@ void LoopAnalysis::PopulateLoops()
 void LoopAnalysis::PopulateLoop(Loop* loop)
 {
     if (loop->IsReducible()) {
-        MarkersPopulate markers = { marking::MarkerFactory::AcquireMarker() };
+        MarkersPopulate markers = { marker::MarkerFactory::AcquireMarker() };
 
         loop->GetHeader()->SetMark(&markers[MarksPopulate::GREEN]);
 

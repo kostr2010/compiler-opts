@@ -1,11 +1,11 @@
 #include "dce.h"
 #include "bb.h"
 #include "graph.h"
-#include "marker_factory.h"
+#include "marker/marker_factory.h"
 
 bool DCE::RunPass()
 {
-    Markers markers = { marking::MarkerFactory::AcquireMarker() };
+    Markers markers = { marker::MarkerFactory::AcquireMarker() };
 
     Mark(markers);
     Sweep(markers);

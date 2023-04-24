@@ -14,7 +14,7 @@ class DCE : public Pass
         VISITED = 0,
         N_MARKS,
     };
-    using Markers = marking::Markers<Marks::N_MARKS>;
+    using Markers = marker::Markers<Marks::N_MARKS>;
 
     DCE(Graph* graph) : Pass(graph)
     {
