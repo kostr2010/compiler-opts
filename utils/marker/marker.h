@@ -7,9 +7,9 @@
 
 #include "macros.h"
 
-namespace marking {
+namespace marker {
 
-// RAII class for marking. acquired using MarkerFactory and released upon scope end
+// RAII class for marker. acquired using MarkerFactory and released upon scope end
 class Marker
 {
     friend class MarkerFactory;

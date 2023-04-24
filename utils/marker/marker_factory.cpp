@@ -1,6 +1,6 @@
 #include "marker_factory.h"
 
-namespace marking {
+namespace marker {
 
 Marker MarkerFactory::AcquireMarker()
 {

@@ -8,7 +8,7 @@
 #include "marker.h"
 #include "marking_params.h"
 
-namespace marking {
+namespace marker {
 
 class MarkerFactory
 {

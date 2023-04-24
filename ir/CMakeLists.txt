@@ -19,6 +19,7 @@ add_library(passes SHARED
 )
 
 target_include_directories(passes PUBLIC ${CMAKE_SOURCE_DIR}/utils ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(passes marker)
 
 add_library(ir SHARED
     bb.cpp
@@ -28,10 +29,7 @@ add_library(ir SHARED
     inst.cpp
     loop.cpp
     analyser.cpp
-    markable.cpp
-    marker.cpp
-    marker_factory.cpp
 )
 
-target_link_libraries(ir passes)
+target_link_libraries(ir passes marker)
 target_include_directories(ir PUBLIC ${CMAKE_SOURCE_DIR}/utils ${CMAKE_CURRENT_SOURCE_DIR})

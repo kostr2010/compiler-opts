@@ -20,14 +20,14 @@ class LoopAnalysis : public Pass
         BLACK,
         N_MARKS_BACKEDGES,
     };
-    using MarkersBckEdges = marking::Markers<MarksBckEdges::N_MARKS_BACKEDGES>;
+    using MarkersBckEdges = marker::Markers<MarksBckEdges::N_MARKS_BACKEDGES>;
 
     enum MarksPopulate
     {
         GREEN = 0,
         N_MARKS_POPULATE,
     };
-    using MarkersPopulate = marking::Markers<MarksPopulate::N_MARKS_POPULATE>;
+    using MarkersPopulate = marker::Markers<MarksPopulate::N_MARKS_POPULATE>;
 
     LoopAnalysis(Graph* graph) : Pass(graph)
     {

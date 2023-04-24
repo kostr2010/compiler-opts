@@ -17,7 +17,7 @@
 #include "bit_flag.h"
 #include "ir_isa.h"
 #include "macros.h"
-#include "markable.h"
+#include "marker/markable.h"
 #include "typedefs.h"
 
 class Inst;
@@ -61,7 +61,7 @@ class User
 INSTRUCTION_TYPES(FORWARD_DECL);
 #undef FORWARD_DECL
 
-class Inst : public marking::Markable
+class Inst : public marker::Markable
 {
   protected:
     static constexpr size_t MAX_INPUTS = std::numeric_limits<uint8_t>::max();

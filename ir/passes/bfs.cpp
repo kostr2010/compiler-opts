@@ -1,7 +1,7 @@
 #include "bfs.h"
 #include "bb.h"
 #include "graph.h"
-#include "marker_factory.h"
+#include "marker/marker_factory.h"
 
 #include <list>
 
@@ -9,7 +9,7 @@ bool BFS::RunPass()
 {
     ResetState();
 
-    Markers markers = { marking::MarkerFactory::AcquireMarker() };
+    Markers markers = { marker::MarkerFactory::AcquireMarker() };
 
     std::list<BasicBlock*> queue{};
 

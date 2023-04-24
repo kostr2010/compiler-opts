@@ -1,11 +1,11 @@
 #include "rpo.h"
 #include "bb.h"
 #include "graph.h"
-#include "marker_factory.h"
+#include "marker/marker_factory.h"
 
 bool RPO::RunPass()
 {
-    Markers markers = { marking::MarkerFactory::AcquireMarker() };
+    Markers markers = { marker::MarkerFactory::AcquireMarker() };
 
     ResetState();
     RunPass_(graph_->GetStartBasicBlock(), markers);

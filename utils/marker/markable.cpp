@@ -1,6 +1,6 @@
 #include "markable.h"
 
-namespace marking {
+namespace marker {
 
 Markable::Markable()
 {

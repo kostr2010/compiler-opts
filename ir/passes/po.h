@@ -15,7 +15,7 @@ class PO : public Pass
         VISITED = 0,
         N_MARKS,
     };
-    using Markers = marking::Markers<Marks::N_MARKS>;
+    using Markers = marker::Markers<Marks::N_MARKS>;
 
     PO(Graph* graph) : Pass(graph)
     {

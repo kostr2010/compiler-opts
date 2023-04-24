@@ -1,7 +1,7 @@
 #include "marker.h"
 #include "marker_factory.h"
 
-namespace marking {
+namespace marker {
 
 Marker::Marker(size_t slot, MarkerGenT gen) : slot_{ slot }, gen_{ gen }
 {

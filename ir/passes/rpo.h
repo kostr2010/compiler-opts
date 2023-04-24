@@ -15,7 +15,7 @@ class RPO : public Pass
         VISITED = 0,
         N_MARKS,
     };
-    using Markers = marking::Markers<Marks::N_MARKS>;
+    using Markers = marker::Markers<Marks::N_MARKS>;
 
     RPO(Graph* graph) : Pass(graph)
     {

@@ -12,12 +12,12 @@
 #include "inst.h"
 #include "loop.h"
 #include "macros.h"
-#include "markable.h"
+#include "marker/markable.h"
 #include "typedefs.h"
 
 class Graph;
 
-class BasicBlock : public marking::Markable
+class BasicBlock : public marker::Markable
 {
   public:
     BasicBlock(const IdType& id) : id_(id)
