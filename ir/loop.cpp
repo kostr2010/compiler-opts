@@ -41,6 +41,8 @@ void Loop::AddBlock(BasicBlock* bb)
 
 void Loop::AddBackEdge(BasicBlock* bb)
 {
+    assert(bb != nullptr);
+
     back_edges_.push_back(bb);
     if (!header_->Dominates(bb)) {
         is_reducible_ = false;

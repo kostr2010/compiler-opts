@@ -116,10 +116,27 @@ void GraphBuilder::SetCond(IdType id, Conditional::Type c)
     }
 }
 
+using NumBranchesDefault =
+    std::integral_constant<isa::flag::ValueT,
+                           isa::flag::Flag<isa::flag::Type::BRANCH>::Value::ONE_SUCCESSOR>;
+
+template <isa::inst::Opcode OP>
+using GetNumBranches = isa::FlagValueOr<OP, isa::flag::Type::BRANCH, NumBranchesDefault::value>;
+
+template <typename INST, typename ACC>
+struct BranchNumAccumulator
+{
+    using BranchNum = GetNumBranches<INST::opcode>;
+    static constexpr isa::flag::ValueT value =
+        std::conditional_t < ACC::value<BranchNum::value, BranchNum, ACC>::value;
+};
+
+using MaxBranchNum = type_sequence::Accumulate<isa::ISA, BranchNumAccumulator, NumBranchesDefault>;
+
 void GraphBuilder::ConstructCFG()
 {
     for (auto& [bb_id, succs] : bb_succ_map_) {
-        assert(succs.size() <= 2);
+        assert(succs.size() <= MaxBranchNum::value);
         auto bb = bb_map_.at(bb_id);
         for (auto succ : succs) {
             graph_->AddEdge(bb, bb_map_.at(succ));
@@ -175,9 +192,6 @@ void GraphBuilder::ConstructDFG()
 
 bool GraphBuilder::RunChecks()
 {
-    // FIXME:
-    return true;
-
     if (!(cfg_constructed || dfg_constructed)) {
         LOG_ERROR("can't check graph without CFG or DFG!");
     }
@@ -186,11 +200,52 @@ bool GraphBuilder::RunChecks()
     auto analyser = graph_->GetAnalyser();
     auto rpo = analyser->GetValidPass<RPO>()->GetBlocks();
     for (auto bb : rpo) {
+        for (size_t i = 0; i < bb->GetNumSuccessors(); ++i) {
+            if (bb->GetSuccessor(i) == nullptr) {
+                LOG_ERROR("BB: " << bb->GetId()
+                                 << ", number of successors inferred from the last instruction is "
+                                 << bb->GetNumSuccessors() << ". But " << i
+                                 << "'th successor is nullptr!");
+                return false;
+            }
+        }
+
+        for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
+            for (size_t i = 0; i < inst->GetNumInputs(); ++i) {
+                auto input = inst->GetInput(i);
+                if (input.GetInst() == nullptr) {
+                    if (inst->IsDynamic()) {
+                        LOG_ERROR("BB: " << bb->GetId() << ", INST_ID: " << inst->GetId()
+                                         << ", number of inputs inferred from  input's size is "
+                                         << inst->GetNumInputs() << ". But " << i
+                                         << "'th input is nullptr!");
+                    } else {
+                        LOG_ERROR("BB: " << bb->GetId() << ", INST_ID: " << inst->GetId()
+                                         << ", number of inputs inferred from the ISA is "
+                                         << inst->GetNumInputs() << ". But " << i
+                                         << "'th input is nullptr!");
+                    }
+
+                    return false;
+                }
+            }
+
+            for (const auto& user : inst->GetUsers()) {
+                if (user.GetInst() == nullptr) {
+                    LOG_ERROR("BB: " << bb->GetId() << ", INST_ID: " << inst->GetId() << ", "
+                                     << user.GetIdx() << "'th user is nullptr!");
+
+                    return false;
+                }
+            }
+        }
+
         for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetPrev()) {
             if (phi->GetNumInputs() > bb->GetNumPredecessors()) {
                 LOG_ERROR("BB: " << bb->GetId() << ", INST_ID: " << phi->GetId()
-                                 << ", number of phi inputs > number of BB predecessors");
-                LOG(phi->GetNumInputs() << " " << bb->GetNumPredecessors() << "\n");
+                                 << ", number of phi inputs(" << phi->GetNumInputs()
+                                 << ") > number of BB predecessors(" << bb->GetNumPredecessors()
+                                 << ")");
                 return false;
             }
 

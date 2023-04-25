@@ -124,7 +124,44 @@ void Inlining::UpdateDFGReturns()
 
 void Inlining::MoveConstants()
 {
-    graph_->AppendBasicBlock(graph_->GetStartBasicBlock(), callee_start_bb_);
+    auto first = graph_->GetStartBasicBlock();
+    auto second = callee_start_bb_;
+
+    assert(first != nullptr);
+    assert(second != nullptr);
+
+    assert(first->GetFirstPhi() == nullptr);
+    assert(second->GetFirstPhi() == nullptr);
+
+    auto second_last_inst = second->GetLastInst();
+    auto first_last_inst = first->GetLastInst();
+
+    auto second_first_inst = std::unique_ptr<InstBase>{ second->TransferInst() };
+
+    assert(second_first_inst->GetPrev() == nullptr);
+    // delete parameters
+    while (second_first_inst != nullptr && second_first_inst->IsParam()) {
+        second_first_inst.reset(second_first_inst->ReleaseNext());
+    }
+
+    if (second_first_inst != nullptr) {
+        second_first_inst->SetPrev(nullptr);
+
+        assert(second_last_inst != nullptr);
+
+        second_first_inst->SetPrev(first_last_inst);
+        auto inst = second_first_inst.get();
+        while (inst != nullptr) {
+            if (inst->IsConst()) {
+            }
+            assert(inst->IsConst() || inst->IsParam());
+            inst->SetBasicBlock(first);
+            inst = inst->GetNext();
+        }
+
+        first->PushBackInst(std::move(second_first_inst));
+        first->SetLastInst(second_last_inst);
+    }
 }
 
 void Inlining::MoveCalleeBlocks()
@@ -139,8 +176,9 @@ void Inlining::MoveCalleeBlocks()
 
 void Inlining::InsertInlinedGraph()
 {
-    auto call_cont_block = graph_->SplitBasicBlock(cur_call_);
-    auto call_block = cur_call_->GetBasicBlock();
+    auto call_block = graph_->SplitBasicBlock(cur_call_);
+    assert(call_block->GetNumSuccessors() == 1);
+    auto call_cont_block = call_block->GetSuccessor(0);
 
     // remove call instruction by hand
     for (const auto& input : cur_call_->GetInputs()) {
@@ -148,7 +186,6 @@ void Inlining::InsertInlinedGraph()
     }
     call_block->UnlinkInst(cur_call_);
 
-    assert(call_block->GetNumSuccessors() == 1);
     assert(call_block->GetSuccessor(0) == call_cont_block);
     assert(call_cont_block->GetNumPredecessors() == 1);
     assert(call_cont_block->GetPredecessor(0) == call_block);
@@ -157,13 +194,12 @@ void Inlining::InsertInlinedGraph()
         call_cont_block->PushBackPhi(std::move(ret_phi_));
     }
 
-    graph_->RemoveEdge(call_block, call_cont_block);
+    graph_->ReplaceSuccessor(call_block, call_cont_block, callee_start_bb_);
 
-    assert(call_block->HasNoSuccessors());
-    assert(call_cont_block->HasNoPredecessors());
-    assert(callee_start_bb_->HasNoPredecessors());
-
-    graph_->AddEdge(call_block, callee_start_bb_);
+    assert(call_block->GetNumSuccessors() == 1);
+    assert(call_block->GetSuccessor(0)->GetId() == callee_start_bb_->GetId());
+    assert(callee_start_bb_->GetNumPredecessors() == 1);
+    assert(callee_start_bb_->GetPredecessor(0)->GetId() == call_block->GetId());
 
     for (const auto& ret_bb : ret_bbs_) {
         graph_->AddEdge(ret_bb, call_cont_block);

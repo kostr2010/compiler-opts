@@ -101,17 +101,26 @@ TEST(TestLoopAnalysis, Example1)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(2);
+
     auto A = b.NewBlock();
     auto B = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto C = b.NewBlock();
     auto D = b.NewBlock();
+    (void)b.NewInst<isa::inst::Opcode::RETURN_VOID>();
     auto E = b.NewBlock();
     auto F = b.NewBlock();
+    auto IF1 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto G = b.NewBlock();
+
+    b.SetInputs(IF0, C0, C1);
+    b.SetInputs(IF1, C0, C1);
 
     b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
-    b.SetSuccessors(B, { C, F });
+    b.SetSuccessors(B, { F, C });
     b.SetSuccessors(C, { D });
     b.SetSuccessors(D, {});
     b.SetSuccessors(E, { D });
@@ -206,26 +215,39 @@ TEST(TestLoopAnalysis, Example2)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(2);
+
     auto A = b.NewBlock();
     auto B = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto C = b.NewBlock();
     auto D = b.NewBlock();
+    auto IF1 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto E = b.NewBlock();
     auto F = b.NewBlock();
+    auto IF2 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto G = b.NewBlock();
+    auto IF3 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto H = b.NewBlock();
     auto I = b.NewBlock();
     auto J = b.NewBlock();
     auto K = b.NewBlock();
+    (void)b.NewInst<isa::inst::Opcode::RETURN_VOID>();
+
+    b.SetInputs(IF0, C0, C1);
+    b.SetInputs(IF1, C0, C1);
+    b.SetInputs(IF2, C0, C1);
+    b.SetInputs(IF3, C0, C1);
 
     b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
-    b.SetSuccessors(B, { C, J });
+    b.SetSuccessors(B, { J, C });
     b.SetSuccessors(C, { D });
     b.SetSuccessors(D, { E, C });
     b.SetSuccessors(E, { F });
-    b.SetSuccessors(F, { E, G });
-    b.SetSuccessors(G, { H, I });
+    b.SetSuccessors(F, { G, E });
+    b.SetSuccessors(G, { I, H });
     b.SetSuccessors(H, { B });
     b.SetSuccessors(I, { K });
     b.SetSuccessors(J, { C });
@@ -244,17 +266,17 @@ TEST(TestLoopAnalysis, Example2)
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
     ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
-    auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
+    auto B_ = g.GetBasicBlock(A)->GetSuccessor(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
 
     ASSERT_EQ(g.GetBasicBlock(J)->GetNumSuccessors(), 1);
-    auto C_ = g.GetBasicBlock(J)->GetSuccessors().at(0);
+    auto C_ = g.GetBasicBlock(J)->GetSuccessor(0);
     CheckPredecessors(C_, { J, B });
     CheckSuccessors(C_, { C });
 
     ASSERT_EQ(g.GetBasicBlock(D)->GetNumSuccessors(), 2);
-    auto E_ = g.GetBasicBlock(D)->GetSuccessors().at(0);
+    auto E_ = g.GetBasicBlock(D)->GetSuccessor(0);
     ASSERT_NE(E_->GetId(), C);
     CheckPredecessors(E_, { D });
     CheckSuccessors(E_, { E });
@@ -346,15 +368,30 @@ TEST(TestLoopAnalysis, Example3)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(2);
+
     auto A = b.NewBlock();
     auto B = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto C = b.NewBlock();
     auto D = b.NewBlock();
     auto E = b.NewBlock();
+    auto IF1 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto F = b.NewBlock();
+    auto IF2 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto G = b.NewBlock();
+    auto IF3 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto H = b.NewBlock();
+    auto IF4 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto I = b.NewBlock();
+    (void)b.NewInst<isa::inst::Opcode::RETURN_VOID>();
+
+    b.SetInputs(IF0, C0, C1);
+    b.SetInputs(IF1, C0, C1);
+    b.SetInputs(IF2, C0, C1);
+    b.SetInputs(IF3, C0, C1);
+    b.SetInputs(IF4, C0, C1);
 
     b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
@@ -380,7 +417,7 @@ TEST(TestLoopAnalysis, Example3)
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
     ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
-    auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
+    auto B_ = g.GetBasicBlock(A)->GetSuccessor(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
 
@@ -444,15 +481,21 @@ TEST(TestLoopAnalysis, Example4)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(2);
     auto A = b.NewBlock();
     auto B = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto C = b.NewBlock();
+    (void)b.NewInst<isa::inst::Opcode::RETURN_VOID>();
     auto D = b.NewBlock();
     auto E = b.NewBlock();
 
+    b.SetInputs(IF0, C0, C1);
+
     b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
-    b.SetSuccessors(B, { C, D });
+    b.SetSuccessors(B, { D, C });
     b.SetSuccessors(C, {});
     b.SetSuccessors(D, { E });
     b.SetSuccessors(E, { B });
@@ -470,7 +513,7 @@ TEST(TestLoopAnalysis, Example4)
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
     ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
-    auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
+    auto B_ = g.GetBasicBlock(A)->GetSuccessor(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
 
@@ -530,18 +573,26 @@ TEST(TestLoopAnalysis, Example5)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(2);
     auto A = b.NewBlock();
     auto B = b.NewBlock();
     auto C = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto D = b.NewBlock();
+    auto IF1 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto E = b.NewBlock();
     auto F = b.NewBlock();
+    (void)b.NewInst<isa::inst::Opcode::RETURN_VOID>();
+
+    b.SetInputs(IF0, C0, C1);
+    b.SetInputs(IF1, C0, C1);
 
     b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
     b.SetSuccessors(B, { C });
     b.SetSuccessors(C, { D, F });
-    b.SetSuccessors(D, { F, E });
+    b.SetSuccessors(D, { E, F });
     b.SetSuccessors(E, { B });
     b.SetSuccessors(F, {});
 
@@ -558,7 +609,7 @@ TEST(TestLoopAnalysis, Example5)
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
     ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
-    auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
+    auto B_ = g.GetBasicBlock(A)->GetSuccessor(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
 
@@ -624,19 +675,29 @@ TEST(TestLoopAnalysis, Example6)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(2);
     auto A = b.NewBlock();
     auto B = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto C = b.NewBlock();
+    auto IF1 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto D = b.NewBlock();
     auto E = b.NewBlock();
     auto F = b.NewBlock();
+    (void)b.NewInst<isa::inst::Opcode::RETURN_VOID>();
     auto G = b.NewBlock();
+    auto IF2 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto H = b.NewBlock();
+
+    b.SetInputs(IF0, C0, C1);
+    b.SetInputs(IF1, C0, C1);
+    b.SetInputs(IF2, C0, C1);
 
     b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
     b.SetSuccessors(B, { C, D });
-    b.SetSuccessors(C, { F, E });
+    b.SetSuccessors(C, { E, F });
     b.SetSuccessors(D, { E });
     b.SetSuccessors(E, { G });
     b.SetSuccessors(F, {});
@@ -656,12 +717,12 @@ TEST(TestLoopAnalysis, Example6)
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
 
     ASSERT_EQ(g.GetBasicBlock(START)->GetNumSuccessors(), 1);
-    auto A_ = g.GetBasicBlock(START)->GetSuccessors().at(0);
+    auto A_ = g.GetBasicBlock(START)->GetSuccessor(0);
     CheckPredecessors(A_, { START });
     CheckSuccessors(A_, { A });
 
     ASSERT_EQ(g.GetBasicBlock(A)->GetNumSuccessors(), 1);
-    auto B_ = g.GetBasicBlock(A)->GetSuccessors().at(0);
+    auto B_ = g.GetBasicBlock(A)->GetSuccessor(0);
     CheckPredecessors(B_, { A });
     CheckSuccessors(B_, { B });
 
@@ -731,11 +792,20 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     GraphBuilder b(&g);
 
     auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(2);
     auto A = b.NewBlock();
     auto B = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto C = b.NewBlock();
+    auto IF1 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto D = b.NewBlock();
+    auto IF2 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
     auto E = b.NewBlock();
+
+    b.SetInputs(IF0, C0, C1);
+    b.SetInputs(IF1, C0, C1);
+    b.SetInputs(IF2, C0, C1);
 
     b.SetSuccessors(START, { E });
     b.SetSuccessors(A, { E });
@@ -755,10 +825,10 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     ASSERT_EQ(start_bb->GetNumSuccessors(), 1);
 
     ASSERT_EQ(g.GetBasicBlock(START)->GetNumSuccessors(), 1);
-    auto H_ = g.GetBasicBlock(START)->GetSuccessors().at(0);
+    auto H_ = g.GetBasicBlock(START)->GetSuccessor(0);
     CheckPredecessors(H_, { START });
     ASSERT_EQ(H_->GetNumSuccessors(), 1);
-    auto H = H_->GetSuccessors().at(0)->GetId();
+    auto H = H_->GetSuccessor(0)->GetId();
     CheckSuccessors(H_, { H });
 
     auto bb = g.GetBasicBlock(H);
@@ -767,11 +837,11 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     CheckPredecessors(bb, { A, H_->GetId() });
 
     ASSERT_EQ(g.GetBasicBlock(H)->GetNumSuccessors(), 1);
-    auto G_ = g.GetBasicBlock(H)->GetSuccessors().at(0);
+    auto G_ = g.GetBasicBlock(H)->GetSuccessor(0);
     CheckSuccessors(bb, { G_->GetId() });
     CheckPredecessors(G_, { H });
     ASSERT_EQ(G_->GetNumSuccessors(), 1);
-    auto G = G_->GetSuccessors().at(0)->GetId();
+    auto G = G_->GetSuccessor(0)->GetId();
     CheckSuccessors(G_, { G });
 
     bb = g.GetBasicBlock(G);
@@ -780,11 +850,11 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     CheckPredecessors(bb, { B, G_->GetId() });
 
     ASSERT_EQ(g.GetBasicBlock(G)->GetNumSuccessors(), 1);
-    auto F_ = g.GetBasicBlock(G)->GetSuccessors().at(0);
+    auto F_ = g.GetBasicBlock(G)->GetSuccessor(0);
     CheckSuccessors(bb, { F_->GetId() });
     CheckPredecessors(F_, { G });
     ASSERT_EQ(F_->GetNumSuccessors(), 1);
-    auto F = F_->GetSuccessors().at(0)->GetId();
+    auto F = F_->GetSuccessor(0)->GetId();
     CheckSuccessors(F_, { F });
 
     bb = g.GetBasicBlock(F);
@@ -793,7 +863,7 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     CheckPredecessors(bb, { C, F_->GetId() });
 
     ASSERT_EQ(g.GetBasicBlock(F)->GetNumSuccessors(), 1);
-    auto E_ = g.GetBasicBlock(F)->GetSuccessors().at(0);
+    auto E_ = g.GetBasicBlock(F)->GetSuccessor(0);
     CheckSuccessors(bb, { E_->GetId() });
     CheckPredecessors(E_, { F });
     CheckSuccessors(E_, { E });
@@ -919,13 +989,17 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
 
     auto B = b.NewBlock();
     auto I2 = b.NewInst<isa::inst::Opcode::ADDI>();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
 
     auto C = b.NewBlock();
     auto I3 = b.NewInst<isa::inst::Opcode::ADDI>();
+    auto IF1 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
 
     auto D = b.NewBlock();
     auto I4 = b.NewInst<isa::inst::Opcode::ADDI>();
 
+    b.SetInputs(IF0, C0, C0);
+    b.SetInputs(IF1, C0, C0);
     b.SetInputs(I0, { { C0, Graph::BB_START_ID }, { I2, B }, { I3, C }, { I4, D } });
     b.SetInputs(I1, { { C0, Graph::BB_START_ID }, { I2, B }, { I3, C } });
     b.SetInputs(I2, C0);
@@ -952,10 +1026,10 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     ASSERT_EQ(start_bb->GetNumSuccessors(), 1);
 
     ASSERT_EQ(g.GetBasicBlock(START)->GetNumSuccessors(), 1);
-    auto I = g.GetBasicBlock(START)->GetSuccessors().at(0);
+    auto I = g.GetBasicBlock(START)->GetSuccessor(0);
     CheckPredecessors(I, { START });
     ASSERT_EQ(I->GetNumSuccessors(), 1);
-    auto F = I->GetSuccessors().at(0)->GetId();
+    auto F = I->GetSuccessor(0)->GetId();
     CheckSuccessors(I, { F });
 
     auto bb = g.GetBasicBlock(F);
@@ -964,11 +1038,11 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     CheckPredecessors(bb, { I->GetId(), D });
 
     ASSERT_EQ(g.GetBasicBlock(F)->GetNumSuccessors(), 1);
-    auto H = g.GetBasicBlock(F)->GetSuccessors().at(0);
+    auto H = g.GetBasicBlock(F)->GetSuccessor(0);
     CheckSuccessors(bb, { H->GetId() });
     CheckPredecessors(H, { F });
     ASSERT_EQ(H->GetNumSuccessors(), 1);
-    auto E = H->GetSuccessors().at(0)->GetId();
+    auto E = H->GetSuccessor(0)->GetId();
     CheckSuccessors(H, { E });
 
     bb = g.GetBasicBlock(E);
@@ -977,7 +1051,7 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     CheckPredecessors(bb, { C, H->GetId() });
 
     ASSERT_EQ(g.GetBasicBlock(E)->GetNumSuccessors(), 1);
-    auto G = g.GetBasicBlock(E)->GetSuccessors().at(0);
+    auto G = g.GetBasicBlock(E)->GetSuccessor(0);
     CheckSuccessors(bb, { G->GetId() });
     CheckPredecessors(G, { E });
     ASSERT_EQ(G->GetNumSuccessors(), 1);
@@ -1048,7 +1122,9 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     auto i0 = g.GetBasicBlock(A)->GetFirstPhi();
     auto i1 = i0->GetNext();
     auto i2 = g.GetBasicBlock(B)->GetFirstInst();
+    auto if0 = i2->GetNext();
     auto i3 = g.GetBasicBlock(C)->GetFirstInst();
+    auto if1 = i3->GetNext();
     auto i4 = g.GetBasicBlock(D)->GetFirstInst();
     auto i5 = g.GetBasicBlock(E)->GetFirstPhi();
     auto i6 = i5->GetNext();
@@ -1060,7 +1136,19 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
                      { i6->GetId(), -1 },
                      { i2->GetId(), 0 },
                      { i3->GetId(), 0 },
-                     { i4->GetId(), 0 } });
+                     { i4->GetId(), 0 },
+                     { if0->GetId(), 0 },
+                     { if0->GetId(), 1 },
+                     { if1->GetId(), 0 },
+                     { if1->GetId(), 1 } });
+
+    ASSERT_EQ(if0->GetOpcode(), isa::inst::Opcode::IF);
+    CheckInputs(if0, { { c0->GetId(), Graph::BB_START_ID }, { c0->GetId(), Graph::BB_START_ID } });
+    CheckUsers(if0, {});
+
+    ASSERT_EQ(if1->GetOpcode(), isa::inst::Opcode::IF);
+    CheckInputs(if1, { { c0->GetId(), Graph::BB_START_ID }, { c0->GetId(), Graph::BB_START_ID } });
+    CheckUsers(if1, {});
 
     ASSERT_EQ(i7->GetOpcode(), isa::inst::Opcode::PHI);
     CheckInputs(i7, { { i4->GetId(), D }, { c0->GetId(), I->GetId() } });

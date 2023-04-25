@@ -126,7 +126,7 @@ void InstBase::ReplaceInput(InstBase* old_inst, InstBase* new_inst)
 }
 
 template <isa::inst::Opcode OP>
-using VregValue = isa::InputValue<typename isa::inst::Inst<OP>::Type, isa::input::Type::DYN>;
+using VregValue = isa::InputValue<typename isa::inst::Inst<OP>::Type, isa::input::Type::VREG>;
 
 size_t InstBase::GetNumInputs() const
 {

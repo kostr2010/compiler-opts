@@ -30,24 +30,20 @@ bool DBE::RemoveEmpty(BasicBlock* bb)
     }
 
     // empty bb can only have 1 successor
-    assert(bb->GetNumSuccessors() <= 1);
+    assert(bb->GetNumSuccessors() == 1);
+    assert(bb->GetSuccessor(0) != nullptr);
+    auto succ = bb->GetSuccessor(0);
 
     auto preds = bb->GetPredecessors();
     for (const auto& pred : preds) {
-        graph_->RemoveEdge(pred, bb);
-    }
-
-    if (!bb->HasNoSuccessors()) {
-        for (const auto& pred : preds) {
-            graph_->AddEdge(pred, bb->GetSuccessor(0));
-        }
-        graph_->RemoveEdge(bb, bb->GetSuccessor(0));
+        graph_->ReplaceSuccessor(pred, bb, succ);
+        graph_->ReplaceSuccessor(bb, succ, nullptr);
     }
 
     assert(bb->HasNoSuccessors());
     assert(bb->HasNoPredecessors());
 
-    graph_->DestroyBasicBlock(bb->GetId());
+    graph_->DestroyBasicBlock(bb);
 
     return true;
 }
@@ -61,7 +57,7 @@ bool DBE::RemoveUnlinked(BasicBlock* bb)
         return false;
     }
 
-    graph_->DestroyBasicBlock(bb->GetId());
+    graph_->DestroyBasicBlock(bb);
 
     return true;
 }

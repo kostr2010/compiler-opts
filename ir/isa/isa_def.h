@@ -59,7 +59,7 @@
     GENERATOR(CALL_STATIC, CALL, (CALL)(NO_DCE), )                                                \
     GENERATOR(PHI, PHI, /* NO FLAGS */, )                                                         \
     GENERATOR(CONST, CONST, /* NO FLAGS */, )                                                     \
-    GENERATOR(PARAM, NO_INPUT, /* NO FLAGS */, )                                                  \
+    GENERATOR(PARAM, NO_INPUT, (NO_DCE), )                                                        \
     GENERATOR(RETURN, UNARY, (BRANCH, NO_SUCCESSORS)(NO_DCE), )                                   \
     GENERATOR(RETURN_VOID, NO_INPUT, (BRANCH, NO_SUCCESSORS)(NO_DCE), )                           \
     GENERATOR(IF_IMM, IF_IMM, (BRANCH, TWO_SUCCESSORS)(NO_DCE), )                                 \

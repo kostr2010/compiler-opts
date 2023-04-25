@@ -200,7 +200,10 @@ TEST(TestDCE, Example3)
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
-    auto c0 = bb_start->GetFirstInst();
+    auto p0 = bb_start->GetFirstInst();
+    ASSERT_NE(p0, nullptr);
+    ASSERT_EQ(p0->GetId(), P0);
+    auto c0 = p0->GetNext();
     ASSERT_NE(c0, nullptr);
     ASSERT_EQ(c0->GetId(), C0);
     auto c1 = c0->GetNext();
@@ -219,6 +222,9 @@ TEST(TestDCE, Example3)
     ASSERT_NE(i4, nullptr);
     ASSERT_EQ(i4->GetId(), I4);
     ASSERT_EQ(i4->GetNext(), nullptr);
+
+    CheckInputs(p0, {});
+    CheckUsers(p0, {});
 
     CheckInputs(c0, {});
     CheckUsers(c0, { { I2, 0 } });
@@ -239,8 +245,14 @@ TEST(TestDCE, Example3)
 TEST(TestDCE, Example4)
 {
     /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
     +---+     +-------+
-    | B | <-- | START |
+    | B | <-- |   D   |
     +---+     +-------+
       |         |
       |         |
@@ -265,6 +277,9 @@ TEST(TestDCE, Example4)
     auto C1 = b.NewConst(2U);
     auto C2 = b.NewConst(3U);
 
+    auto D = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
+
     auto A = b.NewBlock();
     auto I0 = b.NewInst<isa::inst::Opcode::ADD>();
     auto I1 = b.NewInst<isa::inst::Opcode::SUB>();
@@ -280,6 +295,7 @@ TEST(TestDCE, Example4)
     auto I7 = b.NewInst<isa::inst::Opcode::PHI>();
     auto I8 = b.NewInst<isa::inst::Opcode::RETURN>();
 
+    b.SetInputs(IF0, P0, P0);
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, I0, C1);
     b.SetInputs(I2, C0, C1);
@@ -290,7 +306,8 @@ TEST(TestDCE, Example4)
     b.SetInputs(I7, { { I2, B }, { I0, A } });
     b.SetInputs(I8, I6);
 
-    b.SetSuccessors(START, { A, B });
+    b.SetSuccessors(START, { D });
+    b.SetSuccessors(D, { A, B });
     b.SetSuccessors(A, { C });
     b.SetSuccessors(B, { C });
 
@@ -311,6 +328,12 @@ TEST(TestDCE, Example4)
     ASSERT_NE(c1, nullptr);
     ASSERT_EQ(c1->GetId(), C1);
     ASSERT_EQ(c1->GetNext(), nullptr);
+
+    auto bb_d = g.GetBasicBlock(D);
+    ASSERT_NE(bb_d->GetFirstInst(), nullptr);
+    auto if0 = bb_d->GetFirstInst();
+    ASSERT_EQ(if0->GetId(), IF0);
+    ASSERT_EQ(if0->GetNext(), nullptr);
 
     auto bb_a = g.GetBasicBlock(A);
     ASSERT_NE(bb_a->GetFirstInst(), nullptr);
@@ -344,7 +367,10 @@ TEST(TestDCE, Example4)
     CheckUsers(c1, { { I3, 0 }, { I2, 1 }, { I0, 1 } });
 
     CheckInputs(p0, {});
-    CheckUsers(p0, { { I0, 0 } });
+    CheckUsers(p0, { { I0, 0 }, { IF0, 0 }, { IF0, 1 } });
+
+    CheckInputs(if0, { { P0, START }, { P0, START } });
+    CheckUsers(if0, {});
 
     CheckInputs(i0, { { P0, START }, { C1, START } });
     CheckUsers(i0, { { I6, -1 } });

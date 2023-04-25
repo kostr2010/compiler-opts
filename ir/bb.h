@@ -27,7 +27,21 @@ class BasicBlock : public marker::Markable
     }
 
     GETTER(Predecessors, preds_);
-    GETTER(Successors, succs_);
+    // GETTER(Successors, succs_);
+
+    auto GetSuccessors() const
+    {
+        std::vector<BasicBlock*> succ{};
+
+        for (auto bb : succs_) {
+            if (bb != nullptr) {
+                succ.push_back(bb);
+            }
+        }
+
+        return succ;
+    }
+
     GETTER_SETTER(LastInst, InstBase*, last_inst_);
     GETTER_SETTER(LastPhi, InstBase*, last_phi_);
     GETTER_SETTER(Id, IdType, id_);
@@ -41,6 +55,12 @@ class BasicBlock : public marker::Markable
     bool HasNoSuccessors() const;
     size_t GetNumSuccessors() const;
     BasicBlock* GetSuccessor(size_t idx);
+
+    bool IsInSucc(IdType bb_id) const;
+    bool IsInSucc(BasicBlock* bb) const;
+
+    bool IsInPred(IdType bb_id) const;
+    bool IsInPred(BasicBlock* bb) const;
 
     void SetLoop(Loop* loop, bool is_header = false);
     bool IsLoopHeader() const;
@@ -74,13 +94,10 @@ class BasicBlock : public marker::Markable
     friend Graph;
     void SetSucc(BasicBlock* bb, size_t pos = 0);
     void AddSucc(BasicBlock* bb);
-    bool IsInSucc(IdType bb_id) const;
-    bool IsInSucc(BasicBlock* bb) const;
+
     void RemoveSucc(BasicBlock* bb);
 
     void AddPred(BasicBlock* bb);
-    bool IsInPred(IdType bb_id) const;
-    bool IsInPred(BasicBlock* bb) const;
     void RemovePred(BasicBlock* bb);
 
     void ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new);
@@ -91,12 +108,13 @@ class BasicBlock : public marker::Markable
     Loop* loop_ = nullptr;
     bool is_loop_header_ = false;
 
-    using NoBranches =
+    using NumBranchesDefault =
         std::integral_constant<isa::flag::ValueT,
-                               isa::flag::Flag<isa::flag::Type::BRANCH>::Value::NO_SUCCESSORS>;
+                               isa::flag::Flag<isa::flag::Type::BRANCH>::Value::ONE_SUCCESSOR>;
 
     template <isa::inst::Opcode OP>
-    using GetNumBranches = isa::FlagValueOr<OP, isa::flag::Type::BRANCH, NoBranches::value>;
+    using GetNumBranches =
+        isa::FlagValueOr<OP, isa::flag::Type::BRANCH, NumBranchesDefault::value>;
 
     template <typename INST, typename ACC>
     struct BranchNumAccumulator
@@ -106,7 +124,8 @@ class BasicBlock : public marker::Markable
             std::conditional_t < ACC::value<BranchNum::value, BranchNum, ACC>::value;
     };
 
-    using MaxBranchNum = type_sequence::Accumulate<isa::ISA, BranchNumAccumulator, NoBranches>;
+    using MaxBranchNum =
+        type_sequence::Accumulate<isa::ISA, BranchNumAccumulator, NumBranchesDefault>;
     std::vector<BasicBlock*> preds_{};                     // predecessors
     std::array<BasicBlock*, MaxBranchNum::value> succs_{}; // successors
 

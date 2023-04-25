@@ -72,7 +72,7 @@ TEST(BasicTests, Example1)
 
     b.ConstructCFG();
     b.ConstructDFG();
-    b.RunChecks();
+    ASSERT_TRUE(b.RunChecks());
 
     ASSERT_TRUE(g.GetStartBasicBlock() != nullptr);
 

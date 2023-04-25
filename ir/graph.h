@@ -33,14 +33,14 @@ class Graph
     void AddEdge(IdType from, IdType to);
     void AddEdge(BasicBlock* from, BasicBlock* to);
 
-    void RemoveEdge(IdType from, IdType to);
-    void RemoveEdge(BasicBlock* from, BasicBlock* to);
+    // void RemoveEdge(IdType from, IdType to);
+    // void RemoveEdge(BasicBlock* from, BasicBlock* to);
 
     void InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to);
     void InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before);
-    void InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after);
+    // void InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after);
     void ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ);
-    void AppendBasicBlock(BasicBlock* first, BasicBlock* second);
+    // void AppendBasicBlock(BasicBlock* first, BasicBlock* second);
 
     BasicBlock* SplitBasicBlock(InstBase* inst_after);
 
@@ -50,7 +50,7 @@ class Graph
     // used to transfer ownership of a block to another graph
     BasicBlock* ReleaseBasicBlock(IdType id);
     // null basic block, invalidate previous pointer
-    void DestroyBasicBlock(IdType id);
+    void DestroyBasicBlock(BasicBlock* bb);
 
     void Dump(std::string name = "");
 

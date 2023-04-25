@@ -82,8 +82,8 @@ bool Peepholes::RunPass()
 
 void Peepholes::ReplaceWithIntegralConst(InstBase* inst, int64_t val)
 {
-    graph_->GetStartBasicBlock()->PushFrontInst(InstBase::NewInst<isa::inst::Opcode::CONST>(val));
-    auto new_inst = graph_->GetStartBasicBlock()->GetFirstInst();
+    graph_->GetStartBasicBlock()->PushBackInst(InstBase::NewInst<isa::inst::Opcode::CONST>(val));
+    auto new_inst = graph_->GetStartBasicBlock()->GetLastInst();
 
     TransferUsers(inst, new_inst);
 }
@@ -339,9 +339,8 @@ bool Peepholes::MatchASHR_zero_1(InstBase* i)
                                       isa::input::Type::VREG>;
     assert(i->GetNumInputs() == NumInputs::value);
 
-    std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
-
-    if (inputs[0]->IsConst() && (static_cast<isa::inst_type::CONST*>(inputs[1])->IsZero())) {
+    auto first_input = i->GetInput(0).GetInst();
+    if (first_input->IsConst() && (static_cast<isa::inst_type::CONST*>(first_input)->IsZero())) {
         ReplaceWithIntegralConst(i, 0);
         return true;
     }

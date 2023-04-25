@@ -19,20 +19,25 @@ BasicBlock* BasicBlock::GetPredecessor(size_t idx)
 
 bool BasicBlock::HasNoSuccessors() const
 {
-    return succs_.empty();
+    for (size_t i = 0; i < GetNumSuccessors(); ++i) {
+        if (succs_[i] != nullptr) {
+            return false;
+        }
+    }
+    return true;
 }
 
 size_t BasicBlock::GetNumSuccessors() const
 {
     if (last_inst_ == nullptr) {
-        return 0;
+        return NumBranchesDefault::value;
     }
     return isa::EvaluatePredicate<GetNumBranches>(last_inst_->GetOpcode());
 }
 
 BasicBlock* BasicBlock::GetSuccessor(size_t idx)
 {
-    assert(idx < succs_.size());
+    assert(idx < GetNumSuccessors());
     return succs_[idx];
 }
 
@@ -68,6 +73,10 @@ bool BasicBlock::Dominates(BasicBlock* bb) const
 {
     assert(bb != nullptr);
 
+    if (bb->GetId() == GetId()) {
+        return true;
+    }
+
     auto dom = bb->GetImmDominator();
     while (dom != nullptr) {
         if (dom == this) {
@@ -81,6 +90,7 @@ bool BasicBlock::Dominates(BasicBlock* bb) const
 void BasicBlock::SetSucc(BasicBlock* bb, size_t pos /* = 0 */)
 {
     assert(bb != nullptr);
+    assert(pos < GetNumSuccessors());
 
     if (IsInSucc(bb)) {
         return;
@@ -92,14 +102,10 @@ void BasicBlock::SetSucc(BasicBlock* bb, size_t pos /* = 0 */)
 void BasicBlock::AddSucc(BasicBlock* bb)
 {
     assert(bb != nullptr);
-
-    if (IsInSucc(bb)) {
-        return;
-    }
-
     for (size_t i = 0; i < GetNumSuccessors(); ++i) {
         if (succs_[i] == nullptr) {
             succs_[i] = bb;
+            return;
         }
     }
 
@@ -108,32 +114,37 @@ void BasicBlock::AddSucc(BasicBlock* bb)
 
 bool BasicBlock::IsInSucc(IdType bb_id) const
 {
-    return std::find_if(succs_.begin(), succs_.end(),
-                        [bb_id](BasicBlock* bb) { return bb->GetId() == bb_id; }) != succs_.end();
+    for (size_t i = 0; i < GetNumSuccessors(); ++i) {
+        assert(succs_[i] != nullptr);
+        if (bb_id == succs_[i]->GetId()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool BasicBlock::IsInSucc(BasicBlock* bb) const
 {
     assert(bb != nullptr);
-    return std::find_if(succs_.begin(), succs_.end(),
-                        [bb](BasicBlock* s) { return bb->GetId() == s->GetId(); }) != succs_.end();
+
+    return IsInSucc(bb->GetId());
 }
 
-void BasicBlock::RemoveSucc(BasicBlock* bb)
-{
-    assert(bb != nullptr);
+// void BasicBlock::RemoveSucc(BasicBlock* bb)
+// {
+//     assert(bb != nullptr);
 
-    if (!IsInSucc(bb)) {
-        return;
-    }
+//     if (!IsInSucc(bb)) {
+//         return;
+//     }
 
-    for (auto succ : succs_) {
-        if (succ->GetId() == bb->GetId()) {
-            succ = nullptr;
-            break;
-        }
-    }
-}
+//     for (auto succ : succs_) {
+//         if (succ->GetId() == bb->GetId()) {
+//             succ = nullptr;
+//             break;
+//         }
+//     }
+// }
 
 void BasicBlock::AddPred(BasicBlock* bb)
 {
@@ -172,16 +183,32 @@ void BasicBlock::RemovePred(BasicBlock* bb)
 
 void BasicBlock::ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new)
 {
-    std::replace_if(
-        succs_.begin(), succs_.end(),
-        [bb_old](BasicBlock* bb) { return bb->GetId() == bb_old->GetId(); }, bb_new);
+    assert(bb_old != nullptr);
+
+    for (size_t i = 0; i < GetNumSuccessors(); ++i) {
+        assert(succs_[i] != nullptr);
+
+        if (succs_[i]->GetId() == bb_old->GetId()) {
+            succs_[i] = bb_new;
+            return;
+        }
+    }
+
+    UNREACHABLE("Trying to replace unexisting successor.");
 }
 
 void BasicBlock::ReplacePred(BasicBlock* bb_old, BasicBlock* bb_new)
 {
-    std::replace_if(
-        preds_.begin(), preds_.end(),
-        [bb_old](BasicBlock* bb) { return bb->GetId() == bb_old->GetId(); }, bb_new);
+    for (size_t i = 0; i < GetNumPredecessors(); ++i) {
+        assert(preds_[i] != nullptr);
+
+        if (preds_[i]->GetId() == bb_old->GetId()) {
+            preds_[i] = bb_new;
+            return;
+        }
+    }
+
+    UNREACHABLE("Trying to replace unexisting predecessor.");
 }
 
 void BasicBlock::PushBackInst(std::unique_ptr<InstBase> inst)
@@ -342,13 +369,13 @@ void BasicBlock::Dump() const
     std::cout << "# BB id: " << id_ << "\n";
 
     std::cout << "# PREDS: [";
-    for (auto bb : preds_) {
+    for (auto bb : GetPredecessors()) {
         std::cout << bb->GetId() << " ";
     }
     std::cout << "]\n";
 
     std::cout << "# SUCCS: [";
-    for (auto bb : succs_) {
+    for (auto bb : GetSuccessors()) {
         std::cout << bb->GetId() << " ";
     }
     std::cout << "]\n";
@@ -419,10 +446,10 @@ bool BasicBlock::IsEmpty() const
 
 bool BasicBlock::IsStartBlock() const
 {
-    return id_ == Graph::BB_START_ID;
+    return HasNoPredecessors();
 }
 
 bool BasicBlock::IsEndBlock() const
 {
-    return succs_.empty();
+    return HasNoSuccessors();
 }

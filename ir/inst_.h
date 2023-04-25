@@ -175,6 +175,11 @@ class InstBase : public marker::Markable
 class Conditional
 {
   public:
+    enum Branch
+    {
+        FALLTHOUGH = 0
+    };
+
     enum Type : uint8_t
     {
         UNSET,

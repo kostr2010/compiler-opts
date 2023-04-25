@@ -123,12 +123,14 @@ void LoopAnalysis::SplitBackEdges()
 
 void LoopAnalysis::SplitBackEdge(Loop* loop)
 {
-    static const auto comparator = [this](BasicBlock* lhs, BasicBlock* rhs) {
-        return id_to_dfs_idx_.at(lhs->GetId()) < id_to_dfs_idx_.at(rhs->GetId());
-    };
-
     auto back_edges = loop->GetBackEdges();
-    std::sort(back_edges.begin(), back_edges.end(), comparator);
+
+    std::sort(back_edges.begin(), back_edges.end(), [this](BasicBlock* lhs, BasicBlock* rhs) {
+        assert(lhs != nullptr);
+        assert(rhs != nullptr);
+        return id_to_dfs_idx_.at(lhs->GetId()) < id_to_dfs_idx_.at(rhs->GetId());
+    });
+
     auto header = loop->GetHeader();
 
     std::vector<BasicBlock*> new_headers{};
@@ -163,20 +165,28 @@ void LoopAnalysis::AddPreHeaders()
 
 void LoopAnalysis::AddPreHeader(Loop* loop)
 {
+    assert(loop != nullptr);
     auto head = loop->GetHeader();
     assert(head != nullptr);
 
-    for (const auto& bck : loop->GetBackEdges()) {
-        graph_->RemoveEdge(bck, head);
+    std::vector<BasicBlock*> pred{};
+
+    auto bck = loop->GetBackEdges();
+    for (const auto& bb : head->GetPredecessors()) {
+        if (std::find(bck.begin(), bck.end(), bb) == bck.end()) {
+            pred.push_back(bb);
+        }
     }
 
-    auto bb = graph_->NewBasicBlock();
-    graph_->InsertBasicBlockBefore(bb, head);
-    loop->SetPreHeader(bb);
+    assert(!pred.empty());
 
-    for (const auto& bck : loop->GetBackEdges()) {
-        graph_->AddEdge(bck, head);
+    auto preheader = graph_->NewBasicBlock();
+    loop->SetPreHeader(preheader);
+
+    for (const auto& bb : pred) {
+        graph_->ReplaceSuccessor(bb, head, preheader);
     }
+    graph_->AddEdge(preheader, head);
 }
 
 void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
@@ -185,12 +195,8 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
     assert(pred != nullptr);
     assert(bb->GetLoop() != nullptr);
     assert(bb->GetLoop()->GetBackEdges().size() == 1);
-    assert(std::find_if(bb->GetPredecessors().begin(), bb->GetPredecessors().end(),
-                        [pred](BasicBlock* p) { return p->GetId() == pred->GetId(); }) !=
-           bb->GetPredecessors().end());
-    assert(std::find_if(pred->GetSuccessors().begin(), pred->GetSuccessors().end(),
-                        [bb](BasicBlock* s) { return s->GetId() == bb->GetId(); }) !=
-           pred->GetSuccessors().end());
+    assert(bb->IsInPred(pred));
+    assert(pred->IsInSucc(bb));
 
     auto loop = bb->GetLoop();
     auto bck = loop->GetBackEdges().front();

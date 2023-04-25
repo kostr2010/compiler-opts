@@ -50,6 +50,7 @@ TEST(TestCheckElimination, TestSameCheckSameInput)
     auto I0 = b.NewInst<isa::inst::Opcode::MULI>();
     auto I1 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I2 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto I3 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
     b.SetImm(I0, 0, 10);
@@ -80,7 +81,11 @@ TEST(TestCheckElimination, TestSameCheckSameInput)
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
     ASSERT_EQ(i1->GetOpcode(), isa::inst::Opcode::CHECK_ZERO);
-    ASSERT_EQ(i1->GetNext(), nullptr);
+    auto i3 = i1->GetNext();
+    ASSERT_NE(i3, nullptr);
+    ASSERT_EQ(i3->GetId(), I3);
+    ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(i3->GetNext(), nullptr);
 
     CheckInputs(c0, {});
     CheckUsers(c0, { { I0, 0 } });
@@ -90,6 +95,9 @@ TEST(TestCheckElimination, TestSameCheckSameInput)
 
     CheckInputs(i1, { { I0, A } });
     CheckUsers(i1, {});
+
+    CheckInputs(i3, {});
+    CheckUsers(i3, {});
 }
 
 TEST(TestCheckElimination, TestSameCheckDiffInput)
@@ -117,6 +125,7 @@ TEST(TestCheckElimination, TestSameCheckDiffInput)
     auto I1 = b.NewInst<isa::inst::Opcode::MULI>();
     auto I2 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I3 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto I4 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
     b.SetImm(I0, 0, 1);
@@ -158,7 +167,11 @@ TEST(TestCheckElimination, TestSameCheckDiffInput)
     ASSERT_NE(i3, nullptr);
     ASSERT_EQ(i3->GetId(), I3);
     ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::CHECK_ZERO);
-    ASSERT_EQ(i3->GetNext(), nullptr);
+    auto i4 = i3->GetNext();
+    ASSERT_NE(i4, nullptr);
+    ASSERT_EQ(i4->GetId(), I4);
+    ASSERT_EQ(i4->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(i4->GetNext(), nullptr);
     ASSERT_EQ(bb_a->GetNumSuccessors(), 0);
 
     CheckInputs(c0, {});
@@ -175,6 +188,9 @@ TEST(TestCheckElimination, TestSameCheckDiffInput)
 
     CheckInputs(i3, { { I1, A } });
     CheckUsers(i3, {});
+
+    CheckInputs(i4, {});
+    CheckUsers(i4, {});
 }
 
 TEST(TestCheckElimination, TestDiffCheckSameInput)
@@ -201,6 +217,7 @@ TEST(TestCheckElimination, TestDiffCheckSameInput)
     auto I0 = b.NewInst<isa::inst::Opcode::MULI>();
     auto I1 = b.NewInst<isa::inst::Opcode::CHECK_NULL>();
     auto I2 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto I3 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
     b.SetImm(I0, 0, 10);
@@ -236,7 +253,11 @@ TEST(TestCheckElimination, TestDiffCheckSameInput)
     ASSERT_NE(i2, nullptr);
     ASSERT_EQ(i2->GetId(), I2);
     ASSERT_EQ(i2->GetOpcode(), isa::inst::Opcode::CHECK_ZERO);
-    ASSERT_EQ(i2->GetNext(), nullptr);
+    auto i3 = i2->GetNext();
+    ASSERT_NE(i3, nullptr);
+    ASSERT_EQ(i3->GetId(), I3);
+    ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(i3->GetNext(), nullptr);
     ASSERT_EQ(bb_a->GetNumSuccessors(), 0);
 
     CheckInputs(c0, {});
@@ -248,8 +269,11 @@ TEST(TestCheckElimination, TestDiffCheckSameInput)
     CheckInputs(i1, { { I0, A } });
     CheckUsers(i1, {});
 
-    CheckInputs(i1, { { I0, A } });
-    CheckUsers(i1, {});
+    CheckInputs(i2, { { I0, A } });
+    CheckUsers(i2, {});
+
+    CheckInputs(i3, {});
+    CheckUsers(i3, {});
 }
 
 TEST(TestCheckElimination, TestDiffCheckDiffInput)
@@ -277,6 +301,7 @@ TEST(TestCheckElimination, TestDiffCheckDiffInput)
     auto I1 = b.NewInst<isa::inst::Opcode::MULI>();
     auto I2 = b.NewInst<isa::inst::Opcode::CHECK_NULL>();
     auto I3 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto I4 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
     b.SetImm(I0, 0, 1);
@@ -318,7 +343,11 @@ TEST(TestCheckElimination, TestDiffCheckDiffInput)
     ASSERT_NE(i3, nullptr);
     ASSERT_EQ(i3->GetId(), I3);
     ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::CHECK_ZERO);
-    ASSERT_EQ(i3->GetNext(), nullptr);
+    auto i4 = i3->GetNext();
+    ASSERT_NE(i4, nullptr);
+    ASSERT_EQ(i4->GetId(), I4);
+    ASSERT_EQ(i4->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(i4->GetNext(), nullptr);
     ASSERT_EQ(bb_a->GetNumSuccessors(), 0);
 
     CheckInputs(c0, {});
@@ -335,6 +364,9 @@ TEST(TestCheckElimination, TestDiffCheckDiffInput)
 
     CheckInputs(i3, { { I1, A } });
     CheckUsers(i3, {});
+
+    CheckInputs(i4, {});
+    CheckUsers(i4, {});
 }
 
 TEST(TestCheckElimination, TestMultipleSameCheckSameInput)
@@ -374,6 +406,7 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInput)
     auto I4 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I5 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I6 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto R0 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
     b.SetImm(I0, 0, 10);
@@ -411,8 +444,17 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInput)
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
     ASSERT_EQ(i1->GetOpcode(), isa::inst::Opcode::CHECK_ZERO);
-    ASSERT_EQ(i1->GetNext(), nullptr);
-    ASSERT_EQ(bb_a->GetNumSuccessors(), 0);
+    ASSERT_EQ(bb_a->GetNumSuccessors(), 1);
+
+    auto bb_b = bb_a->GetSuccessor(0);
+    ASSERT_NE(bb_b, nullptr);
+    ASSERT_NE(bb_b->GetFirstInst(), nullptr);
+    auto r0 = bb_b->GetFirstInst();
+    ASSERT_NE(r0, nullptr);
+    ASSERT_EQ(r0->GetId(), R0);
+    ASSERT_EQ(r0->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(r0->GetNext(), nullptr);
+    ASSERT_EQ(bb_b->GetNumSuccessors(), 0);
 
     CheckInputs(c0, {});
     CheckUsers(c0, { { I0, 0 } });
@@ -422,6 +464,9 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInput)
 
     CheckInputs(i1, { { I0, A } });
     CheckUsers(i1, {});
+
+    CheckInputs(r0, {});
+    CheckUsers(r0, {});
 }
 
 TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
@@ -452,17 +497,21 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
 
     auto A = b.NewBlock();
     auto I0 = b.NewInst<isa::inst::Opcode::MULI>();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
 
     auto B = b.NewBlock();
     auto I1 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I2 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I3 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto R0 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     auto C = b.NewBlock();
     auto I4 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I5 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I6 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto R1 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
+    b.SetInputs(IF0, C0, C0);
     b.SetInputs(I0, C0);
     b.SetImm(I0, 0, 10);
     b.SetInputs(I1, I0);
@@ -495,7 +544,11 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
     auto i0 = bb_a->GetFirstInst();
     ASSERT_EQ(i0->GetId(), I0);
     ASSERT_EQ(i0->GetOpcode(), isa::inst::Opcode::MULI);
-    ASSERT_EQ(i0->GetNext(), nullptr);
+    auto if0 = i0->GetNext();
+    ASSERT_NE(if0, nullptr);
+    ASSERT_EQ(if0->GetId(), IF0);
+    ASSERT_EQ(if0->GetOpcode(), isa::inst::Opcode::IF);
+    ASSERT_EQ(if0->GetNext(), nullptr);
     ASSERT_EQ(bb_a->GetNumSuccessors(), 2);
 
     auto bb_b = bb_a->GetSuccessor(0);
@@ -504,7 +557,11 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
     ASSERT_NE(i1, nullptr);
     ASSERT_EQ(i1->GetId(), I1);
     ASSERT_EQ(i1->GetOpcode(), isa::inst::Opcode::CHECK_ZERO);
-    ASSERT_EQ(i1->GetNext(), nullptr);
+    auto r0 = i1->GetNext();
+    ASSERT_NE(r0, nullptr);
+    ASSERT_EQ(r0->GetId(), R0);
+    ASSERT_EQ(r0->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(r0->GetNext(), nullptr);
     ASSERT_EQ(bb_b->GetNumSuccessors(), 0);
 
     auto bb_c = bb_a->GetSuccessor(1);
@@ -513,11 +570,15 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
     ASSERT_NE(i4, nullptr);
     ASSERT_EQ(i4->GetId(), I4);
     ASSERT_EQ(i4->GetOpcode(), isa::inst::Opcode::CHECK_ZERO);
-    ASSERT_EQ(i4->GetNext(), nullptr);
+    auto r1 = i4->GetNext();
+    ASSERT_NE(r1, nullptr);
+    ASSERT_EQ(r1->GetId(), R1);
+    ASSERT_EQ(r1->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(r1->GetNext(), nullptr);
     ASSERT_EQ(bb_c->GetNumSuccessors(), 0);
 
     CheckInputs(c0, {});
-    CheckUsers(c0, { { I0, 0 } });
+    CheckUsers(c0, { { I0, 0 }, { IF0, 0 }, { IF0, 1 } });
 
     CheckInputs(i0, { { C0, START } });
     CheckUsers(i0, { { I1, 0 }, { I4, 0 } });
@@ -527,6 +588,12 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
 
     CheckInputs(i4, { { I0, A } });
     CheckUsers(i4, {});
+
+    CheckInputs(r0, {});
+    CheckUsers(r0, {});
+
+    CheckInputs(r1, {});
+    CheckUsers(r1, {});
 }
 
 TEST(TestCheckElimination, TestCheckSizeEquivalence)
@@ -562,15 +629,19 @@ TEST(TestCheckElimination, TestCheckSizeEquivalence)
     // dummy for array of something like that. not important for the sake of this pass
     auto ARR = b.NewInst<isa::inst::Opcode::ADDI>();
     auto I0 = b.NewInst<isa::inst::Opcode::CHECK_SIZE>();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
 
     auto B = b.NewBlock();
     auto I1 = b.NewInst<isa::inst::Opcode::CHECK_SIZE>();
     auto I2 = b.NewInst<isa::inst::Opcode::CHECK_SIZE>();
+    auto R0 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     auto C = b.NewBlock();
     auto I3 = b.NewInst<isa::inst::Opcode::CHECK_SIZE>();
     auto I4 = b.NewInst<isa::inst::Opcode::CHECK_SIZE>();
+    auto R1 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
+    b.SetInputs(IF0, C0, C0);
     b.SetInputs(ARR, C0);
     b.SetImm(ARR, 0, 11);
     b.SetInputs(I0, ARR, C0);
@@ -614,7 +685,11 @@ TEST(TestCheckElimination, TestCheckSizeEquivalence)
     ASSERT_NE(i0, nullptr);
     ASSERT_EQ(i0->GetId(), I0);
     ASSERT_EQ(i0->GetOpcode(), isa::inst::Opcode::CHECK_SIZE);
-    ASSERT_EQ(i0->GetNext(), nullptr);
+    auto if0 = i0->GetNext();
+    ASSERT_NE(if0, nullptr);
+    ASSERT_EQ(if0->GetId(), IF0);
+    ASSERT_EQ(if0->GetOpcode(), isa::inst::Opcode::IF);
+    ASSERT_EQ(if0->GetNext(), nullptr);
     ASSERT_EQ(bb_a->GetNumSuccessors(), 2);
 
     auto bb_b = bb_a->GetSuccessor(0);
@@ -623,7 +698,11 @@ TEST(TestCheckElimination, TestCheckSizeEquivalence)
     ASSERT_NE(i2, nullptr);
     ASSERT_EQ(i2->GetId(), I2);
     ASSERT_EQ(i2->GetOpcode(), isa::inst::Opcode::CHECK_SIZE);
-    ASSERT_EQ(i2->GetNext(), nullptr);
+    auto r0 = i2->GetNext();
+    ASSERT_NE(r0, nullptr);
+    ASSERT_EQ(r0->GetId(), R0);
+    ASSERT_EQ(r0->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(r0->GetNext(), nullptr);
     ASSERT_EQ(bb_b->GetNumSuccessors(), 0);
 
     auto bb_c = bb_a->GetSuccessor(1);
@@ -632,11 +711,15 @@ TEST(TestCheckElimination, TestCheckSizeEquivalence)
     ASSERT_NE(i3, nullptr);
     ASSERT_EQ(i3->GetId(), I3);
     ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::CHECK_SIZE);
-    ASSERT_EQ(i3->GetNext(), nullptr);
+    auto r1 = i3->GetNext();
+    ASSERT_NE(r1, nullptr);
+    ASSERT_EQ(r1->GetId(), R1);
+    ASSERT_EQ(r1->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(r1->GetNext(), nullptr);
     ASSERT_EQ(bb_c->GetNumSuccessors(), 0);
 
     CheckInputs(c0, {});
-    CheckUsers(c0, { { ARR, 0 }, { I0, 1 } });
+    CheckUsers(c0, { { ARR, 0 }, { I0, 1 }, { IF0, 0 }, { IF0, 1 } });
 
     CheckInputs(c1, {});
     CheckUsers(c1, { { I2, 1 } });
@@ -655,6 +738,12 @@ TEST(TestCheckElimination, TestCheckSizeEquivalence)
 
     CheckInputs(i3, { { ARR, A }, { C3, START } });
     CheckUsers(i3, {});
+
+    CheckInputs(r0, {});
+    CheckUsers(r0, {});
+
+    CheckInputs(r1, {});
+    CheckUsers(r1, {});
 }
 
 TEST(TestCheckElimination, TestRemoveRedundantChecks)
@@ -689,6 +778,7 @@ TEST(TestCheckElimination, TestRemoveRedundantChecks)
     auto I5 = b.NewInst<isa::inst::Opcode::CHECK_NULL>();
     auto I6 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I7 = b.NewInst<isa::inst::Opcode::CHECK_NULL>();
+    auto I8 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C1);
     b.SetInputs(I1, C3);
@@ -739,7 +829,11 @@ TEST(TestCheckElimination, TestRemoveRedundantChecks)
     ASSERT_NE(i5, nullptr);
     ASSERT_EQ(i5->GetId(), I5);
     ASSERT_EQ(i5->GetOpcode(), isa::inst::Opcode::CHECK_NULL);
-    ASSERT_EQ(i5->GetNext(), nullptr);
+    auto i8 = i5->GetNext();
+    ASSERT_NE(i8, nullptr);
+    ASSERT_EQ(i8->GetId(), I8);
+    ASSERT_EQ(i8->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(i8->GetNext(), nullptr);
     ASSERT_EQ(bb_a->GetNumSuccessors(), 0);
 
     CheckInputs(c1, {});
@@ -759,6 +853,9 @@ TEST(TestCheckElimination, TestRemoveRedundantChecks)
 
     CheckInputs(i5, { { C3, START } });
     CheckUsers(i5, {});
+
+    CheckInputs(i8, {});
+    CheckUsers(i8, {});
 }
 
 TEST(TestCheckElimination, TestWithPeepholes)
@@ -785,6 +882,7 @@ TEST(TestCheckElimination, TestWithPeepholes)
     auto A = b.NewBlock();
     auto I0 = b.NewInst<isa::inst::Opcode::ADD>();
     auto I1 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto R0 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0, C1);
     b.SetInputs(I1, I0);
@@ -802,7 +900,16 @@ TEST(TestCheckElimination, TestWithPeepholes)
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_EQ(bb_start->GetFirstInst(), nullptr);
-    ASSERT_EQ(bb_start->GetNumSuccessors(), 0);
+    ASSERT_EQ(bb_start->GetNumSuccessors(), 1);
+
+    auto bb_a = bb_start->GetSuccessor(0);
+    ASSERT_NE(bb_a->GetFirstInst(), nullptr);
+    auto r0 = bb_a->GetFirstInst();
+    ASSERT_NE(r0, nullptr);
+    ASSERT_EQ(r0->GetId(), R0);
+    ASSERT_EQ(r0->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(r0->GetNext(), nullptr);
+    ASSERT_EQ(bb_a->GetNumSuccessors(), 0);
 }
 
 TEST(TestCheckElimination, TestNoRemoveNotEquivalent)
@@ -829,6 +936,7 @@ TEST(TestCheckElimination, TestNoRemoveNotEquivalent)
     auto A = b.NewBlock();
     auto I0 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
     auto I1 = b.NewInst<isa::inst::Opcode::CHECK_ZERO>();
+    auto R0 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
     b.SetInputs(I1, C1);
@@ -864,7 +972,11 @@ TEST(TestCheckElimination, TestNoRemoveNotEquivalent)
     auto i1 = i0->GetNext();
     ASSERT_EQ(i1->GetId(), I1);
     ASSERT_EQ(i1->GetOpcode(), isa::inst::Opcode::CHECK_ZERO);
-    ASSERT_EQ(i1->GetNext(), nullptr);
+    auto r0 = i1->GetNext();
+    ASSERT_NE(r0, nullptr);
+    ASSERT_EQ(r0->GetId(), R0);
+    ASSERT_EQ(r0->GetOpcode(), isa::inst::Opcode::RETURN_VOID);
+    ASSERT_EQ(r0->GetNext(), nullptr);
 
     CheckInputs(c0, {});
     CheckUsers(c0, { { I0, 0 } });
@@ -877,4 +989,7 @@ TEST(TestCheckElimination, TestNoRemoveNotEquivalent)
 
     CheckInputs(i1, { { C1, START } });
     CheckUsers(i1, {});
+
+    CheckInputs(r0, {});
+    CheckUsers(r0, {});
 }
