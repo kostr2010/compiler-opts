@@ -4,7 +4,7 @@
 #include "pass.h"
 
 class BasicBlock;
-class Inst;
+class InstBase;
 
 class DBE : public Pass
 {

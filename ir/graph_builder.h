@@ -13,23 +13,23 @@
 #include "macros.h"
 #include "typedefs.h"
 
-class Inst;
+class InstBase;
 
 class GraphBuilder
 {
   public:
     GraphBuilder(Graph* g);
 
-    template <Inst::Opcode OPCODE, typename... Args>
+    template <isa::inst::Opcode OPCODE, typename... Args>
     IdType NewInst(Args&&... args)
     {
         assert(graph_ != nullptr);
         assert(cur_bb_ != nullptr);
 
-        static_assert(OPCODE != Inst::Opcode::CONST);
-        static_assert(OPCODE != Inst::Opcode::PARAM);
+        static_assert(OPCODE != isa::inst::Opcode::CONST);
+        static_assert(OPCODE != isa::inst::Opcode::PARAM);
 
-        std::unique_ptr<Inst> inst = Inst::NewInst<OPCODE>(std::forward<Args>(args)...);
+        std::unique_ptr<InstBase> inst = InstBase::NewInst<OPCODE>(std::forward<Args>(args)...);
 
         assert(inst != nullptr);
         auto id = inst->GetId();
@@ -54,7 +54,7 @@ class GraphBuilder
         assert(graph_ != nullptr);
         assert(graph_->GetStartBasicBlock() != nullptr);
 
-        auto inst = Inst::NewInst<Inst::Opcode::CONST>(value);
+        auto inst = InstBase::NewInst<isa::inst::Opcode::CONST>(value);
 
         assert(inst != nullptr);
         auto id = inst->GetId();
@@ -83,9 +83,9 @@ class GraphBuilder
         }
     }
 
-    void SetType(IdType id, Inst::DataType t);
-    void SetImm(IdType id, ImmType imm);
-    void SetCond(IdType id, Inst::Cond c);
+    void SetType(IdType id, InstBase::DataType t);
+    void SetImm(IdType id, size_t pos, ImmType imm);
+    void SetCond(IdType id, Conditional::Type c);
 
     void ConstructCFG();
     void ConstructDFG();
@@ -110,11 +110,11 @@ class GraphBuilder
     Graph* graph_{ nullptr };
     BasicBlock* cur_bb_{ nullptr };
     IdType cur_bb_id_;
-    Inst* cur_inst_{ nullptr };
+    InstBase* cur_inst_{ nullptr };
 
     std::unordered_map<IdType, BasicBlock*> bb_map_;
     std::unordered_map<IdType, std::vector<IdType> > bb_succ_map_;
-    std::unordered_map<IdType, Inst*> inst_map_;
+    std::unordered_map<IdType, InstBase*> inst_map_;
     std::unordered_map<IdType, std::vector<IdType> > inst_inputs_map_;
     std::unordered_map<IdType, std::vector<std::pair<IdType, IdType> > > phi_inputs_map_;
 };

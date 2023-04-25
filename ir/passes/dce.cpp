@@ -17,14 +17,14 @@ void DCE::Mark(const Markers markers)
 {
     for (const auto& bb : graph_->GetAnalyser()->GetValidPass<PO>()->GetBlocks()) {
         for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
-            if (inst->HasFlag(Inst::Flags::NO_DCE)) {
+            if (inst->HasFlag<isa::flag::Type::NO_DCE>()) {
                 MarkRecursively(inst, markers);
             }
         }
     }
 }
 
-void DCE::MarkRecursively(Inst* inst, const Markers markers)
+void DCE::MarkRecursively(InstBase* inst, const Markers markers)
 {
     if (inst->SetMark(&markers[Marks::VISITED])) {
         return;
@@ -58,7 +58,7 @@ void DCE::Sweep(const Markers markers)
     }
 }
 
-void DCE::RemoveInst(Inst* inst)
+void DCE::RemoveInst(InstBase* inst)
 {
     assert(inst != nullptr);
 

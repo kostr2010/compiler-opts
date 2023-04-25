@@ -14,13 +14,13 @@ bool Inlining::RunPass()
     return true;
 }
 
-void Inlining::VisitCALL_STATIC(GraphVisitor* v, Inst* inst)
+void Inlining::VisitCALL_STATIC(GraphVisitor* v, InstBase* inst)
 {
-    using T = Inst::to_inst_type<Inst::Opcode::CALL_STATIC>;
+    using T = typename isa::inst::Inst<isa::inst::Opcode::CALL_STATIC>::Type;
 
     assert(v != nullptr);
     assert(inst != nullptr);
-    assert(inst->GetOpcode() == Inst::Opcode::CALL_STATIC);
+    assert(inst->GetOpcode() == isa::inst::Opcode::CALL_STATIC);
 
     auto _this = static_cast<Inlining*>(v);
 
@@ -65,10 +65,10 @@ void Inlining::UpdateDFGParameters()
 void Inlining::UpdateDFGReturns()
 {
     auto call_inst =
-        static_cast<typename Inst::to_inst_type<Inst::Opcode::CALL_STATIC>*>(cur_call_);
+        static_cast<typename isa::inst::Inst<isa::inst::Opcode::CALL_STATIC>::Type*>(cur_call_);
     auto callee_blocks = call_inst->GetCallee()->GetAnalyser()->GetValidPass<RPO>()->GetBlocks();
 
-    std::vector<Inst*> rets{};
+    std::vector<InstBase*> rets{};
     for (const auto& bb : callee_blocks) {
         auto last_inst = bb->GetLastInst();
         if (last_inst->IsReturn()) {
@@ -79,25 +79,26 @@ void Inlining::UpdateDFGReturns()
 
     assert(!rets.empty());
 
+    using ReturnT = typename isa::inst::Inst<isa::inst::Opcode::RETURN>::Type;
+    using RetNumArgs = isa::InputValue<ReturnT, isa::input::Type::VREG>;
+
     // only one return type per function
     switch (rets.front()->GetOpcode()) {
-    case Inst::Opcode::RETURN: {
-        Inst* call_ret_res{ nullptr };
+    case isa::inst::Opcode::RETURN: {
+        InstBase* call_ret_res{ nullptr };
         if (rets.size() == 1) {
-            assert(Inst::get_num_inputs<Inst::to_inst_type<Inst::Opcode::RETURN> >() ==
-                   rets.front()->GetNumInputs());
+            assert(RetNumArgs::value == rets.front()->GetNumInputs());
             call_ret_res = rets.front()->GetInput(0).GetInst();
             call_ret_res->RemoveUser(rets.front());
             rets.front()->GetBasicBlock()->UnlinkInst(rets.front());
         } else {
-            ret_phi_ = std::move(Inst::NewInst<Inst::Opcode::PHI>());
+            ret_phi_ = InstBase::NewInst<isa::inst::Opcode::PHI>();
             call_ret_res = ret_phi_.get();
 
             assert(call_ret_res != nullptr);
 
             for (const auto& ret : rets) {
-                assert(Inst::get_num_inputs<Inst::to_inst_type<Inst::Opcode::RETURN> >() ==
-                       ret->GetNumInputs());
+                assert(RetNumArgs::value == ret->GetNumInputs());
                 // input is ret's input, but phi's bb is bb, where ret was
                 auto ret_input = ret->GetInput(0).GetInst();
                 ret_phi_->AddInput(ret_input, ret->GetBasicBlock());
@@ -111,7 +112,7 @@ void Inlining::UpdateDFGReturns()
             call_ret_res->AddUser(user);
         }
     } break;
-    case Inst::Opcode::RETURN_VOID: {
+    case isa::inst::Opcode::RETURN_VOID: {
         for (const auto& ret : rets) {
             ret->GetBasicBlock()->UnlinkInst(ret);
         }
@@ -129,7 +130,7 @@ void Inlining::MoveConstants()
 void Inlining::MoveCalleeBlocks()
 {
     auto call_inst =
-        static_cast<typename Inst::to_inst_type<Inst::Opcode::CALL_STATIC>*>(cur_call_);
+        static_cast<typename isa::inst::Inst<isa::inst::Opcode::CALL_STATIC>::Type*>(cur_call_);
     auto callee = call_inst->GetCallee();
     for (const auto& bb : callee->GetAnalyser()->GetValidPass<RPO>()->GetBlocks()) {
         graph_->NewBasicBlock(callee->ReleaseBasicBlock(bb->GetId()));
@@ -147,8 +148,10 @@ void Inlining::InsertInlinedGraph()
     }
     call_block->UnlinkInst(cur_call_);
 
-    assert(call_block->GetSuccessors() == std::vector<BasicBlock*>{ call_cont_block });
-    assert(call_cont_block->GetPredecessors() == std::vector<BasicBlock*>{ call_block });
+    assert(call_block->GetNumSuccessors() == 1);
+    assert(call_block->GetSuccessor(0) == call_cont_block);
+    assert(call_cont_block->GetNumPredecessors() == 1);
+    assert(call_cont_block->GetPredecessor(0) == call_block);
 
     if (ret_phi_.get() != nullptr) {
         call_cont_block->PushBackPhi(std::move(ret_phi_));

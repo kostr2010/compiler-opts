@@ -54,7 +54,7 @@ class Analyser
     void InvalidateCFGSensitivePasses(std::index_sequence<IDS...>)
     {
         (([&] {
-             using Type = DefaultPasses::GetPass<IDS>::type;
+             using Type = typename DefaultPasses::GetPass<IDS>::type;
              if constexpr (Pass::PassTraits<Type>::is_cfg_sensitive::value) {
                  GetPass<Type>()->SetValid(false);
              }
@@ -66,7 +66,7 @@ class Analyser
     void Allocate(Graph* graph, std::index_sequence<IDS...>)
     {
         passes_.reserve(DefaultPasses::NumPasses());
-        (passes_.emplace_back(new DefaultPasses::GetPass<IDS>::type(graph)), ...);
+        (passes_.emplace_back(new typename DefaultPasses::GetPass<IDS>::type(graph)), ...);
     }
 
     std::vector<std::unique_ptr<Pass> > passes_;

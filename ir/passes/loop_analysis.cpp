@@ -197,7 +197,7 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
 
     for (auto i = bb->GetFirstPhi(); i != nullptr; i = i->GetNext()) {
         assert(i->IsPhi());
-        auto phi = static_cast<Inst::to_inst_type<Inst::Opcode::PHI>*>(i);
+        auto phi = static_cast<isa::inst::Inst<isa::inst::Opcode::PHI>::Type*>(i);
         auto inputs = phi->GetInputs();
         auto it = std::find_if(inputs.begin(), inputs.end(), [bck](const Input& in) {
             return in.GetSourceBB()->GetId() == bck->GetId();
@@ -214,9 +214,9 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
             }
             phi->ClearInputs();
 
-            Inst* source_inst = nullptr;
+            InstBase* source_inst = nullptr;
             if (inputs.size() > 1) {
-                pred->PushBackPhi(Inst::NewInst<Inst::Opcode::PHI>());
+                pred->PushBackPhi(InstBase::NewInst<isa::inst::Opcode::PHI>());
                 source_inst = pred->GetLastPhi();
                 for (const auto& input : inputs) {
                     source_inst->AddInput(input);

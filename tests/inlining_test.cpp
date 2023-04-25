@@ -11,7 +11,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-static void CheckUsers(Inst* inst, std::set<std::pair<IdType, int> > expected)
+static void CheckUsers(InstBase* inst, std::set<std::pair<IdType, int> > expected)
 {
     std::vector<std::pair<IdType, int> > res = {};
     for (const auto& u : inst->GetUsers()) {
@@ -22,7 +22,7 @@ static void CheckUsers(Inst* inst, std::set<std::pair<IdType, int> > expected)
     ASSERT_EQ(res_set, expected);
 }
 
-static void CheckInputs(Inst* inst, std::set<std::pair<IdType, IdType> > expected)
+static void CheckInputs(InstBase* inst, std::set<std::pair<IdType, IdType> > expected)
 {
     std::vector<std::pair<IdType, IdType> > res = {};
     for (const auto& i : inst->GetInputs()) {
@@ -50,7 +50,7 @@ TEST(TestInlining, Example0)
         auto P0 = b.NewParameter();
 
         auto A = b.NewBlock();
-        auto I0 = b.NewInst<Inst::Opcode::RETURN>();
+        auto I0 = b.NewInst<isa::inst::Opcode::RETURN>();
 
         b.SetInputs(I0, P0);
 
@@ -69,8 +69,8 @@ TEST(TestInlining, Example0)
         auto P0 = b.NewParameter();
 
         auto A = b.NewBlock();
-        auto I0 = b.NewInst<Inst::Opcode::CALL_STATIC>(&callee);
-        auto I1 = b.NewInst<Inst::Opcode::RETURN>();
+        auto I0 = b.NewInst<isa::inst::Opcode::CALL_STATIC>(&callee);
+        auto I1 = b.NewInst<isa::inst::Opcode::RETURN>();
 
         b.SetInputs(I0, P0);
         b.SetInputs(I1, I0);
@@ -104,7 +104,7 @@ TEST(TestInlining, Example0)
     ASSERT_EQ(start->GetLastInst(), start->GetFirstInst());
     auto p0 = start->GetFirstInst();
     auto P0 = p0->GetId();
-    ASSERT_EQ(p0->GetOpcode(), Inst::Opcode::PARAM);
+    ASSERT_EQ(p0->GetOpcode(), isa::inst::Opcode::PARAM);
     ASSERT_EQ(p0->GetNext(), nullptr);
     ASSERT_FALSE(p0->GetUsers().empty());
     ASSERT_EQ(p0->GetUsers().size(), 1);
@@ -120,7 +120,7 @@ TEST(TestInlining, Example0)
     ASSERT_EQ(a->GetLastInst(), a->GetFirstInst());
     auto i0 = a->GetFirstInst();
     auto I0 = i0->GetId();
-    ASSERT_EQ(i0->GetOpcode(), Inst::Opcode::RETURN);
+    ASSERT_EQ(i0->GetOpcode(), isa::inst::Opcode::RETURN);
     ASSERT_EQ(i0->GetNext(), nullptr);
     ASSERT_FALSE(i0->GetInputs().empty());
     ASSERT_EQ(i0->GetNumInputs(), 1);
@@ -152,17 +152,17 @@ TEST(TestInlining, Example1)
         auto C1 = b.NewConst(2);
 
         auto A = b.NewBlock();
-        auto I0 = b.NewInst<Inst::Opcode::IF>(Inst::Cond::EQ);
+        auto I0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
 
         auto B = b.NewBlock();
-        auto I1 = b.NewInst<Inst::Opcode::MUL>();
+        auto I1 = b.NewInst<isa::inst::Opcode::MUL>();
 
         auto C = b.NewBlock();
-        auto I2 = b.NewInst<Inst::Opcode::ADD>();
+        auto I2 = b.NewInst<isa::inst::Opcode::ADD>();
 
         auto D = b.NewBlock();
-        auto I3 = b.NewInst<Inst::Opcode::PHI>();
-        auto I4 = b.NewInst<Inst::Opcode::RETURN>();
+        auto I3 = b.NewInst<isa::inst::Opcode::PHI>();
+        auto I4 = b.NewInst<isa::inst::Opcode::RETURN>();
 
         b.SetInputs(I0, P0, C1);
         b.SetInputs(I1, C1, P0);
@@ -190,8 +190,8 @@ TEST(TestInlining, Example1)
         auto C1 = b.NewConst(3);
 
         auto A = b.NewBlock();
-        auto I0 = b.NewInst<Inst::Opcode::CALL_STATIC>(&callee);
-        auto I1 = b.NewInst<Inst::Opcode::RETURN>();
+        auto I0 = b.NewInst<isa::inst::Opcode::CALL_STATIC>(&callee);
+        auto I1 = b.NewInst<isa::inst::Opcode::RETURN>();
 
         b.SetInputs(I0, C0, P0);
         b.SetInputs(I1, I0);
@@ -225,7 +225,7 @@ TEST(TestInlining, Example1)
     ASSERT_NE(start->GetLastInst(), nullptr);
     auto p0 = start->GetFirstInst();
     auto P0 = p0->GetId();
-    ASSERT_EQ(p0->GetOpcode(), Inst::Opcode::PARAM);
+    ASSERT_EQ(p0->GetOpcode(), isa::inst::Opcode::PARAM);
     ASSERT_NE(p0->GetNext(), nullptr);
     auto c0 = p0->GetNext();
     auto C0 = c0->GetId();
@@ -251,7 +251,7 @@ TEST(TestInlining, Example1)
     ASSERT_NE(a->GetLastInst(), nullptr);
     auto i0 = a->GetFirstInst();
     auto I0 = i0->GetId();
-    ASSERT_EQ(i0->GetOpcode(), Inst::Opcode::IF);
+    ASSERT_EQ(i0->GetOpcode(), isa::inst::Opcode::IF);
     ASSERT_EQ(i0->GetNext(), nullptr);
     ASSERT_EQ(I0, a->GetLastInst()->GetId());
     ASSERT_EQ(a->GetNumSuccessors(), 2);
@@ -265,7 +265,7 @@ TEST(TestInlining, Example1)
     ASSERT_NE(b->GetLastInst(), nullptr);
     auto i1 = b->GetFirstInst();
     auto I1 = i1->GetId();
-    ASSERT_EQ(i1->GetOpcode(), Inst::Opcode::MUL);
+    ASSERT_EQ(i1->GetOpcode(), isa::inst::Opcode::MUL);
     ASSERT_EQ(i1->GetNext(), nullptr);
     ASSERT_EQ(I1, b->GetLastInst()->GetId());
     ASSERT_EQ(b->GetNumSuccessors(), 1);
@@ -279,7 +279,7 @@ TEST(TestInlining, Example1)
     ASSERT_NE(c->GetLastInst(), nullptr);
     auto i2 = c->GetFirstInst();
     auto I2 = i2->GetId();
-    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ADD);
+    ASSERT_EQ(i2->GetOpcode(), isa::inst::Opcode::ADD);
     ASSERT_EQ(i2->GetNext(), nullptr);
     ASSERT_EQ(I2, c->GetLastInst()->GetId());
     ASSERT_EQ(c->GetNumSuccessors(), 1);
@@ -295,7 +295,7 @@ TEST(TestInlining, Example1)
     ASSERT_NE(d->GetLastPhi(), nullptr);
     auto i3 = d->GetFirstPhi();
     auto I3 = i3->GetId();
-    ASSERT_EQ(i3->GetOpcode(), Inst::Opcode::PHI);
+    ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::PHI);
     ASSERT_EQ(i3->GetNext(), nullptr);
     ASSERT_EQ(I3, d->GetLastPhi()->GetId());
     ASSERT_EQ(d->GetNumSuccessors(), 1);
@@ -309,7 +309,7 @@ TEST(TestInlining, Example1)
     ASSERT_NE(e->GetLastInst(), nullptr);
     auto i4 = e->GetFirstInst();
     auto I4 = i4->GetId();
-    ASSERT_EQ(i4->GetOpcode(), Inst::Opcode::RETURN);
+    ASSERT_EQ(i4->GetOpcode(), isa::inst::Opcode::RETURN);
     ASSERT_EQ(i4->GetNext(), nullptr);
     ASSERT_EQ(I4, e->GetLastInst()->GetId());
     ASSERT_TRUE(e->HasNoSuccessors());
@@ -365,14 +365,14 @@ TEST(TestInlining, Example2)
         auto C1 = b.NewConst(2);
 
         auto A = b.NewBlock();
-        auto I0 = b.NewInst<Inst::Opcode::MUL>();
+        auto I0 = b.NewInst<isa::inst::Opcode::MUL>();
 
         auto B = b.NewBlock();
-        auto I1 = b.NewInst<Inst::Opcode::ADD>();
-        auto I2 = b.NewInst<Inst::Opcode::IF>(Inst::Cond::EQ);
+        auto I1 = b.NewInst<isa::inst::Opcode::ADD>();
+        auto I2 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
 
         auto C = b.NewBlock();
-        auto I3 = b.NewInst<Inst::Opcode::RETURN_VOID>();
+        auto I3 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
         b.SetInputs(I0, P0, C0);
         b.SetInputs(I1, C1, P0);
@@ -396,9 +396,9 @@ TEST(TestInlining, Example2)
         auto C0 = b.NewConst(2);
 
         auto A = b.NewBlock();
-        auto I0 = b.NewInst<Inst::Opcode::MUL>();
-        auto I1 = b.NewInst<Inst::Opcode::CALL_STATIC>(&callee);
-        auto I2 = b.NewInst<Inst::Opcode::RETURN>();
+        auto I0 = b.NewInst<isa::inst::Opcode::MUL>();
+        auto I1 = b.NewInst<isa::inst::Opcode::CALL_STATIC>(&callee);
+        auto I2 = b.NewInst<isa::inst::Opcode::RETURN>();
 
         b.SetInputs(I0, C0, P0);
         b.SetInputs(I1, I0);
@@ -433,7 +433,7 @@ TEST(TestInlining, Example2)
     ASSERT_NE(start->GetLastInst(), nullptr);
     auto p0 = start->GetFirstInst();
     auto P0 = p0->GetId();
-    ASSERT_EQ(p0->GetOpcode(), Inst::Opcode::PARAM);
+    ASSERT_EQ(p0->GetOpcode(), isa::inst::Opcode::PARAM);
     ASSERT_NE(p0->GetNext(), nullptr);
     auto c0 = p0->GetNext();
     auto C0 = c0->GetId();
@@ -459,7 +459,7 @@ TEST(TestInlining, Example2)
     ASSERT_NE(a->GetLastInst(), nullptr);
     auto i0 = a->GetFirstInst();
     auto I0 = i0->GetId();
-    ASSERT_EQ(i0->GetOpcode(), Inst::Opcode::MUL);
+    ASSERT_EQ(i0->GetOpcode(), isa::inst::Opcode::MUL);
     ASSERT_EQ(i0->GetNext(), nullptr);
     ASSERT_EQ(I0, a->GetLastInst()->GetId());
     ASSERT_EQ(a->GetNumSuccessors(), 1);
@@ -473,7 +473,7 @@ TEST(TestInlining, Example2)
     ASSERT_NE(b->GetLastInst(), nullptr);
     auto i1 = b->GetFirstInst();
     auto I1 = i1->GetId();
-    ASSERT_EQ(i1->GetOpcode(), Inst::Opcode::MUL);
+    ASSERT_EQ(i1->GetOpcode(), isa::inst::Opcode::MUL);
     ASSERT_EQ(i1->GetNext(), nullptr);
     ASSERT_EQ(I1, b->GetLastInst()->GetId());
     ASSERT_EQ(b->GetNumSuccessors(), 1);
@@ -488,11 +488,11 @@ TEST(TestInlining, Example2)
     ASSERT_NE(c->GetLastInst(), nullptr);
     auto i2 = c->GetFirstInst();
     auto I2 = i2->GetId();
-    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ADD);
+    ASSERT_EQ(i2->GetOpcode(), isa::inst::Opcode::ADD);
     ASSERT_NE(i2->GetNext(), nullptr);
     auto i3 = i2->GetNext();
     auto I3 = i3->GetId();
-    ASSERT_EQ(i3->GetOpcode(), Inst::Opcode::IF);
+    ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::IF);
     ASSERT_EQ(i3->GetNext(), nullptr);
     ASSERT_EQ(I3, c->GetLastInst()->GetId());
     ASSERT_EQ(c->GetNumSuccessors(), 2);
@@ -507,7 +507,7 @@ TEST(TestInlining, Example2)
     ASSERT_NE(d->GetLastInst(), nullptr);
     auto i4 = d->GetFirstInst();
     auto I4 = i4->GetId();
-    ASSERT_EQ(i4->GetOpcode(), Inst::Opcode::RETURN);
+    ASSERT_EQ(i4->GetOpcode(), isa::inst::Opcode::RETURN);
     ASSERT_EQ(i4->GetNext(), nullptr);
     ASSERT_EQ(I4, d->GetLastInst()->GetId());
     ASSERT_TRUE(d->HasNoSuccessors());
@@ -561,16 +561,16 @@ TEST(TestInlining, Example3)
         auto C0 = b.NewConst(0);
 
         auto A = b.NewBlock();
-        auto I0 = b.NewInst<Inst::Opcode::MUL>();
-        auto If = b.NewInst<Inst::Opcode::IF>(Inst::Cond::EQ);
+        auto I0 = b.NewInst<isa::inst::Opcode::MUL>();
+        auto If = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
 
         auto B = b.NewBlock();
-        auto I1 = b.NewInst<Inst::Opcode::ADD>();
-        auto I2 = b.NewInst<Inst::Opcode::RETURN>();
+        auto I1 = b.NewInst<isa::inst::Opcode::ADD>();
+        auto I2 = b.NewInst<isa::inst::Opcode::RETURN>();
 
         auto C = b.NewBlock();
-        auto I3 = b.NewInst<Inst::Opcode::SUB>();
-        auto I4 = b.NewInst<Inst::Opcode::RETURN>();
+        auto I3 = b.NewInst<isa::inst::Opcode::SUB>();
+        auto I4 = b.NewInst<isa::inst::Opcode::RETURN>();
 
         b.SetInputs(I0, P2, C0);
         b.SetInputs(If, P2, I0);
@@ -597,8 +597,8 @@ TEST(TestInlining, Example3)
         auto C1 = b.NewConst(2);
 
         auto A = b.NewBlock();
-        auto I0 = b.NewInst<Inst::Opcode::CALL_STATIC>(&callee);
-        auto I1 = b.NewInst<Inst::Opcode::RETURN>();
+        auto I0 = b.NewInst<isa::inst::Opcode::CALL_STATIC>(&callee);
+        auto I1 = b.NewInst<isa::inst::Opcode::RETURN>();
 
         b.SetInputs(I0, C0, P0, C1);
         b.SetInputs(I1, I0);
@@ -630,7 +630,7 @@ TEST(TestInlining, Example3)
     ASSERT_NE(start->GetLastInst(), nullptr);
     auto p0 = start->GetFirstInst();
     auto P0 = p0->GetId();
-    ASSERT_EQ(p0->GetOpcode(), Inst::Opcode::PARAM);
+    ASSERT_EQ(p0->GetOpcode(), isa::inst::Opcode::PARAM);
     ASSERT_NE(p0->GetNext(), nullptr);
     auto c0 = p0->GetNext();
     auto C0 = c0->GetId();
@@ -656,11 +656,11 @@ TEST(TestInlining, Example3)
     ASSERT_NE(a->GetLastInst(), nullptr);
     auto i0 = a->GetFirstInst();
     auto I0 = i0->GetId();
-    ASSERT_EQ(i0->GetOpcode(), Inst::Opcode::MUL);
+    ASSERT_EQ(i0->GetOpcode(), isa::inst::Opcode::MUL);
     ASSERT_NE(i0->GetNext(), nullptr);
     auto i1 = i0->GetNext();
     auto I1 = i1->GetId();
-    ASSERT_EQ(i1->GetOpcode(), Inst::Opcode::IF);
+    ASSERT_EQ(i1->GetOpcode(), isa::inst::Opcode::IF);
     ASSERT_EQ(i1->GetNext(), nullptr);
     ASSERT_EQ(I1, a->GetLastInst()->GetId());
     ASSERT_EQ(a->GetNumSuccessors(), 2);
@@ -674,7 +674,7 @@ TEST(TestInlining, Example3)
     ASSERT_NE(b->GetLastInst(), nullptr);
     auto i2 = b->GetFirstInst();
     auto I2 = i2->GetId();
-    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ADD);
+    ASSERT_EQ(i2->GetOpcode(), isa::inst::Opcode::ADD);
     ASSERT_EQ(i2->GetNext(), nullptr);
     ASSERT_EQ(I2, b->GetLastInst()->GetId());
     ASSERT_EQ(b->GetNumSuccessors(), 1);
@@ -688,7 +688,7 @@ TEST(TestInlining, Example3)
     ASSERT_NE(c->GetLastInst(), nullptr);
     auto i3 = c->GetFirstInst();
     auto I3 = i3->GetId();
-    ASSERT_EQ(i3->GetOpcode(), Inst::Opcode::SUB);
+    ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::SUB);
     ASSERT_EQ(i3->GetNext(), nullptr);
     ASSERT_EQ(I3, c->GetLastInst()->GetId());
     ASSERT_EQ(c->GetNumSuccessors(), 1);
@@ -701,7 +701,7 @@ TEST(TestInlining, Example3)
     ASSERT_NE(d->GetLastPhi(), nullptr);
     auto i4 = d->GetFirstPhi();
     auto I4 = i4->GetId();
-    ASSERT_EQ(i4->GetOpcode(), Inst::Opcode::PHI);
+    ASSERT_EQ(i4->GetOpcode(), isa::inst::Opcode::PHI);
     ASSERT_EQ(i4->GetNext(), nullptr);
     ASSERT_EQ(I4, d->GetLastPhi()->GetId());
     ASSERT_TRUE(d->HasNoSuccessors());
@@ -709,7 +709,7 @@ TEST(TestInlining, Example3)
     ASSERT_NE(d->GetLastInst(), nullptr);
     auto i5 = d->GetFirstInst();
     auto I5 = i5->GetId();
-    ASSERT_EQ(i5->GetOpcode(), Inst::Opcode::RETURN);
+    ASSERT_EQ(i5->GetOpcode(), isa::inst::Opcode::RETURN);
     ASSERT_EQ(i5->GetNext(), nullptr);
     ASSERT_EQ(I5, d->GetLastInst()->GetId());
     ASSERT_TRUE(d->HasNoSuccessors());

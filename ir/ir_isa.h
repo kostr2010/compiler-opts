@@ -1,17 +1,17 @@
 #define INSTRUCTION_LIST(_)                                                                       \
-    _(ADD, BinaryOp, Inst::Flags::SYMMETRY)                                                       \
+    _(ADD, BinaryOp, isa::flag::TypeSYMMETRY)                                                     \
     _(SUB, BinaryOp, {})                                                                          \
-    _(MUL, BinaryOp, Inst::Flags::SYMMETRY)                                                       \
+    _(MUL, BinaryOp, isa::flag::TypeSYMMETRY)                                                     \
     _(DIV, BinaryOp, {})                                                                          \
     _(MOD, BinaryOp, {})                                                                          \
-    _(MIN, BinaryOp, Inst::Flags::SYMMETRY)                                                       \
-    _(MAX, BinaryOp, Inst::Flags::SYMMETRY)                                                       \
+    _(MIN, BinaryOp, isa::flag::TypeSYMMETRY)                                                     \
+    _(MAX, BinaryOp, isa::flag::TypeSYMMETRY)                                                     \
     _(SHL, BinaryOp, {})                                                                          \
     _(SHR, BinaryOp, {})                                                                          \
     _(ASHR, BinaryOp, {})                                                                         \
-    _(AND, BinaryOp, Inst::Flags::SYMMETRY)                                                       \
-    _(OR, BinaryOp, Inst::Flags::SYMMETRY)                                                        \
-    _(XOR, BinaryOp, Inst::Flags::SYMMETRY)                                                       \
+    _(AND, BinaryOp, isa::flag::TypeSYMMETRY)                                                     \
+    _(OR, BinaryOp, isa::flag::TypeSYMMETRY)                                                      \
+    _(XOR, BinaryOp, isa::flag::TypeSYMMETRY)                                                     \
     _(ADDI, BinaryImmOp, {})                                                                      \
     _(SUBI, BinaryImmOp, {})                                                                      \
     _(MULI, BinaryImmOp, {})                                                                      \
@@ -26,20 +26,20 @@
     _(ORI, BinaryImmOp, {})                                                                       \
     _(XORI, BinaryImmOp, {})                                                                      \
     _(CMP, CompareOp, {})                                                                         \
-    _(CHECK_ZERO, FixedInputOp1, Inst::Flags::CHECK | Inst::Flags::NO_DCE)                        \
-    _(CHECK_NULL, FixedInputOp1, Inst::Flags::CHECK | Inst::Flags::NO_DCE)                        \
-    _(CHECK_SIZE, BinaryOp, Inst::Flags::CHECK | Inst::Flags::NO_DCE)                             \
+    _(CHECK_ZERO, FixedInputOp1, isa::flag::TypeCHECK | isa::flag::TypeNO_DCE)                    \
+    _(CHECK_NULL, FixedInputOp1, isa::flag::TypeCHECK | isa::flag::TypeNO_DCE)                    \
+    _(CHECK_SIZE, BinaryOp, isa::flag::TypeCHECK | isa::flag::TypeNO_DCE)                         \
     /*_(CAST, CastOp )*/                                                                          \
-    /*_(CALL_DYNAMIC, CallOp, Inst::Flags::CALL | Inst::Flags::NO_DCE)*/                          \
-    _(CALL_STATIC, CallOp, Inst::Flags::CALL | Inst::Flags::NO_DCE)                               \
+    /*_(CALL_DYNAMIC, CallOp, isa::flag::TypeCALL | isa::flag::TypeNO_DCE)*/                      \
+    _(CALL_STATIC, CallOp, isa::flag::TypeCALL | isa::flag::TypeNO_DCE)                           \
     _(PHI, PhiOp, {})                                                                             \
     _(CONST, ConstantOp, {})                                                                      \
     _(PARAM, ParamOp, {})                                                                         \
-    _(RETURN, FixedInputOp1, Inst::Flags::NO_DCE)                                                 \
-    _(RETURN_VOID, FixedInputOp0, Inst::Flags::NO_DCE)                                            \
-    _(IF, IfOp, Inst::Flags::NO_DCE)                                                              \
-    _(IF_IMM, IfImmOp, Inst::Flags::NO_DCE)                                                       \
-    _(JMP_IND, FixedInputOp1, Inst::Flags::NO_DCE)
+    _(RETURN, FixedInputOp1, isa::flag::TypeNO_DCE)                                               \
+    _(RETURN_VOID, FixedInputOp0, isa::flag::TypeNO_DCE)                                          \
+    _(IF, IfOp, isa::flag::TypeNO_DCE)                                                            \
+    _(IF_IMM, IfImmOp, isa::flag::TypeNO_DCE)                                                     \
+    _(JMP, FixedInputOp1, isa::flag::TypeNO_DCE)
 
 #define INSTRUCTION_TYPES(_)                                                                      \
     _(BinaryOp)                                                                                   \

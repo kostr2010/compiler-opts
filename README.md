@@ -36,7 +36,7 @@ structure that holds `CFG` and `DFG`. `BasicBlock`s are stored in vector, also t
 
 # BasicBlock (`bb.h`, `bb.cpp`)
 
-structure that holds `Inst`ructions in an intrusive list. Also contains vector of successors and predecessors, needed for CFG. Instuctions are stored in following order:
+structure that holds `InstBase`ructions in an intrusive list. Also contains vector of successors and predecessors, needed for CFG. Instuctions are stored in following order:
 
 ```
 nullptr
@@ -58,6 +58,6 @@ nullptr <---- last_inst_
 
 it is done in order to separate instructions and phi's, but still be able to iterate over all of them if needed (as it is unused now, might change: f.ex. add last_phi for convinience, etc)
 
-# Inst (`inst.h`, `inst.cpp`)
+# InstBase (`inst.h`, `inst.cpp`)
 
 instructions are impllemented using OOP. all needed extensions are encoded as `Has...` if extension contains data. Using these extensions, specific instruction types are constructed.

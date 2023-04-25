@@ -1,6 +1,94 @@
 #include "bb.h"
 #include "graph.h"
 
+bool BasicBlock::HasNoPredecessors() const
+{
+    return preds_.empty();
+}
+
+size_t BasicBlock::GetNumPredecessors() const
+{
+    return preds_.size();
+}
+
+BasicBlock* BasicBlock::GetPredecessor(size_t idx)
+{
+    assert(idx < preds_.size());
+    return preds_[idx];
+}
+
+bool BasicBlock::HasNoSuccessors() const
+{
+    return succs_.empty();
+}
+
+size_t BasicBlock::GetNumSuccessors() const
+{
+    if (last_inst_ == nullptr) {
+        return 0;
+    }
+    return isa::EvaluatePredicate<GetNumBranches>(last_inst_->GetOpcode());
+}
+
+BasicBlock* BasicBlock::GetSuccessor(size_t idx)
+{
+    assert(idx < succs_.size());
+    return succs_[idx];
+}
+
+void BasicBlock::SetLoop(Loop* loop, bool is_header /* = false */)
+{
+    assert(loop != nullptr);
+
+    is_loop_header_ = is_header;
+    loop_ = loop;
+}
+
+bool BasicBlock::IsLoopHeader() const
+{
+    return is_loop_header_;
+}
+
+InstBase* BasicBlock::GetFirstPhi() const
+{
+    return first_phi_.get();
+}
+
+InstBase* BasicBlock::GetFirstInst() const
+{
+    return first_inst_.get();
+}
+
+void BasicBlock::ClearImmDominator()
+{
+    imm_dominator_ = nullptr;
+}
+
+bool BasicBlock::Dominates(BasicBlock* bb) const
+{
+    assert(bb != nullptr);
+
+    auto dom = bb->GetImmDominator();
+    while (dom != nullptr) {
+        if (dom == this) {
+            return true;
+        }
+        dom = dom->GetImmDominator();
+    }
+    return false;
+}
+
+void BasicBlock::SetSucc(BasicBlock* bb, size_t pos /* = 0 */)
+{
+    assert(bb != nullptr);
+
+    if (IsInSucc(bb)) {
+        return;
+    }
+
+    succs_[pos] = bb;
+}
+
 void BasicBlock::AddSucc(BasicBlock* bb)
 {
     assert(bb != nullptr);
@@ -9,7 +97,13 @@ void BasicBlock::AddSucc(BasicBlock* bb)
         return;
     }
 
-    succs_.emplace_back(bb);
+    for (size_t i = 0; i < GetNumSuccessors(); ++i) {
+        if (succs_[i] == nullptr) {
+            succs_[i] = bb;
+        }
+    }
+
+    UNREACHABLE("Trying to add too many successors to the basic block.");
 }
 
 bool BasicBlock::IsInSucc(IdType bb_id) const
@@ -33,7 +127,12 @@ void BasicBlock::RemoveSucc(BasicBlock* bb)
         return;
     }
 
-    std::erase_if(succs_, [bb](BasicBlock* s) { return bb->GetId() == s->GetId(); });
+    for (auto succ : succs_) {
+        if (succ->GetId() == bb->GetId()) {
+            succ = nullptr;
+            break;
+        }
+    }
 }
 
 void BasicBlock::AddPred(BasicBlock* bb)
@@ -85,7 +184,7 @@ void BasicBlock::ReplacePred(BasicBlock* bb_old, BasicBlock* bb_new)
         [bb_old](BasicBlock* bb) { return bb->GetId() == bb_old->GetId(); }, bb_new);
 }
 
-void BasicBlock::PushBackInst(std::unique_ptr<Inst> inst)
+void BasicBlock::PushBackInst(std::unique_ptr<InstBase> inst)
 {
     assert(inst != nullptr);
     assert(!inst->IsPhi());
@@ -100,7 +199,7 @@ void BasicBlock::PushBackInst(std::unique_ptr<Inst> inst)
     }
 }
 
-void BasicBlock::PushFrontInst(std::unique_ptr<Inst> inst)
+void BasicBlock::PushFrontInst(std::unique_ptr<InstBase> inst)
 {
     assert(inst != nullptr);
     assert(!inst->IsPhi());
@@ -115,7 +214,7 @@ void BasicBlock::PushFrontInst(std::unique_ptr<Inst> inst)
     }
 }
 
-void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right)
+void BasicBlock::InsertInst(std::unique_ptr<InstBase> inst, InstBase* left, InstBase* right)
 {
     assert(right != nullptr);
     assert(left != nullptr);
@@ -133,7 +232,7 @@ void BasicBlock::InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right)
     left->SetNext(std::move(inst));
 }
 
-void BasicBlock::InsertInstAfter(std::unique_ptr<Inst> inst, Inst* after)
+void BasicBlock::InsertInstAfter(std::unique_ptr<InstBase> inst, InstBase* after)
 {
     assert(after != nullptr);
     auto next = after->GetNext();
@@ -145,7 +244,7 @@ void BasicBlock::InsertInstAfter(std::unique_ptr<Inst> inst, Inst* after)
     }
 }
 
-void BasicBlock::InsertInstBefore(std::unique_ptr<Inst> inst, Inst* before)
+void BasicBlock::InsertInstBefore(std::unique_ptr<InstBase> inst, InstBase* before)
 {
     assert(before != nullptr);
     auto prev = before->GetPrev();
@@ -157,7 +256,7 @@ void BasicBlock::InsertInstBefore(std::unique_ptr<Inst> inst, Inst* before)
     }
 }
 
-void BasicBlock::PushBackPhi(std::unique_ptr<Inst> inst)
+void BasicBlock::PushBackPhi(std::unique_ptr<InstBase> inst)
 {
     assert(inst != nullptr);
     assert(inst->IsPhi());
@@ -173,7 +272,7 @@ void BasicBlock::PushBackPhi(std::unique_ptr<Inst> inst)
     }
 }
 
-void BasicBlock::PushBackPhi(Inst* inst)
+void BasicBlock::PushBackPhi(InstBase* inst)
 {
     assert(inst != nullptr);
     assert(inst->IsPhi());
@@ -189,7 +288,7 @@ void BasicBlock::PushBackPhi(Inst* inst)
     }
 }
 
-void BasicBlock::UnlinkInst(Inst* inst)
+void BasicBlock::UnlinkInst(InstBase* inst)
 {
     assert(inst != nullptr);
 
@@ -225,13 +324,13 @@ void BasicBlock::UnlinkInst(Inst* inst)
     }
 }
 
-Inst* BasicBlock::TransferInst()
+InstBase* BasicBlock::TransferInst()
 {
     last_inst_ = nullptr;
     return first_inst_.release();
 }
 
-Inst* BasicBlock::TransferPhi()
+InstBase* BasicBlock::TransferPhi()
 {
     last_phi_ = nullptr;
     return first_phi_.release();
@@ -302,7 +401,7 @@ void BasicBlock::Dump() const
     std::cout << "#########################\n";
 }
 
-void BasicBlock::SetFirstInst(std::unique_ptr<Inst> inst)
+void BasicBlock::SetFirstInst(std::unique_ptr<InstBase> inst)
 {
     assert(inst != nullptr);
     assert(first_inst_ == nullptr);

@@ -1,8 +1,8 @@
 #ifndef __ISA_H_INCLUDED__
 #define __ISA_H_INCLUDED__
 
-#include "../../utils/macros.h"
-#include "../../utils/type_sequence.h"
+#include "macros.h"
+#include "type_sequence.h"
 
 #include "instruction.h"
 #include "isa_def.h"
@@ -19,7 +19,7 @@ using ISA = type_sequence::TypeSequence<CHAIN_COMMA(
 #undef OPERATOR
 #undef GEN_INSTRUCTION_CHAIN
 
-template <typename InstType, input::InputType I>
+template <typename InstType, input::Type I>
 struct InputValue
 {
     template <typename Value>
@@ -47,6 +47,17 @@ struct FlagValue
     using Res = type_sequence::GetIf<typename inst::Inst<OP>::FlagValues, IsSameFlag>;
 
     static constexpr flag::ValueT value = Res::value;
+};
+
+template <inst::Opcode OP, flag::Type F, flag::ValueT VALUE>
+struct FlagValueOr
+{
+    using HasFlag = isa::HasFlag<OP, F>;
+    using FlagValue = isa::FlagValue<OP, F>;
+    using Default = std::integral_constant<flag::ValueT, VALUE>;
+    using Select = std::conditional_t<HasFlag::value, FlagValue, Default>;
+
+    static constexpr flag::ValueT value = Select::value;
 };
 
 template <template <inst::Opcode> typename Predicate>

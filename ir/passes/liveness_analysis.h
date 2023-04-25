@@ -8,7 +8,7 @@
 #include <vector>
 
 class BasicBlock;
-class Inst;
+class InstBase;
 
 class LivenessAnalysis : public Pass
 {

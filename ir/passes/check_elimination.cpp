@@ -7,7 +7,7 @@
 
 GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(CheckElimination, RPO);
 
-static void DeleteCheck(Inst* check)
+static void DeleteCheck(InstBase* check)
 {
     assert(check != nullptr);
     assert(check->IsCheck());
@@ -22,10 +22,10 @@ static void DeleteCheck(Inst* check)
 }
 
 // returns true if two checks with same check subject are equivalent
-using EquivalenceCriterion = bool (*)(const Inst*, const Inst*);
+using EquivalenceCriterion = bool (*)(const InstBase*, const InstBase*);
 
-template <Inst::Opcode OPCODE, typename EquivalenceCriterion>
-static void DeleteDominatedChecks(Inst* inst, EquivalenceCriterion eq_criterion)
+template <isa::inst::Opcode OPCODE, typename EquivalenceCriterion>
+static void DeleteDominatedChecks(InstBase* inst, EquivalenceCriterion eq_criterion)
 {
     assert(inst != nullptr);
     assert(inst->IsCheck());
@@ -60,8 +60,8 @@ static void DeleteDominatedChecks(Inst* inst, EquivalenceCriterion eq_criterion)
     }
 }
 
-template <Inst::Opcode OPCODE>
-static bool CheckRedundancy(Inst* check);
+template <isa::inst::Opcode OPCODE>
+static bool CheckRedundancy(InstBase* check);
 
 bool CheckElimination::RunPass()
 {
@@ -87,38 +87,40 @@ void CheckElimination::ResetStructs()
     redundant_checks_.clear();
 }
 
-static bool AreSameOrSameVal(const Inst* i1, const Inst* i2)
+static bool AreSameOrSameVal(const InstBase* i1, const InstBase* i2)
 {
     if (i1->GetId() == i2->GetId()) {
         return true;
     }
 
     if (i1->IsConst() && i2->IsConst()) {
-        return Inst::to_inst_type<Inst::Opcode::CONST>::Compare(i1, i2);
+        return isa::inst::Inst<isa::inst::Opcode::CONST>::Type::Compare(i1, i2);
     }
 
     return false;
 }
 
-template <Inst::Opcode OPCODE>
-static bool DefaultEquivalenceCheck(const Inst* i1, const Inst* i2)
+template <isa::inst::Opcode OPCODE>
+static bool DefaultEquivalenceCheck(const InstBase* i1, const InstBase* i2)
 {
-    using T = Inst::to_inst_type<OPCODE>;
-    static_assert(!Inst::has_dynamic_operands<OPCODE>());
+    using T = typename isa::inst::Inst<OPCODE>::Type;
+    using NumInputs = isa::InputValue<T, isa::input::Type::VREG>;
 
+    static_assert(!isa::InputValue<T, isa::input::Type::DYN>::value);
+    static_assert(isa::HasFlag<OPCODE, isa::flag::Type::CHECK>::value);
     assert(i1->GetOpcode() == OPCODE);
     assert(i2->GetOpcode() == OPCODE);
     assert(i1->IsCheck());
     assert(i2->IsCheck());
-    static_assert(Inst::get_num_inputs<T>() != 0);
-    assert(i1->GetNumInputs() == Inst::get_num_inputs<T>());
-    assert(i2->GetNumInputs() == Inst::get_num_inputs<T>());
+    static_assert(NumInputs::value != 0);
+    assert(i1->GetNumInputs() == NumInputs::value);
+    assert(i2->GetNumInputs() == NumInputs::value);
     assert(i1->GetNumInputs() == i2->GetNumInputs());
     assert(i1->GetId() != i2->GetId());
     assert(i1->GetInput(0).GetInst()->GetId() == i2->GetInput(0).GetInst()->GetId());
 
     // if check only accepts object to check
-    if constexpr (Inst::get_num_inputs<T>() == 1) {
+    if constexpr (NumInputs::value == 1) {
         return true;
     }
 
@@ -134,18 +136,18 @@ static bool DefaultEquivalenceCheck(const Inst* i1, const Inst* i2)
 }
 
 template <>
-bool CheckRedundancy<Inst::Opcode::CHECK_ZERO>(Inst* check)
+bool CheckRedundancy<isa::inst::Opcode::CHECK_ZERO>(InstBase* check)
 {
-    using T = Inst::to_inst_type<Inst::Opcode::CHECK_ZERO>;
-    static_assert(!Inst::has_dynamic_operands<Inst::Opcode::CHECK_ZERO>());
-    static_assert(Inst::get_num_inputs<T>() != 0);
-    assert(Inst::Opcode::CHECK_ZERO == check->GetOpcode());
-    assert(Inst::get_num_inputs<T>() == check->GetNumInputs());
+    using T = typename isa::inst::Inst<isa::inst::Opcode::CHECK_ZERO>::Type;
+    static_assert(!isa::InputValue<T, isa::input::Type::DYN>::value);
+    static_assert(isa::HasFlag<isa::inst::Opcode::CHECK_ZERO, isa::flag::Type::CHECK>::value);
+    static_assert(isa::InputValue<T, isa::input::Type::VREG>::value != 0);
+    assert(check->GetOpcode() == isa::inst::Opcode::CHECK_ZERO);
 
     auto input = check->GetInput(0).GetInst();
     assert(input != nullptr);
 
-    using ConstT = Inst::to_inst_type<Inst::Opcode::CONST>;
+    using ConstT = typename isa::inst::Inst<isa::inst::Opcode::CONST>::Type;
     if (input->IsConst() && !static_cast<ConstT*>(input)->IsZero()) {
         return true;
     }
@@ -153,29 +155,29 @@ bool CheckRedundancy<Inst::Opcode::CHECK_ZERO>(Inst* check)
     return false;
 }
 
-void CheckElimination::VisitCHECK_ZERO(GraphVisitor* v, Inst* inst)
+void CheckElimination::VisitCHECK_ZERO(GraphVisitor* v, InstBase* inst)
 {
-    DeleteDominatedChecks<Inst::Opcode::CHECK_ZERO>(
-        inst, DefaultEquivalenceCheck<Inst::Opcode::CHECK_ZERO>);
+    DeleteDominatedChecks<isa::inst::Opcode::CHECK_ZERO>(
+        inst, DefaultEquivalenceCheck<isa::inst::Opcode::CHECK_ZERO>);
 
-    if (CheckRedundancy<Inst::Opcode::CHECK_ZERO>(inst)) {
+    if (CheckRedundancy<isa::inst::Opcode::CHECK_ZERO>(inst)) {
         static_cast<CheckElimination*>(v)->redundant_checks_.push_back(inst);
     }
 }
 
 template <>
-bool CheckRedundancy<Inst::Opcode::CHECK_NULL>(Inst* check)
+bool CheckRedundancy<isa::inst::Opcode::CHECK_NULL>(InstBase* check)
 {
-    using T = Inst::to_inst_type<Inst::Opcode::CHECK_NULL>;
-    static_assert(!Inst::has_dynamic_operands<Inst::Opcode::CHECK_NULL>());
-    static_assert(Inst::get_num_inputs<T>() != 0);
-    assert(Inst::Opcode::CHECK_NULL == check->GetOpcode());
-    assert(Inst::get_num_inputs<T>() == check->GetNumInputs());
+    using T = typename isa::inst::Inst<isa::inst::Opcode::CHECK_NULL>::Type;
+    static_assert(!isa::InputValue<T, isa::input::Type::DYN>::value);
+    static_assert(isa::InputValue<T, isa::input::Type::VREG>::value != 0);
+    static_assert(isa::HasFlag<isa::inst::Opcode::CHECK_NULL, isa::flag::Type::CHECK>::value);
+    assert(check->GetOpcode() == isa::inst::Opcode::CHECK_NULL);
 
     auto input = check->GetInput(0).GetInst();
     assert(input != nullptr);
 
-    using ConstT = Inst::to_inst_type<Inst::Opcode::CONST>;
+    using ConstT = typename isa::inst::Inst<isa::inst::Opcode::CONST>::Type;
     if (input->IsConst() && !static_cast<ConstT*>(input)->IsNull()) {
         return true;
     }
@@ -183,24 +185,22 @@ bool CheckRedundancy<Inst::Opcode::CHECK_NULL>(Inst* check)
     return false;
 }
 
-void CheckElimination::VisitCHECK_NULL(GraphVisitor* v, Inst* inst)
+void CheckElimination::VisitCHECK_NULL(GraphVisitor* v, InstBase* inst)
 {
-    DeleteDominatedChecks<Inst::Opcode::CHECK_NULL>(
-        inst, DefaultEquivalenceCheck<Inst::Opcode::CHECK_NULL>);
+    DeleteDominatedChecks<isa::inst::Opcode::CHECK_NULL>(
+        inst, DefaultEquivalenceCheck<isa::inst::Opcode::CHECK_NULL>);
 
-    if (CheckRedundancy<Inst::Opcode::CHECK_NULL>(inst)) {
+    if (CheckRedundancy<isa::inst::Opcode::CHECK_NULL>(inst)) {
         static_cast<CheckElimination*>(v)->redundant_checks_.push_back(inst);
     }
 }
 
-void CheckElimination::VisitCHECK_SIZE([[maybe_unused]] GraphVisitor* v, Inst* inst)
+void CheckElimination::VisitCHECK_SIZE([[maybe_unused]] GraphVisitor* v, InstBase* inst)
 {
-    using T = Inst::to_inst_type<Inst::Opcode::CHECK_SIZE>;
-    static_assert(!Inst::has_dynamic_operands<Inst::Opcode::CHECK_SIZE>());
-    static_assert(Inst::get_num_inputs<T>::value != 0);
+    assert(inst->GetOpcode() == isa::inst::Opcode::CHECK_SIZE);
 
-    DeleteDominatedChecks<Inst::Opcode::CHECK_SIZE>(
-        inst, DefaultEquivalenceCheck<Inst::Opcode::CHECK_SIZE>);
+    DeleteDominatedChecks<isa::inst::Opcode::CHECK_SIZE>(
+        inst, DefaultEquivalenceCheck<isa::inst::Opcode::CHECK_SIZE>);
 
     // TODO: analyze if statements - requires range analysis
 }

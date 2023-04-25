@@ -8,7 +8,7 @@
 #include <vector>
 
 class BasicBlock;
-class Inst;
+class InstBase;
 
 class CheckElimination : public Pass, public GraphVisitor
 {
@@ -23,11 +23,11 @@ class CheckElimination : public Pass, public GraphVisitor
     void RemoveRedundantChecks();
     void ResetStructs();
 
-    static void VisitCHECK_ZERO(GraphVisitor* v, Inst* inst);
-    static void VisitCHECK_NULL(GraphVisitor* v, Inst* inst);
-    static void VisitCHECK_SIZE([[maybe_unused]] GraphVisitor* v, Inst* inst);
+    static void VisitCHECK_ZERO(GraphVisitor* v, InstBase* inst);
+    static void VisitCHECK_NULL(GraphVisitor* v, InstBase* inst);
+    static void VisitCHECK_SIZE([[maybe_unused]] GraphVisitor* v, InstBase* inst);
 
-    std::vector<Inst*> redundant_checks_;
+    std::vector<InstBase*> redundant_checks_;
 
 #include "graph_visitor.inc"
 };

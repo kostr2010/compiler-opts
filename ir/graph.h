@@ -13,7 +13,7 @@
 #include "typedefs.h"
 
 class BasicBlock;
-class Inst;
+class InstBase;
 
 class Graph
 {
@@ -42,7 +42,7 @@ class Graph
     void ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ);
     void AppendBasicBlock(BasicBlock* first, BasicBlock* second);
 
-    BasicBlock* SplitBasicBlock(Inst* inst_after);
+    BasicBlock* SplitBasicBlock(InstBase* inst_after);
 
     BasicBlock* NewBasicBlock();
     // used to accept BB's released by another graph. obtains ownership of a pointer

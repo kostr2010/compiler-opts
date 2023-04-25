@@ -26,7 +26,7 @@ add_library(ir SHARED
     graph_builder.cpp
     graph_visitor.cpp
     graph.cpp
-    inst.cpp
+    inst_.cpp
     loop.cpp
     analyser.cpp
 )

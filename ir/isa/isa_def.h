@@ -63,4 +63,5 @@
     GENERATOR(RETURN, UNARY, (BRANCH, NO_SUCCESSORS)(NO_DCE), )                                   \
     GENERATOR(RETURN_VOID, NO_INPUT, (BRANCH, NO_SUCCESSORS)(NO_DCE), )                           \
     GENERATOR(IF_IMM, IF_IMM, (BRANCH, TWO_SUCCESSORS)(NO_DCE), )                                 \
-    GENERATOR(IF, IF, (BRANCH, TWO_SUCCESSORS)(NO_DCE), )
+    GENERATOR(IF, IF, (BRANCH, TWO_SUCCESSORS)(NO_DCE), )                                         \
+    GENERATOR(JMP, NO_INPUT, (BRANCH, ONE_SUCCESSOR)(NO_DCE), )

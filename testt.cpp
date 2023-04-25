@@ -16,7 +16,7 @@
 #include <iostream>
 #include <tuple>
 
-#include "ir_/isa/isa.h"
+#include "ir/isa/isa.h"
 
 template <typename INST, typename ACC>
 struct BranchNumAccumulator
@@ -35,7 +35,7 @@ void PrintConditional(isa::inst::Opcode opcode)
 {
 #define GEN_CONDITIONAL_DISPATCH(OPCODE, TYPE, ...)                                               \
     if constexpr (isa::InputValue<isa::inst::Inst<isa::inst::Opcode::OPCODE>::Type,               \
-                                  isa::input::InputType::COND>::value) {                          \
+                                  isa::input::Type::COND>::value) {                               \
         if (opcode == isa::inst::Opcode::OPCODE) {                                                \
             std::cout << #TYPE << "\n";                                                           \
             return;                                                                               \
@@ -48,12 +48,11 @@ void PrintConditional(isa::inst::Opcode opcode)
 }
 
 template <isa::inst::Opcode OPCODE>
-using IsDynamic =
-    isa::InputValue<typename isa::inst::Inst<OPCODE>::Type, isa::input::InputType::DYN>;
+using IsDynamic = isa::InputValue<typename isa::inst::Inst<OPCODE>::Type, isa::input::Type::DYN>;
 
 template <isa::inst::Opcode OPCODE>
-using IsCond =
-    isa::InputValue<typename isa::inst::Inst<OPCODE>::Type, isa::input::InputType::COND>;
+using IsConditional =
+    isa::InputValue<typename isa::inst::Inst<OPCODE>::Type, isa::input::Type::COND>;
 
 int main()
 {
@@ -64,8 +63,10 @@ int main()
 
     std::cout << isa::EvaluatePredicate<IsDynamic>(isa::inst::Opcode::CALL_STATIC) << "\n";
     std::cout << isa::InputValue<isa::inst::Inst<isa::inst::Opcode::ADD>::Type,
-                                 isa::input::InputType::VREG>::value
+                                 isa::input::Type::VREG>::value
               << "\n";
+
+    std::cout << isa::InputValue<isa::inst_type::BINARY, isa::input::Type::COND>::value << "\n";
 
     return 0;
 }

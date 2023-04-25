@@ -1,8 +1,8 @@
 #ifndef __ISA_INSTRCTION_H_INCLUDED__
 #define __ISA_INSTRCTION_H_INCLUDED__
 
-#include "../../utils/macros.h"
-#include "../../utils/type_sequence.h"
+#include "macros.h"
+#include "type_sequence.h"
 
 #include "flag.h"
 #include "instruction_type.h"
@@ -15,12 +15,12 @@ namespace inst {
 #define GEN_OPCODE_ENUM(OPCODE, ...) OPCODE,
 enum Opcode
 {
-    ISA_INSTRUCTION_LIST(GEN_OPCODE_ENUM) NUM_OPCODES
+    ISA_INSTRUCTION_LIST(GEN_OPCODE_ENUM) N_OPCODES
 };
 #undef GEN_OPCODE_ENUM
 
 template <Opcode OPCODE>
-struct Inst;
+class Inst;
 
 #define PREFIX(ELEM, ...) (flag::Flag<flag::Type::ELEM
 #define SUFFIX(ELEM, ...) ELEM>)

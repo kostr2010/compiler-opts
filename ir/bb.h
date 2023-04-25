@@ -2,18 +2,20 @@
 #define ___BASICBLOCK_H_INCLUDED___
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#include "inst.h"
+#include "inst_.h"
 #include "loop.h"
 #include "macros.h"
 #include "marker/markable.h"
 #include "typedefs.h"
+
+#include "isa/isa.h"
 
 class Graph;
 
@@ -26,107 +28,51 @@ class BasicBlock : public marker::Markable
 
     GETTER(Predecessors, preds_);
     GETTER(Successors, succs_);
-    GETTER_SETTER(LastInst, Inst*, last_inst_);
-    GETTER_SETTER(LastPhi, Inst*, last_phi_);
+    GETTER_SETTER(LastInst, InstBase*, last_inst_);
+    GETTER_SETTER(LastPhi, InstBase*, last_phi_);
     GETTER_SETTER(Id, IdType, id_);
     GETTER_SETTER(ImmDominator, BasicBlock*, imm_dominator_);
     GETTER(Loop, loop_);
 
-    bool HasNoPredecessors()
-    {
-        return preds_.empty();
-    }
+    bool HasNoPredecessors() const;
+    size_t GetNumPredecessors() const;
+    BasicBlock* GetPredecessor(size_t idx);
 
-    size_t GetNumPredecessors()
-    {
-        return preds_.size();
-    }
+    bool HasNoSuccessors() const;
+    size_t GetNumSuccessors() const;
+    BasicBlock* GetSuccessor(size_t idx);
 
-    BasicBlock* GetPredecessor(size_t idx)
-    {
-        assert(idx < preds_.size());
-        return preds_[idx];
-    }
+    void SetLoop(Loop* loop, bool is_header = false);
+    bool IsLoopHeader() const;
 
-    bool HasNoSuccessors()
-    {
-        return succs_.empty();
-    }
+    InstBase* GetFirstPhi() const;
+    InstBase* GetFirstInst() const;
 
-    size_t GetNumSuccessors()
-    {
-        return succs_.size();
-    }
-
-    BasicBlock* GetSuccessor(size_t idx)
-    {
-        assert(idx < succs_.size());
-        return succs_[idx];
-    }
-
-    void SetLoop(Loop* loop, bool is_header = false)
-    {
-        assert(loop != nullptr);
-
-        is_loop_header_ = is_header;
-        loop_ = loop;
-    }
-
-    bool IsLoopHeader()
-    {
-        return is_loop_header_;
-    }
-
-    inline Inst* GetFirstPhi()
-    {
-        return first_phi_.get();
-    }
-
-    inline Inst* GetFirstInst()
-    {
-        return first_inst_.get();
-    }
-
-    inline void ClearImmDominator()
-    {
-        imm_dominator_ = nullptr;
-    }
-
-    bool Dominates(BasicBlock* bb) const
-    {
-        assert(bb != nullptr);
-
-        auto dom = bb->GetImmDominator();
-        while (dom != nullptr) {
-            if (dom == this) {
-                return true;
-            }
-            dom = dom->GetImmDominator();
-        }
-        return false;
-    }
+    void ClearImmDominator();
+    bool Dominates(BasicBlock* bb) const;
 
     bool IsEmpty() const;
     bool IsStartBlock() const;
     bool IsEndBlock() const;
 
-    void PushBackInst(std::unique_ptr<Inst> inst);
-    void PushFrontInst(std::unique_ptr<Inst> inst);
-    void InsertInst(std::unique_ptr<Inst> inst, Inst* left, Inst* right);
-    void InsertInstAfter(std::unique_ptr<Inst> inst, Inst* after);
-    void InsertInstBefore(std::unique_ptr<Inst> inst, Inst* before);
-    void PushBackPhi(std::unique_ptr<Inst> inst);
-    void PushBackPhi(Inst* inst);
+    void PushBackInst(std::unique_ptr<InstBase> inst);
+    void PushFrontInst(std::unique_ptr<InstBase> inst);
+    void InsertInst(std::unique_ptr<InstBase> inst, InstBase* left, InstBase* right);
+    void InsertInstAfter(std::unique_ptr<InstBase> inst, InstBase* after);
+    void InsertInstBefore(std::unique_ptr<InstBase> inst, InstBase* before);
+    void PushBackPhi(std::unique_ptr<InstBase> inst);
+    void PushBackPhi(InstBase* inst);
 
-    void UnlinkInst(Inst* inst);
-    Inst* TransferInst();
-    Inst* TransferPhi();
+    void UnlinkInst(InstBase* inst);
+    InstBase* TransferInst();
+    InstBase* TransferPhi();
 
     void Dump() const;
 
   private:
     // only graph can manipulate CFG
     friend Graph;
+    void SetSucc(BasicBlock* bb, size_t pos = 0);
     void AddSucc(BasicBlock* bb);
     bool IsInSucc(IdType bb_id) const;
     bool IsInSucc(BasicBlock* bb) const;
@@ -140,22 +86,38 @@ class BasicBlock : public marker::Markable
     void ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new);
     void ReplacePred(BasicBlock* bb_old, BasicBlock* bb_new);
 
-    void SetFirstInst(std::unique_ptr<Inst> inst);
+    void SetFirstInst(std::unique_ptr<InstBase> inst);
 
     Loop* loop_ = nullptr;
     bool is_loop_header_ = false;
 
-    std::vector<BasicBlock*> preds_{}; // predecessors
-    std::vector<BasicBlock*> succs_{}; // successors
+    using NoBranches =
+        std::integral_constant<isa::flag::ValueT,
+                               isa::flag::Flag<isa::flag::Type::BRANCH>::Value::NO_SUCCESSORS>;
+
+    template <isa::inst::Opcode OP>
+    using GetNumBranches = isa::FlagValueOr<OP, isa::flag::Type::BRANCH, NoBranches::value>;
+
+    template <typename INST, typename ACC>
+    struct BranchNumAccumulator
+    {
+        using BranchNum = GetNumBranches<INST::opcode>;
+        static constexpr isa::flag::ValueT value =
+            std::conditional_t < ACC::value<BranchNum::value, BranchNum, ACC>::value;
+    };
+
+    using MaxBranchNum = type_sequence::Accumulate<isa::ISA, BranchNumAccumulator, NoBranches>;
+    std::vector<BasicBlock*> preds_{};                     // predecessors
+    std::array<BasicBlock*, MaxBranchNum::value> succs_{}; // successors
 
     BasicBlock* imm_dominator_{ nullptr };
 
     IdType id_;
 
-    std::unique_ptr<Inst> first_inst_{ nullptr };
-    Inst* last_inst_{ nullptr };
-    std::unique_ptr<Inst> first_phi_{ nullptr };
-    Inst* last_phi_{ nullptr };
+    std::unique_ptr<InstBase> first_inst_{ nullptr };
+    InstBase* last_inst_{ nullptr };
+    std::unique_ptr<InstBase> first_phi_{ nullptr };
+    InstBase* last_phi_{ nullptr };
 };
 
 #endif

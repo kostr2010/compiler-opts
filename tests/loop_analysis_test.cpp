@@ -37,7 +37,7 @@ static void CheckSuccessors(BasicBlock* bb, std::set<IdType> expected)
     ASSERT_EQ(std::set<IdType>(bb_res.begin(), bb_res.end()), expected);
 }
 
-static void CheckUsers(Inst* inst, std::set<std::pair<IdType, int> > expected)
+static void CheckUsers(InstBase* inst, std::set<std::pair<IdType, int> > expected)
 {
     std::vector<std::pair<IdType, int> > res = {};
     for (const auto& u : inst->GetUsers()) {
@@ -48,7 +48,7 @@ static void CheckUsers(Inst* inst, std::set<std::pair<IdType, int> > expected)
     ASSERT_EQ(res_set, expected);
 }
 
-static void CheckInputs(Inst* inst, std::set<std::pair<IdType, IdType> > expected)
+static void CheckInputs(InstBase* inst, std::set<std::pair<IdType, IdType> > expected)
 {
     std::vector<std::pair<IdType, IdType> > res = {};
     for (const auto& i : inst->GetInputs()) {
@@ -914,23 +914,26 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     auto C0 = b.NewConst(1U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Inst::Opcode::PHI>();
-    auto I1 = b.NewInst<Inst::Opcode::PHI>();
+    auto I0 = b.NewInst<isa::inst::Opcode::PHI>();
+    auto I1 = b.NewInst<isa::inst::Opcode::PHI>();
 
     auto B = b.NewBlock();
-    auto I2 = b.NewInst<Inst::Opcode::ADDI>(10);
+    auto I2 = b.NewInst<isa::inst::Opcode::ADDI>();
 
     auto C = b.NewBlock();
-    auto I3 = b.NewInst<Inst::Opcode::ADDI>(10);
+    auto I3 = b.NewInst<isa::inst::Opcode::ADDI>();
 
     auto D = b.NewBlock();
-    auto I4 = b.NewInst<Inst::Opcode::ADDI>(10);
+    auto I4 = b.NewInst<isa::inst::Opcode::ADDI>();
 
     b.SetInputs(I0, { { C0, Graph::BB_START_ID }, { I2, B }, { I3, C }, { I4, D } });
     b.SetInputs(I1, { { C0, Graph::BB_START_ID }, { I2, B }, { I3, C } });
     b.SetInputs(I2, C0);
+    b.SetImm(I2, 0, 10);
     b.SetInputs(I3, C0);
+    b.SetImm(I3, 0, 10);
     b.SetInputs(I4, C0);
+    b.SetImm(I4, 0, 10);
 
     b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });
@@ -1059,35 +1062,35 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
                      { i3->GetId(), 0 },
                      { i4->GetId(), 0 } });
 
-    ASSERT_EQ(i7->GetOpcode(), Inst::Opcode::PHI);
+    ASSERT_EQ(i7->GetOpcode(), isa::inst::Opcode::PHI);
     CheckInputs(i7, { { i4->GetId(), D }, { c0->GetId(), I->GetId() } });
     CheckUsers(i7, { { i5->GetId(), -1 } });
 
-    ASSERT_EQ(i5->GetOpcode(), Inst::Opcode::PHI);
+    ASSERT_EQ(i5->GetOpcode(), isa::inst::Opcode::PHI);
     CheckInputs(i5, { { i3->GetId(), C }, { i7->GetId(), H->GetId() } });
     CheckUsers(i5, { { i0->GetId(), -1 } });
 
-    ASSERT_EQ(i6->GetOpcode(), Inst::Opcode::PHI);
+    ASSERT_EQ(i6->GetOpcode(), isa::inst::Opcode::PHI);
     CheckInputs(i6, { { i3->GetId(), C }, { c0->GetId(), H->GetId() } });
     CheckUsers(i6, { { i1->GetId(), -1 } });
 
-    ASSERT_EQ(i0->GetOpcode(), Inst::Opcode::PHI);
+    ASSERT_EQ(i0->GetOpcode(), isa::inst::Opcode::PHI);
     CheckInputs(i0, { { i2->GetId(), B }, { i5->GetId(), G->GetId() } });
     CheckUsers(i0, {});
 
-    ASSERT_EQ(i1->GetOpcode(), Inst::Opcode::PHI);
+    ASSERT_EQ(i1->GetOpcode(), isa::inst::Opcode::PHI);
     CheckInputs(i1, { { i2->GetId(), B }, { i6->GetId(), G->GetId() } });
     CheckUsers(i1, {});
 
-    ASSERT_EQ(i2->GetOpcode(), Inst::Opcode::ADDI);
+    ASSERT_EQ(i2->GetOpcode(), isa::inst::Opcode::ADDI);
     CheckInputs(i2, { { c0->GetId(), Graph::BB_START_ID } });
     CheckUsers(i2, { { i0->GetId(), -1 }, { i1->GetId(), -1 } });
 
-    ASSERT_EQ(i3->GetOpcode(), Inst::Opcode::ADDI);
+    ASSERT_EQ(i3->GetOpcode(), isa::inst::Opcode::ADDI);
     CheckInputs(i3, { { c0->GetId(), Graph::BB_START_ID } });
     CheckUsers(i3, { { i5->GetId(), -1 }, { i6->GetId(), -1 } });
 
-    ASSERT_EQ(i4->GetOpcode(), Inst::Opcode::ADDI);
+    ASSERT_EQ(i4->GetOpcode(), isa::inst::Opcode::ADDI);
     CheckInputs(i4, { { c0->GetId(), Graph::BB_START_ID } });
     CheckUsers(i4, { { i7->GetId(), -1 } });
 }

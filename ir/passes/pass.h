@@ -25,6 +25,7 @@ class Pass
     Pass(Graph* g) : graph_{ g }
     {
     }
+    virtual ~Pass() = default;
     GETTER_SETTER(Valid, bool, is_valid_);
 
     virtual bool RunPass() = 0;

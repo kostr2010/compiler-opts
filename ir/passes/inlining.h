@@ -8,7 +8,7 @@
 #include "pass.h"
 
 class BasicBlock;
-class Inst;
+class InstBase;
 
 class Inlining : public Pass, public GraphVisitor
 {
@@ -26,13 +26,13 @@ class Inlining : public Pass, public GraphVisitor
     void MoveCalleeBlocks();
     void InsertInlinedGraph();
 
-    Inst* cur_call_{ nullptr };
+    InstBase* cur_call_{ nullptr };
     BasicBlock* callee_start_bb_{ nullptr };
     std::vector<BasicBlock*> ret_bbs_{};
-    std::unique_ptr<Inst> ret_phi_{ nullptr };
+    std::unique_ptr<InstBase> ret_phi_{ nullptr };
 
   private:
-    static void VisitCALL_STATIC(GraphVisitor* v, Inst* inst);
+    static void VisitCALL_STATIC(GraphVisitor* v, InstBase* inst);
 
 #include "graph_visitor.inc"
 };

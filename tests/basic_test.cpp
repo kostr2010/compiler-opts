@@ -41,27 +41,28 @@ TEST(BasicTests, Example1)
     auto p0 = b.NewParameter();
 
     auto c0 = b.NewConst(1U); // res{1U}
-    b.SetType(c0, Inst::DataType::INT);
+    b.SetType(c0, InstBase::DataType::INT);
     auto c1 = b.NewConst(2U); // i{2U}
-    b.SetType(c1, Inst::DataType::INT);
+    b.SetType(c1, InstBase::DataType::INT);
 
     auto b0 = b.NewBlock();
-    auto i0 = b.NewInst<Inst::Opcode::PHI>(); // i
-    auto i1 = b.NewInst<Inst::Opcode::PHI>(); // res
-    auto i2 = b.NewInst<Inst::Opcode::IF>(Inst::Cond::LEQ);
+    auto i0 = b.NewInst<isa::inst::Opcode::PHI>(); // i
+    auto i1 = b.NewInst<isa::inst::Opcode::PHI>(); // res
+    auto i2 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::LEQ);
 
     auto b1 = b.NewBlock();
-    auto i3 = b.NewInst<Inst::Opcode::MUL>();
-    auto i4 = b.NewInst<Inst::Opcode::ADDI>(10);
+    auto i3 = b.NewInst<isa::inst::Opcode::MUL>();
+    auto i4 = b.NewInst<isa::inst::Opcode::ADDI>();
 
     auto b2 = b.NewBlock();
-    auto i5 = b.NewInst<Inst::Opcode::RETURN>();
+    auto i5 = b.NewInst<isa::inst::Opcode::RETURN>();
 
     b.SetInputs(i0, { { c1, START }, { i4, b1 } });
     b.SetInputs(i2, i0, p0);
     b.SetInputs(i1, { { c0, START }, { i3, b1 } });
     b.SetInputs(i3, i1, i0);
     b.SetInputs(i4, i0);
+    b.SetImm(i4, 0, 10);
     b.SetInputs(i5, i1);
 
     b.SetSuccessors(START, { b0 });

@@ -7,7 +7,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-static void CheckUsers(Inst* inst, std::set<std::pair<IdType, int> > expected)
+static void CheckUsers(InstBase* inst, std::set<std::pair<IdType, int> > expected)
 {
     std::vector<std::pair<IdType, int> > res = {};
     for (const auto& u : inst->GetUsers()) {
@@ -18,7 +18,7 @@ static void CheckUsers(Inst* inst, std::set<std::pair<IdType, int> > expected)
     ASSERT_EQ(res_set, expected);
 }
 
-static void CheckInputs(Inst* inst, std::set<std::pair<IdType, IdType> > expected)
+static void CheckInputs(InstBase* inst, std::set<std::pair<IdType, IdType> > expected)
 {
     std::vector<std::pair<IdType, IdType> > res = {};
     for (const auto& i : inst->GetInputs()) {
@@ -51,8 +51,8 @@ TEST(TestDCE, Example1)
     auto C1 = b.NewConst(2U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Inst::Opcode::ADD>();
-    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
+    auto I0 = b.NewInst<isa::inst::Opcode::ADD>();
+    auto I1 = b.NewInst<isa::inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, C0);
     b.SetInputs(I1, I0);
@@ -116,8 +116,8 @@ TEST(TestDCE, Example2)
     auto C1 = b.NewConst(2U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Inst::Opcode::ADD>();
-    auto I1 = b.NewInst<Inst::Opcode::RETURN>();
+    auto I0 = b.NewInst<isa::inst::Opcode::ADD>();
+    auto I1 = b.NewInst<isa::inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C1, C1);
     b.SetInputs(I1, I0);
@@ -178,11 +178,11 @@ TEST(TestDCE, Example3)
     auto C2 = b.NewConst(3U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Inst::Opcode::ADD>();
-    auto I1 = b.NewInst<Inst::Opcode::SUB>();
-    auto I2 = b.NewInst<Inst::Opcode::MUL>();
-    auto I3 = b.NewInst<Inst::Opcode::DIV>();
-    auto I4 = b.NewInst<Inst::Opcode::RETURN>();
+    auto I0 = b.NewInst<isa::inst::Opcode::ADD>();
+    auto I1 = b.NewInst<isa::inst::Opcode::SUB>();
+    auto I2 = b.NewInst<isa::inst::Opcode::MUL>();
+    auto I3 = b.NewInst<isa::inst::Opcode::DIV>();
+    auto I4 = b.NewInst<isa::inst::Opcode::RETURN>();
 
     b.SetInputs(I0, C2, C1);
     b.SetInputs(I1, I0, C1);
@@ -266,19 +266,19 @@ TEST(TestDCE, Example4)
     auto C2 = b.NewConst(3U);
 
     auto A = b.NewBlock();
-    auto I0 = b.NewInst<Inst::Opcode::ADD>();
-    auto I1 = b.NewInst<Inst::Opcode::SUB>();
+    auto I0 = b.NewInst<isa::inst::Opcode::ADD>();
+    auto I1 = b.NewInst<isa::inst::Opcode::SUB>();
 
     auto B = b.NewBlock();
-    auto I2 = b.NewInst<Inst::Opcode::MUL>();
-    auto I3 = b.NewInst<Inst::Opcode::DIV>();
+    auto I2 = b.NewInst<isa::inst::Opcode::MUL>();
+    auto I3 = b.NewInst<isa::inst::Opcode::DIV>();
 
     auto C = b.NewBlock();
-    auto I4 = b.NewInst<Inst::Opcode::XOR>();
-    auto I5 = b.NewInst<Inst::Opcode::AND>();
-    auto I6 = b.NewInst<Inst::Opcode::PHI>();
-    auto I7 = b.NewInst<Inst::Opcode::PHI>();
-    auto I8 = b.NewInst<Inst::Opcode::RETURN>();
+    auto I4 = b.NewInst<isa::inst::Opcode::XOR>();
+    auto I5 = b.NewInst<isa::inst::Opcode::AND>();
+    auto I6 = b.NewInst<isa::inst::Opcode::PHI>();
+    auto I7 = b.NewInst<isa::inst::Opcode::PHI>();
+    auto I8 = b.NewInst<isa::inst::Opcode::RETURN>();
 
     b.SetInputs(I0, P0, C1);
     b.SetInputs(I1, I0, C1);

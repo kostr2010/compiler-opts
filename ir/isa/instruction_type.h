@@ -1,8 +1,8 @@
 #ifndef __ISA_SIGNATURE_H_INCLDED__
 #define __ISA_SIGNATURE_H_INCLDED__
 
-#include "../../utils/macros.h"
-#include "../../utils/type_sequence.h"
+#include "macros.h"
+#include "type_sequence.h"
 
 #include "input.h"
 #include "isa_def.h"
@@ -19,9 +19,9 @@ ISA_INSTRUCTION_TYPE_LIST(DECLARE_INSTRUCTION_TYPES)
 template <typename InstType>
 struct InstTypeInfo;
 
-#define PREFIX(ELEM, ...) (input::Input<input::InputType::ELEM
+#define PREFIX(ELEM, ...) (input::Input<input::Type::ELEM
 #define SUFFIX(ELEM, ...) ELEM>)
-#define OPERATOR(L, R) (input::Value<input::InputType::L, R>)
+#define OPERATOR(L, R) (input::Value<input::Type::L, R>)
 #define GEN_SPECIALIZED_INTRUCTION_TYPE_INFO_DEF(NAME, INPUTS, ...)                               \
     template <>                                                                                   \
     struct InstTypeInfo<NAME>                                                                     \

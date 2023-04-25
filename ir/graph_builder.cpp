@@ -1,4 +1,5 @@
 #include "graph_builder.h"
+#include "isa/isa.h"
 
 GraphBuilder::GraphBuilder(Graph* g)
 {
@@ -23,15 +24,13 @@ IdType GraphBuilder::NewParameter()
 {
     assert(graph_ != nullptr);
     assert(graph_->GetStartBasicBlock() != nullptr);
-    size_t cur_id = 0;
     auto last_inst = graph_->GetStartBasicBlock()->GetLastInst();
     if (last_inst != nullptr) {
         // assert that parameters are passed one after another
         assert(last_inst->IsParam());
-        cur_id = last_inst->GetId() + 1;
     }
 
-    auto inst = Inst::NewInst<Inst::Opcode::PARAM>(cur_id);
+    auto inst = InstBase::NewInst<isa::inst::Opcode::PARAM>();
 
     assert(inst != nullptr);
     auto id = inst->GetId();
@@ -73,60 +72,47 @@ void GraphBuilder::SetInputs(IdType id, std::vector<std::pair<IdType, IdType> >&
     phi_inputs_map_.at(id) = std::move(inputs);
 }
 
-void GraphBuilder::SetType(IdType id, Inst::DataType t)
+void GraphBuilder::SetType(IdType id, InstBase::DataType t)
 {
     auto inst = inst_map_[id];
     assert(inst != nullptr);
     inst->SetDataType(t);
 }
 
-void GraphBuilder::SetImm(IdType id, ImmType imm)
+void GraphBuilder::SetImm(IdType id, size_t pos, ImmType imm)
 {
     auto inst = inst_map_[id];
     assert(inst != nullptr);
 
-    switch (inst->GetOpcode()) {
-    case Inst::Opcode::ADDI:
-    case Inst::Opcode::SUBI:
-    case Inst::Opcode::MULI:
-    case Inst::Opcode::DIVI:
-    case Inst::Opcode::MODI:
-    case Inst::Opcode::MINI:
-    case Inst::Opcode::MAXI:
-    case Inst::Opcode::SHLI:
-    case Inst::Opcode::SHRI:
-    case Inst::Opcode::ASHRI:
-    case Inst::Opcode::ANDI:
-    case Inst::Opcode::ORI:
-    case Inst::Opcode::XORI:
-        static_cast<BinaryImmOp*>(inst)->SetImm(imm);
-        break;
-    case Inst::Opcode::IF_IMM:
-        static_cast<IfImmOp*>(inst)->SetImm(imm);
-        break;
-    default:
-        assert(false);
+    auto num_imms = inst->GetNumImms();
+    assert(pos < num_imms);
+
+    if (num_imms > 0) {
+        static_cast<WithImm*>(inst)->SetImm(pos, imm);
+        return;
     }
+
+    UNREACHABLE("trying to set immediate in an instruction with no immediates");
 }
 
-void GraphBuilder::SetCond(IdType id, Inst::Cond c)
+void GraphBuilder::SetCond(IdType id, Conditional::Type c)
 {
     auto inst = inst_map_[id];
     assert(inst != nullptr);
-    assert(inst->IsCond());
+    assert(inst->IsConditional());
 
     switch (inst->GetOpcode()) {
-    case Inst::Opcode::IF:
-        static_cast<IfOp*>(inst)->SetCond(c);
+    case isa::inst::Opcode::IF:
+        static_cast<isa::inst_type::IF*>(inst)->SetCond(c);
         break;
-    case Inst::Opcode::IF_IMM:
-        static_cast<IfImmOp*>(inst)->SetCond(c);
+    case isa::inst::Opcode::IF_IMM:
+        static_cast<isa::inst_type::IF_IMM*>(inst)->SetCond(c);
         break;
-    case Inst::Opcode::CMP:
-        static_cast<CompareOp*>(inst)->SetCond(c);
+    case isa::inst::Opcode ::CMP:
+        static_cast<isa::inst_type::COMPARE*>(inst)->SetCond(c);
         break;
     default:
-        assert(false);
+        UNREACHABLE("trying to set condition in an instruction with no condition");
     }
 }
 
@@ -158,7 +144,7 @@ void GraphBuilder::ConstructDFG()
 
             assert(inst_map_.find(input_id) != inst_map_.end());
             auto input_inst = inst_map_.at(input_id);
-            if (inst->HasDynamicOperands()) {
+            if (inst->IsDynamic()) {
                 inst->AddInput(input_inst, input_inst->GetBasicBlock());
             } else {
                 inst->SetInput(input_idx, input_inst);
@@ -180,7 +166,7 @@ void GraphBuilder::ConstructDFG()
             auto input_inst = inst_map_.at(input_inst_id);
             auto input_bb = bb_map_.at(input_inst_bb);
 
-            static_cast<PhiOp*>(inst)->AddInput(input_inst, input_bb);
+            static_cast<isa::inst_type::PHI*>(inst)->AddInput(input_inst, input_bb);
         }
     }
 

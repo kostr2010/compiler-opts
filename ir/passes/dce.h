@@ -4,7 +4,7 @@
 #include "pass.h"
 
 class BasicBlock;
-class Inst;
+class InstBase;
 
 class DCE : public Pass
 {
@@ -24,9 +24,9 @@ class DCE : public Pass
 
   private:
     void Mark(const Markers markers);
-    void MarkRecursively(Inst* inst, const Markers markers);
+    void MarkRecursively(InstBase* inst, const Markers markers);
     void Sweep(const Markers markers);
-    void RemoveInst(Inst* inst);
+    void RemoveInst(InstBase* inst);
     void ClearMarks();
 };
 

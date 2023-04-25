@@ -161,7 +161,7 @@ void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)
     // assert(first_last_phi != nullptr);
     auto second_first_phi = second->TransferPhi();
     if (second_first_phi != nullptr) {
-        std::unique_ptr<Inst> i{ second_first_phi };
+        std::unique_ptr<InstBase> i{ second_first_phi };
         first->PushBackPhi(std::move(i));
         second_first_phi->SetPrev(first_last_phi);
         first->SetLastPhi(second_last_phi);
@@ -178,7 +178,7 @@ void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)
 
     auto second_first_inst = second->TransferInst();
     if (second_first_inst != nullptr) {
-        std::unique_ptr<Inst> i{ second_first_inst };
+        std::unique_ptr<InstBase> i{ second_first_inst };
         first->PushBackInst(std::move(i));
         second_first_inst->SetPrev(first_last_inst);
         first->SetLastInst(second_last_inst);
@@ -193,7 +193,7 @@ void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)
     analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
-BasicBlock* Graph::SplitBasicBlock(Inst* inst_after)
+BasicBlock* Graph::SplitBasicBlock(InstBase* inst_after)
 {
     auto bb = inst_after->GetBasicBlock();
     auto prev_last = bb->GetLastInst();
@@ -204,7 +204,7 @@ BasicBlock* Graph::SplitBasicBlock(Inst* inst_after)
 
     if (next != nullptr) {
         next->SetPrev(nullptr);
-        std::unique_ptr<Inst> split{ next };
+        std::unique_ptr<InstBase> split{ next };
         bb_new->PushBackInst(std::move(split));
         assert(inst_after->GetNext() == nullptr);
         bb->SetLastInst(inst_after);

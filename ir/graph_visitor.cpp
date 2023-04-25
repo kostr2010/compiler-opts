@@ -1,23 +1,23 @@
 #include "graph_visitor.h"
-#include "inst.h"
+#include "inst_.h"
 
-void GraphVisitor::VisitDefault(Inst* inst)
+void GraphVisitor::VisitDefault(InstBase* inst)
 {
     return (void)(inst);
 }
 
-#define GEN_INST_TYPE_VISITORS_IMPL(t)                                                            \
-    void GraphVisitor::VisitInstType(t* i)                                                        \
+#define GEN_INST_TYPE_VISITORS_IMPL(TYPE, ...)                                                    \
+    void GraphVisitor::VisitInstType(isa::inst_type::TYPE* i)                                     \
     {                                                                                             \
         return VisitDefault(i);                                                                   \
     }
-INSTRUCTION_TYPES(GEN_INST_TYPE_VISITORS_IMPL)
+ISA_INSTRUCTION_TYPE_LIST(GEN_INST_TYPE_VISITORS_IMPL)
 #undef GEN_INST_TYPE_VISITORS_IMPL
 
 #define GEN_OPCODE_VISITORS_IMPL(OPCODE, ...)                                                     \
-    void GraphVisitor::Visit##OPCODE(GraphVisitor* v, Inst* i)                                    \
+    void GraphVisitor::Visit##OPCODE(GraphVisitor* v, InstBase* i)                                \
     {                                                                                             \
         v->VisitDefault(i);                                                                       \
     }
-INSTRUCTION_LIST(GEN_OPCODE_VISITORS_IMPL)
+ISA_INSTRUCTION_LIST(GEN_OPCODE_VISITORS_IMPL)
 #undef GEN_OPCODE_VISITORS_IMPL

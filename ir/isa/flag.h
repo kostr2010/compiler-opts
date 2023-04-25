@@ -1,9 +1,9 @@
 #ifndef __ISA_FLAG_H_INCLUDED__
 #define __ISA_FLAG_H_INCLUDED__
 
-#include "../../utils/bit_flag.h"
-#include "../../utils/macros.h"
-#include "../../utils/type_sequence.h"
+#include "bit_flag.h"
+#include "macros.h"
+#include "type_sequence.h"
 
 #include "isa_def.h"
 

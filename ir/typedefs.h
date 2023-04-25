@@ -5,6 +5,6 @@
 #include <cstdint>
 
 typedef size_t IdType;
-typedef int ImmType;
+typedef double ImmType;
 
 #endif
