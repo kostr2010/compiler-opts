@@ -14,7 +14,7 @@
     GENERATOR(IF, (VREG, 2U)(COND, true))                                                         \
     GENERATOR(IF_IMM, (VREG, 1U)(IMM, 1U)(COND, true))                                            \
     GENERATOR(COMPARE, (VREG, 2U)(COND, true))                                                    \
-    GENERATOR(CONST, (IMM, 1U))
+    GENERATOR(CONST, /* NO INPUTS */)
 
 #define ISA_FLAG_LIST(GENERATOR)                                                                  \
     GENERATOR(BRANCH, (NO_SUCCESSORS)(ONE_SUCCESSOR)(TWO_SUCCESSORS), )                           \

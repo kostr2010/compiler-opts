@@ -241,6 +241,13 @@ bool InstBase::IsReturn() const
                isa::flag::Flag<isa::flag::BRANCH>::Value::NO_SUCCESSORS;
 }
 
+bool InstBase::IsUnconditionalJump() const
+{
+    return HasFlag<isa::flag::Type::BRANCH>() &&
+           isa::EvaluatePredicate<NumBranches>(opcode_) ==
+               isa::flag::Flag<isa::flag::BRANCH>::Value::ONE_SUCCESSOR;
+}
+
 template <isa::inst::Opcode OP>
 using DynValue = isa::InputValue<typename isa::inst::Inst<OP>::Type, isa::input::Type::DYN>;
 
@@ -302,39 +309,37 @@ bool InstBase::Dominates(const InstBase* inst) const
 // ====================
 // Conditional
 
-Conditional::Type Conditional::Invert()
+void Conditional::Invert()
 {
     switch (cond_) {
     case Type::EQ: {
         cond_ = Type::NEQ;
-        break;
+        return;
     }
     case Type::NEQ: {
         cond_ = EQ;
-        break;
+        return;
     }
     case Type::LEQ: {
         cond_ = Type::G;
-        break;
+        return;
     }
     case Type::GEQ: {
         cond_ = Type::L;
-        break;
+        return;
     }
     case Type::L: {
         cond_ = Type::GEQ;
-        break;
+        return;
     }
     case Type::G: {
         cond_ = Type::LEQ;
-        break;
+        return;
     }
     default: {
         UNREACHABLE("unhandled conditional code");
     }
     }
-
-    return cond_;
 }
 
 void Conditional::Dump() const
@@ -380,30 +385,6 @@ void Conditional::Dump() const
 
 // ====================
 // WithImm
-
-ImmType WithImm::GetImm(size_t idx) const
-{
-    assert(idx < GetNumImms());
-    return imms_[idx];
-}
-
-void WithImm::SetImm(size_t idx, ImmType imm)
-{
-    assert(idx < GetNumImms());
-
-    imms_[idx] = imm;
-}
-
-void WithImm::Dump() const
-{
-    InstBase::Dump();
-
-    std::cout << "#\t immediates: ";
-    for (const auto& imm : imms_) {
-        std::cout << imm;
-    }
-    std::cout << "\n";
-}
 
 // WithImm
 // ====================

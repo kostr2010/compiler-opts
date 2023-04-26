@@ -177,7 +177,8 @@ void Inlining::MoveCalleeBlocks()
 void Inlining::InsertInlinedGraph()
 {
     auto call_block = graph_->SplitBasicBlock(cur_call_);
-    assert(call_block->GetNumSuccessors() == 1);
+    assert(call_block->GetNumSuccessors() ==
+           isa::flag::Flag<isa::flag::Type::BRANCH>::Value::ONE_SUCCESSOR);
     auto call_cont_block = call_block->GetSuccessor(0);
 
     // remove call instruction by hand
@@ -196,12 +197,13 @@ void Inlining::InsertInlinedGraph()
 
     graph_->ReplaceSuccessor(call_block, call_cont_block, callee_start_bb_);
 
-    assert(call_block->GetNumSuccessors() == 1);
+    assert(call_block->GetNumSuccessors() ==
+           isa::flag::Flag<isa::flag::Type::BRANCH>::Value::ONE_SUCCESSOR);
     assert(call_block->GetSuccessor(0)->GetId() == callee_start_bb_->GetId());
     assert(callee_start_bb_->GetNumPredecessors() == 1);
     assert(callee_start_bb_->GetPredecessor(0)->GetId() == call_block->GetId());
 
     for (const auto& ret_bb : ret_bbs_) {
-        graph_->AddEdge(ret_bb, call_cont_block);
+        graph_->AddEdge(ret_bb, call_cont_block, Conditional::Branch::FALLTHROUGH);
     }
 }

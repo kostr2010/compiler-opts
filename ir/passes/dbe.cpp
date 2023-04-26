@@ -30,7 +30,8 @@ bool DBE::RemoveEmpty(BasicBlock* bb)
     }
 
     // empty bb can only have 1 successor
-    assert(bb->GetNumSuccessors() == 1);
+    assert(bb->GetNumSuccessors() ==
+           isa::flag::Flag<isa::flag::Type::BRANCH>::Value::ONE_SUCCESSOR);
     assert(bb->GetSuccessor(0) != nullptr);
     auto succ = bb->GetSuccessor(0);
 

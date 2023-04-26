@@ -87,21 +87,19 @@ bool BasicBlock::Dominates(BasicBlock* bb) const
     return false;
 }
 
-void BasicBlock::SetSucc(BasicBlock* bb, size_t pos /* = 0 */)
+void BasicBlock::SetSuccsessor(size_t pos, BasicBlock* bb)
 {
     assert(bb != nullptr);
     assert(pos < GetNumSuccessors());
 
-    if (IsInSucc(bb)) {
-        return;
-    }
-
     succs_[pos] = bb;
 }
 
-void BasicBlock::AddSucc(BasicBlock* bb)
+void BasicBlock::AddSuccsessor(BasicBlock* bb)
 {
     assert(bb != nullptr);
+    assert(!Precedes(bb));
+
     for (size_t i = 0; i < GetNumSuccessors(); ++i) {
         if (succs_[i] == nullptr) {
             succs_[i] = bb;
@@ -112,7 +110,7 @@ void BasicBlock::AddSucc(BasicBlock* bb)
     UNREACHABLE("Trying to add too many successors to the basic block.");
 }
 
-bool BasicBlock::IsInSucc(IdType bb_id) const
+bool BasicBlock::Precedes(IdType bb_id) const
 {
     for (size_t i = 0; i < GetNumSuccessors(); ++i) {
         assert(succs_[i] != nullptr);
@@ -123,18 +121,18 @@ bool BasicBlock::IsInSucc(IdType bb_id) const
     return false;
 }
 
-bool BasicBlock::IsInSucc(BasicBlock* bb) const
+bool BasicBlock::Precedes(BasicBlock* bb) const
 {
     assert(bb != nullptr);
 
-    return IsInSucc(bb->GetId());
+    return Precedes(bb->GetId());
 }
 
 // void BasicBlock::RemoveSucc(BasicBlock* bb)
 // {
 //     assert(bb != nullptr);
 
-//     if (!IsInSucc(bb)) {
+//     if (!Precedes(bb)) {
 //         return;
 //     }
 
@@ -146,42 +144,40 @@ bool BasicBlock::IsInSucc(BasicBlock* bb) const
 //     }
 // }
 
-void BasicBlock::AddPred(BasicBlock* bb)
+void BasicBlock::AddPredecessor(BasicBlock* bb)
 {
     assert(bb != nullptr);
+    assert(!Succeeds(bb));
 
-    if (IsInPred(bb)) {
-        return;
-    }
+    // if (Succeeds(bb)) {
+    //     return;
+    // }
 
     preds_.emplace_back(bb);
 }
 
-bool BasicBlock::IsInPred(IdType bb_id) const
+bool BasicBlock::Succeeds(IdType bb_id) const
 {
     return std::find_if(preds_.begin(), preds_.end(),
                         [bb_id](BasicBlock* bb) { return bb->GetId() == bb_id; }) != preds_.end();
 }
 
-bool BasicBlock::IsInPred(BasicBlock* bb) const
+bool BasicBlock::Succeeds(BasicBlock* bb) const
 {
     assert(bb != nullptr);
     return std::find_if(preds_.begin(), preds_.end(),
                         [bb](BasicBlock* s) { return bb->GetId() == s->GetId(); }) != preds_.end();
 }
 
-void BasicBlock::RemovePred(BasicBlock* bb)
+void BasicBlock::RemovePredecessor(BasicBlock* bb)
 {
     assert(bb != nullptr);
-
-    if (!IsInPred(bb)) {
-        return;
-    }
+    assert(Succeeds(bb));
 
     std::erase_if(preds_, [bb](BasicBlock* p) { return bb->GetId() == p->GetId(); });
 }
 
-void BasicBlock::ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new)
+void BasicBlock::ReplaceSuccessor(BasicBlock* bb_old, BasicBlock* bb_new)
 {
     assert(bb_old != nullptr);
 
@@ -197,7 +193,7 @@ void BasicBlock::ReplaceSucc(BasicBlock* bb_old, BasicBlock* bb_new)
     UNREACHABLE("Trying to replace unexisting successor.");
 }
 
-void BasicBlock::ReplacePred(BasicBlock* bb_old, BasicBlock* bb_new)
+void BasicBlock::ReplacePredecessor(BasicBlock* bb_old, BasicBlock* bb_new)
 {
     for (size_t i = 0; i < GetNumPredecessors(); ++i) {
         assert(preds_[i] != nullptr);
@@ -426,6 +422,28 @@ void BasicBlock::Dump() const
     }
 
     std::cout << "#########################\n";
+}
+
+void BasicBlock::InvertCondition()
+{
+    assert(GetNumSuccessors() > isa::flag::Flag<isa::flag::BRANCH>::Value::ONE_SUCCESSOR);
+    assert(GetLastInst() != nullptr);
+    assert(GetLastInst()->IsConditional());
+
+    auto opcode = GetLastInst()->GetOpcode();
+
+#define GENERATOR(OPCODE, TYPE, ...)                                                              \
+    if constexpr (isa::InputValue<isa::inst_type::TYPE, isa::input::Type::COND>::value == true && \
+                  isa::HasFlag<isa::inst::Opcode::OPCODE, isa::flag::BRANCH>::value == true) {    \
+        if (opcode == isa::inst::Opcode::OPCODE) {                                                \
+            InvertConditionT<isa::inst::Opcode::OPCODE>();                                        \
+            return;                                                                               \
+        }                                                                                         \
+    }
+    ISA_INSTRUCTION_LIST(GENERATOR);
+#undef GENERATOR
+
+    UNREACHABLE("trying to invert condition in an instruction with no condition");
 }
 
 void BasicBlock::SetFirstInst(std::unique_ptr<InstBase> inst)

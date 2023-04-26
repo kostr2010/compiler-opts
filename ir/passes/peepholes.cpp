@@ -65,7 +65,7 @@ static bool FoldBinOpToBinImmOp(InstBase* i)
     i->GetBasicBlock()->InsertInstAfter(InstBase::NewInst<OPCODE_TO>(), i);
     auto new_inst = i->GetNext();
     new_inst->SetInput(0, input_param);
-    static_cast<isa::inst_type::BIN_IMM*>(new_inst)->SetImm(0, const_op->GetValInt());
+    static_cast<isa::inst_type::BIN_IMM*>(new_inst)->SetImmediate(0, const_op->GetValInt());
     TransferUsers(i, new_inst);
 
     return true;
@@ -246,7 +246,7 @@ bool Peepholes::MatchADD_same_value(InstBase* i)
         bb->InsertInstAfter(InstBase::NewInst<isa::inst::Opcode::SHLI>(), i);
         auto new_inst = i->GetNext();
         new_inst->SetInput(0, inputs[0]);
-        static_cast<isa::inst_type::BIN_IMM*>(new_inst)->SetImm(0, 2);
+        static_cast<isa::inst_type::BIN_IMM*>(new_inst)->SetImmediate(0, 2);
         TransferUsers(i, i->GetNext());
         return true;
     }

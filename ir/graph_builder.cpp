@@ -79,41 +79,64 @@ void GraphBuilder::SetType(IdType id, InstBase::DataType t)
     inst->SetDataType(t);
 }
 
-void GraphBuilder::SetImm(IdType id, size_t pos, ImmType imm)
+template <typename ImmT>
+static void SetImmediateT(InstBase* i, size_t pos, ImmType imm)
+{
+    using NumImm = isa::InputValue<ImmT, isa::input::Type::IMM>;
+    static_assert(NumImm::value > 0);
+    static_assert(std::is_base_of_v<WithImm<NumImm::value>, ImmT>);
+
+    static_cast<ImmT*>(i)->SetImmediate(pos, imm);
+}
+
+void GraphBuilder::SetImmediate(IdType id, size_t pos, ImmType imm)
 {
     auto inst = inst_map_[id];
     assert(inst != nullptr);
+    assert(inst->GetNumImms() > 0);
+    assert(pos < inst->GetNumImms());
+    auto opcode = inst->GetOpcode();
 
-    auto num_imms = inst->GetNumImms();
-    assert(pos < num_imms);
-
-    if (num_imms > 0) {
-        static_cast<WithImm*>(inst)->SetImm(pos, imm);
-        return;
+#define GENERATOR(OPCODE, TYPE, ...)                                                              \
+    if constexpr (isa::InputValue<isa::inst_type::TYPE, isa::input::Type::IMM>::value > 0) {      \
+        if (opcode == isa::inst::Opcode::OPCODE) {                                                \
+            SetImmediateT<isa::inst_type::TYPE>(inst, pos, imm);                                  \
+            return;                                                                               \
+        }                                                                                         \
     }
+    ISA_INSTRUCTION_LIST(GENERATOR);
+#undef GENERATOR
 
     UNREACHABLE("trying to set immediate in an instruction with no immediates");
 }
 
-void GraphBuilder::SetCond(IdType id, Conditional::Type c)
+template <typename CondT>
+static void SetConditionT(InstBase* i, Conditional::Type c)
+{
+    static_assert(isa::InputValue<CondT, isa::input::Type::COND>::value == true);
+    static_assert(std::is_base_of_v<Conditional, CondT>);
+
+    static_cast<CondT*>(i)->SetCondition(c);
+}
+
+void GraphBuilder::SetCondition(IdType id, Conditional::Type c)
 {
     auto inst = inst_map_[id];
     assert(inst != nullptr);
     assert(inst->IsConditional());
+    auto opcode = inst->GetOpcode();
 
-    switch (inst->GetOpcode()) {
-    case isa::inst::Opcode::IF:
-        static_cast<isa::inst_type::IF*>(inst)->SetCond(c);
-        break;
-    case isa::inst::Opcode::IF_IMM:
-        static_cast<isa::inst_type::IF_IMM*>(inst)->SetCond(c);
-        break;
-    case isa::inst::Opcode ::CMP:
-        static_cast<isa::inst_type::COMPARE*>(inst)->SetCond(c);
-        break;
-    default:
-        UNREACHABLE("trying to set condition in an instruction with no condition");
+#define GENERATOR(OPCODE, TYPE, ...)                                                              \
+    if constexpr (isa::InputValue<isa::inst_type::TYPE, isa::input::Type::COND>::value == true) { \
+        if (opcode == isa::inst::Opcode::OPCODE) {                                                \
+            SetConditionT<isa::inst_type::TYPE>(inst, c);                                         \
+            return;                                                                               \
+        }                                                                                         \
     }
+    ISA_INSTRUCTION_LIST(GENERATOR);
+#undef GENERATOR
+
+    UNREACHABLE("trying to set condition in an instruction with no condition");
 }
 
 using NumBranchesDefault =
@@ -138,8 +161,9 @@ void GraphBuilder::ConstructCFG()
     for (auto& [bb_id, succs] : bb_succ_map_) {
         assert(succs.size() <= MaxBranchNum::value);
         auto bb = bb_map_.at(bb_id);
-        for (auto succ : succs) {
-            graph_->AddEdge(bb, bb_map_.at(succ));
+        for (size_t i = 0; i < succs.size(); ++i) {
+            auto succ = bb_map_.at(succs[i]);
+            graph_->AddEdge(bb, succ, i);
         }
     }
 

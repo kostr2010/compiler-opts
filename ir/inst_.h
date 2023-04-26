@@ -124,6 +124,7 @@ class InstBase : public marker::Markable
     bool IsCall() const;
     bool IsCheck() const;
     bool IsReturn() const;
+    bool IsUnconditionalJump() const;
 
     bool Precedes(const InstBase* inst) const;
     bool Dominates(const InstBase* inst) const;
@@ -177,7 +178,8 @@ class Conditional
   public:
     enum Branch
     {
-        FALLTHOUGH = 0
+        FALLTHROUGH = 0,
+        BRANCH_TRUE = 1,
     };
 
     enum Type : uint8_t
@@ -196,9 +198,9 @@ class Conditional
     }
     DEFAULT_CTOR(Conditional);
 
-    GETTER_SETTER(Cond, Type, cond_);
+    GETTER_SETTER(Condition, Type, cond_);
 
-    Type Invert();
+    void Invert();
 
     void Dump() const;
 
@@ -206,22 +208,38 @@ class Conditional
     Type cond_{ Type::UNSET };
 };
 
-class WithImm : public InstBase
+template <size_t N>
+class WithImm
 {
   public:
-    WithImm(isa::inst::Opcode op) : InstBase(op)
+    WithImm()
     {
-        imms_.resize(GetNumImms());
     }
     GETTER(Imms, imms_);
 
-    ImmType GetImm(size_t idx) const;
-    void SetImm(size_t idx, ImmType imm);
+    ImmType GetImm(size_t idx) const
+    {
+        assert(idx < N);
+        return imms_[idx];
+    }
 
-    void Dump() const override;
+    void SetImmediate(size_t idx, ImmType imm)
+    {
+        assert(idx < N);
+        imms_[idx] = imm;
+    }
+
+    void Dump() const
+    {
+        std::cout << "#\t immediates: ";
+        for (const auto& imm : imms_) {
+            std::cout << imm;
+        }
+        std::cout << "\n";
+    }
 
   protected:
-    std::vector<ImmType> imms_{};
+    std::array<ImmType, N> imms_{};
 };
 
 class isa::inst_type::NO_INPUT : public InstBase
@@ -287,12 +305,14 @@ class isa::inst_type::BINARY : public InstBase
   private:
 };
 
-class isa::inst_type::BIN_IMM : public WithImm
+class isa::inst_type::BIN_IMM
+    : public InstBase,
+      public WithImm<isa::InputValue<isa::inst_type::BIN_IMM, isa::input::Type::IMM>::value>
 {
     using Type = isa::inst_type::BIN_IMM;
 
   public:
-    BIN_IMM(isa::inst::Opcode op) : WithImm(op)
+    BIN_IMM(isa::inst::Opcode op) : InstBase(op)
     {
         using ValueDyn = isa::InputValue<Type, isa::input::Type::DYN>;
         using ValueVreg = isa::InputValue<Type, isa::input::Type::VREG>;
@@ -303,6 +323,12 @@ class isa::inst_type::BIN_IMM : public WithImm
         assert(ValueVreg::value == GetNumInputs());
         assert(ValueImm::value == GetNumImms());
         assert(ValueCond::value == IsConditional());
+    }
+
+    void Dump() const override
+    {
+        InstBase::Dump();
+        WithImm::Dump();
     }
 
   private:
@@ -379,12 +405,15 @@ class isa::inst_type::IF : public InstBase, public Conditional
   private:
 };
 
-class isa::inst_type::IF_IMM : public WithImm, public Conditional
+class isa::inst_type::IF_IMM
+    : public InstBase,
+      public Conditional,
+      public WithImm<isa::InputValue<isa::inst_type::BIN_IMM, isa::input::Type::IMM>::value>
 {
     using Type = isa::inst_type::IF_IMM;
 
   public:
-    IF_IMM(isa::inst::Opcode op, Conditional::Type cc) : WithImm(op), Conditional(cc)
+    IF_IMM(isa::inst::Opcode op, Conditional::Type cc) : InstBase(op), Conditional(cc)
     {
         using ValueDyn = isa::InputValue<Type, isa::input::Type::DYN>;
         using ValueVreg = isa::InputValue<Type, isa::input::Type::VREG>;
@@ -399,6 +428,7 @@ class isa::inst_type::IF_IMM : public WithImm, public Conditional
 
     void Dump() const override
     {
+        InstBase::Dump();
         WithImm::Dump();
         Conditional::Dump();
     }

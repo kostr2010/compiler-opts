@@ -186,7 +186,7 @@ void LoopAnalysis::AddPreHeader(Loop* loop)
     for (const auto& bb : pred) {
         graph_->ReplaceSuccessor(bb, head, preheader);
     }
-    graph_->AddEdge(preheader, head);
+    graph_->AddEdge(preheader, head, Conditional::Branch::FALLTHROUGH);
 }
 
 void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
@@ -195,8 +195,8 @@ void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
     assert(pred != nullptr);
     assert(bb->GetLoop() != nullptr);
     assert(bb->GetLoop()->GetBackEdges().size() == 1);
-    assert(bb->IsInPred(pred));
-    assert(pred->IsInSucc(bb));
+    assert(bb->Succeeds(pred));
+    assert(pred->Precedes(bb));
 
     auto loop = bb->GetLoop();
     auto bck = loop->GetBackEdges().front();

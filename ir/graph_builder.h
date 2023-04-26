@@ -84,8 +84,8 @@ class GraphBuilder
     }
 
     void SetType(IdType id, InstBase::DataType t);
-    void SetImm(IdType id, size_t pos, ImmType imm);
-    void SetCond(IdType id, Conditional::Type c);
+    void SetImmediate(IdType id, size_t pos, ImmType imm);
+    void SetCondition(IdType id, Conditional::Type c);
 
     void ConstructCFG();
     void ConstructDFG();

@@ -53,7 +53,7 @@ TEST(TestCheckElimination, TestSameCheckSameInput)
     auto I3 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
-    b.SetImm(I0, 0, 10);
+    b.SetImmediate(I0, 0, 10);
     b.SetInputs(I1, I0);
     b.SetInputs(I2, I0);
 
@@ -128,9 +128,9 @@ TEST(TestCheckElimination, TestSameCheckDiffInput)
     auto I4 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
-    b.SetImm(I0, 0, 1);
+    b.SetImmediate(I0, 0, 1);
     b.SetInputs(I1, C0);
-    b.SetImm(I1, 0, 11);
+    b.SetImmediate(I1, 0, 11);
     b.SetInputs(I2, I0);
     b.SetInputs(I3, I1);
 
@@ -220,7 +220,7 @@ TEST(TestCheckElimination, TestDiffCheckSameInput)
     auto I3 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
-    b.SetImm(I0, 0, 10);
+    b.SetImmediate(I0, 0, 10);
     b.SetInputs(I1, I0);
     b.SetInputs(I2, I0);
 
@@ -304,9 +304,9 @@ TEST(TestCheckElimination, TestDiffCheckDiffInput)
     auto I4 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
-    b.SetImm(I0, 0, 1);
+    b.SetImmediate(I0, 0, 1);
     b.SetInputs(I1, C0);
-    b.SetImm(I1, 0, 11);
+    b.SetImmediate(I1, 0, 11);
     b.SetInputs(I2, I0);
     b.SetInputs(I3, I1);
 
@@ -409,7 +409,7 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInput)
     auto R0 = b.NewInst<isa::inst::Opcode::RETURN_VOID>();
 
     b.SetInputs(I0, C0);
-    b.SetImm(I0, 0, 10);
+    b.SetImmediate(I0, 0, 10);
     b.SetInputs(I1, I0);
     b.SetInputs(I2, I0);
     b.SetInputs(I3, I0);
@@ -513,7 +513,7 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
 
     b.SetInputs(IF0, C0, C0);
     b.SetInputs(I0, C0);
-    b.SetImm(I0, 0, 10);
+    b.SetImmediate(I0, 0, 10);
     b.SetInputs(I1, I0);
     b.SetInputs(I2, I0);
     b.SetInputs(I3, I0);
@@ -643,7 +643,7 @@ TEST(TestCheckElimination, TestCheckSizeEquivalence)
 
     b.SetInputs(IF0, C0, C0);
     b.SetInputs(ARR, C0);
-    b.SetImm(ARR, 0, 11);
+    b.SetImmediate(ARR, 0, 11);
     b.SetInputs(I0, ARR, C0);
     b.SetInputs(I1, ARR, C0);
     b.SetInputs(I2, ARR, C1);

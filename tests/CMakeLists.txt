@@ -8,6 +8,7 @@ set(TESTS
     peepholes_test.cpp
     inlining_test.cpp
     check_elimination_test.cpp
+    linear_order_test.cpp
     )
 
 add_executable(gtests ${TESTS})

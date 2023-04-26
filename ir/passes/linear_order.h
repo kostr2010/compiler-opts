@@ -6,6 +6,7 @@
 #include <vector>
 
 class BasicBlock;
+class Loop;
 
 class LinearOrder : public Pass
 {
@@ -27,6 +28,8 @@ class LinearOrder : public Pass
 
   private:
     void RunPass_(BasicBlock* cur_bb);
+    void LinearizeLoop(Loop* loop, const Markers m);
+    void Check();
     void ResetState();
 
     std::vector<BasicBlock*> linear_bb_{};

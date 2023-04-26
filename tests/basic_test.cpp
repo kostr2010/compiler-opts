@@ -62,7 +62,7 @@ TEST(BasicTests, Example1)
     b.SetInputs(i1, { { c0, START }, { i3, b1 } });
     b.SetInputs(i3, i1, i0);
     b.SetInputs(i4, i0);
-    b.SetImm(i4, 0, 10);
+    b.SetImmediate(i4, 0, 10);
     b.SetInputs(i5, i1);
 
     b.SetSuccessors(START, { b0 });

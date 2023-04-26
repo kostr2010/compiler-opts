@@ -30,17 +30,11 @@ class Graph
     void ClearDominators();
     void ClearLoops();
 
-    void AddEdge(IdType from, IdType to);
-    void AddEdge(BasicBlock* from, BasicBlock* to);
-
-    // void RemoveEdge(IdType from, IdType to);
-    // void RemoveEdge(BasicBlock* from, BasicBlock* to);
+    void AddEdge(BasicBlock* from, BasicBlock* to, size_t slot);
 
     void InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to);
     void InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before);
-    // void InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after);
     void ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ);
-    // void AppendBasicBlock(BasicBlock* first, BasicBlock* second);
 
     BasicBlock* SplitBasicBlock(InstBase* inst_after);
 

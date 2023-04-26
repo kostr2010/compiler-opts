@@ -1003,11 +1003,11 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     b.SetInputs(I0, { { C0, Graph::BB_START_ID }, { I2, B }, { I3, C }, { I4, D } });
     b.SetInputs(I1, { { C0, Graph::BB_START_ID }, { I2, B }, { I3, C } });
     b.SetInputs(I2, C0);
-    b.SetImm(I2, 0, 10);
+    b.SetImmediate(I2, 0, 10);
     b.SetInputs(I3, C0);
-    b.SetImm(I3, 0, 10);
+    b.SetImmediate(I3, 0, 10);
     b.SetInputs(I4, C0);
-    b.SetImm(I4, 0, 10);
+    b.SetImmediate(I4, 0, 10);
 
     b.SetSuccessors(START, { A });
     b.SetSuccessors(A, { B });

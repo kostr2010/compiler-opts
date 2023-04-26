@@ -65,50 +65,24 @@ void Graph::ClearLoops()
     }
 }
 
-void Graph::AddEdge(IdType from, IdType to)
-{
-    auto bb_to = bb_vector_.at(to).get();
-    auto bb_from = bb_vector_.at(from).get();
-
-    AddEdge(bb_from, bb_to);
-}
-
-void Graph::AddEdge(BasicBlock* from, BasicBlock* to)
+void Graph::AddEdge(BasicBlock* from, BasicBlock* to, size_t slot)
 {
     assert(to != nullptr);
     assert(from != nullptr);
 
-    from->AddSucc(to);
-    to->AddPred(from);
+    // from->AddSuccsessor(to);
+    from->SetSuccsessor(slot, to);
+    to->AddPredecessor(from);
 
     analyser_.InvalidateCFGSensitiveActivePasses();
 }
 
-// void Graph::RemoveEdge(IdType from, IdType to)
-// {
-//     auto bb_to = bb_vector_.at(to).get();
-//     auto bb_from = bb_vector_.at(from).get();
-
-//     RemoveEdge(bb_from, bb_to);
-// }
-
-// void Graph::RemoveEdge(BasicBlock* from, BasicBlock* to)
-// {
-//     assert(to != nullptr);
-//     assert(from != nullptr);
-
-//     from->RemoveSucc(to);
-//     to->RemovePred(from);
-
-//     analyser_.InvalidateCFGSensitiveActivePasses();
-// }
-
 void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
 {
-    from->ReplaceSucc(to, bb);
-    bb->AddPred(from);
-    to->ReplacePred(from, bb);
-    bb->AddSucc(to);
+    from->ReplaceSuccessor(to, bb);
+    bb->AddPredecessor(from);
+    to->ReplacePredecessor(from, bb);
+    bb->AddSuccsessor(to);
 
     analyser_.InvalidateCFGSensitiveActivePasses();
 }
@@ -118,89 +92,29 @@ void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
     assert(!before->HasNoPredecessors());
 
     for (const auto& pred : before->GetPredecessors()) {
-        pred->ReplaceSucc(before, bb);
-        before->RemovePred(pred);
-        bb->AddPred(pred);
+        pred->ReplaceSuccessor(before, bb);
+        before->RemovePredecessor(pred);
+        bb->AddPredecessor(pred);
     }
-    AddEdge(bb, before);
+    AddEdge(bb, before, Conditional::Branch::FALLTHROUGH);
 
     analyser_.InvalidateCFGSensitiveActivePasses();
 }
-
-// void Graph::InsertBasicBlockAfter(BasicBlock* bb, BasicBlock* after)
-// {
-//     if (after->IsEndBlock()) {
-//         AddEdge(after, bb);
-//     } else {
-//         for (const auto& succ : after->GetSuccessors()) {
-//             succ->ReplacePred(after, bb);
-//             after->ReplaceSucc();
-//             after->RemoveSucc(succ);
-//             bb->AddSucc(succ);
-//         }
-//         AddEdge(after, bb);
-//     }
-
-//     analyser_.InvalidateCFGSensitiveActivePasses();
-// }
 
 void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ)
 {
     assert(bb != nullptr);
     assert(prev_succ != nullptr);
 
-    bb->ReplaceSucc(prev_succ, new_succ);
-    prev_succ->RemovePred(bb);
+    bb->ReplaceSuccessor(prev_succ, new_succ);
+    prev_succ->RemovePredecessor(bb);
 
     if (new_succ != nullptr) {
-        new_succ->AddPred(bb);
+        new_succ->AddPredecessor(bb);
     }
 
     analyser_.InvalidateCFGSensitiveActivePasses();
 }
-
-// void Graph::AppendBasicBlock(BasicBlock* first, BasicBlock* second)
-// {
-//     assert(first != nullptr);
-//     assert(second != nullptr);
-
-//     auto second_last_phi = second->GetLastPhi();
-//     auto first_last_phi = first->GetLastPhi();
-
-//     // assert(first_last_phi != nullptr);
-//     auto second_first_phi = second->TransferPhi();
-//     if (second_first_phi != nullptr) {
-//         std::unique_ptr<InstBase> i{ second_first_phi };
-//         first->PushBackPhi(std::move(i));
-//         second_first_phi->SetPrev(first_last_phi);
-//         first->SetLastPhi(second_last_phi);
-
-//         auto inst = second_first_phi;
-//         while (inst != nullptr) {
-//             inst->SetBasicBlock(first);
-//             inst = inst->GetNext();
-//         }
-//     }
-
-//     auto second_last_inst = second->GetLastInst();
-//     auto first_last_inst = first->GetLastInst();
-
-//     auto second_first_inst = second->TransferInst();
-//     if (second_first_inst != nullptr) {
-//         std::unique_ptr<InstBase> i{ second_first_inst };
-//         first->PushBackInst(std::move(i));
-//         second_first_inst->SetPrev(first_last_inst);
-//         first->SetLastInst(second_last_inst);
-
-//         auto inst = second_first_inst;
-//         while (inst != nullptr) {
-//             inst->SetBasicBlock(first);
-//             inst = inst->GetNext();
-//         }
-//     }
-
-//     analyser_.InvalidateCFGSensitiveActivePasses();
-// }
 
 BasicBlock* Graph::SplitBasicBlock(InstBase* inst_after)
 {
