@@ -35,6 +35,8 @@ class Graph
     void InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to);
     void InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before);
     void ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ);
+    void InvertCondition(BasicBlock* bb);
+    void SwapTwoSuccessors(BasicBlock* bb);
 
     BasicBlock* SplitBasicBlock(InstBase* inst_after);
 

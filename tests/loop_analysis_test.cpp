@@ -422,7 +422,7 @@ TEST(TestLoopAnalysis, Example3)
     CheckSuccessors(B_, { B });
 
     ASSERT_EQ(root->GetInnerLoops().size(), 2);
-    CheckLoopContents(root, { START, A, H, I, C, B_->GetId() });
+    CheckLoopContents(root, { START, A, H, D, G, I, C, B_->GetId() });
 
     auto loop = root->GetInnerLoops().at(0);
     ASSERT_FALSE(loop->IsReducible());
@@ -432,7 +432,7 @@ TEST(TestLoopAnalysis, Example3)
     ASSERT_EQ(loop->GetInnerLoops().size(), 0);
     ASSERT_EQ(loop->GetBackEdges().size(), 1);
     ASSERT_EQ(loop->GetBackEdges().at(0), g.GetBasicBlock(D));
-    CheckLoopContents(loop, { D });
+    CheckLoopContents(loop, {});
 
     loop = root->GetInnerLoops().at(1);
     ASSERT_TRUE(loop->IsReducible());
@@ -901,7 +901,7 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     auto root = loop_pass->GetRootLoop();
 
     ASSERT_TRUE(root->GetBackEdges().empty());
-    ASSERT_FALSE(root->IsReducible());
+    ASSERT_TRUE(root->IsReducible());
     ASSERT_EQ(root->GetHeader(), nullptr);
     ASSERT_EQ(root->GetOuterLoop(), nullptr);
     ASSERT_TRUE(root->GetPreHeader() == nullptr);
@@ -1084,7 +1084,7 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     auto root = loop_pass->GetRootLoop();
 
     ASSERT_TRUE(root->GetBackEdges().empty());
-    ASSERT_FALSE(root->IsReducible());
+    ASSERT_TRUE(root->IsReducible());
     ASSERT_EQ(root->GetHeader(), nullptr);
     ASSERT_EQ(root->GetOuterLoop(), nullptr);
     ASSERT_TRUE(root->GetPreHeader() == nullptr);

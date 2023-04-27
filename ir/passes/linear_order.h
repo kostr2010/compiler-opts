@@ -11,13 +11,6 @@ class Loop;
 class LinearOrder : public Pass
 {
   public:
-    enum Marks
-    {
-        VISITED = 0,
-        N_MARKS,
-    };
-    using Markers = marker::Markers<Marks::N_MARKS>;
-
     LinearOrder(Graph* graph) : Pass(graph)
     {
     }
@@ -27,8 +20,13 @@ class LinearOrder : public Pass
     std::vector<BasicBlock*> GetBlocks();
 
   private:
-    void RunPass_(BasicBlock* cur_bb);
-    void LinearizeLoop(Loop* loop, const Markers m);
+    void Linearize();
+    void AppendJump(BasicBlock* bb);
+    BasicBlock* InsertJumpBasicBlock(BasicBlock* prev, BasicBlock* next);
+    void ProcessSingleSuccessor(BasicBlock* bb, BasicBlock* prev);
+    void ProcessTwoSuccessors(BasicBlock* bb, BasicBlock* prev);
+    void ProcessMultipleSuccessors(BasicBlock* bb, BasicBlock* prev);
+    void ProcessLast(BasicBlock* bb);
     void Check();
     void ResetState();
 

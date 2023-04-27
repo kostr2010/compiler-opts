@@ -43,8 +43,7 @@ BasicBlock* BasicBlock::GetSuccessor(size_t idx)
 
 void BasicBlock::SetLoop(Loop* loop, bool is_header /* = false */)
 {
-    assert(loop != nullptr);
-
+    // assert(loop != nullptr);
     is_loop_header_ = is_header;
     loop_ = loop;
 }
@@ -95,21 +94,6 @@ void BasicBlock::SetSuccsessor(size_t pos, BasicBlock* bb)
     succs_[pos] = bb;
 }
 
-void BasicBlock::AddSuccsessor(BasicBlock* bb)
-{
-    assert(bb != nullptr);
-    assert(!Precedes(bb));
-
-    for (size_t i = 0; i < GetNumSuccessors(); ++i) {
-        if (succs_[i] == nullptr) {
-            succs_[i] = bb;
-            return;
-        }
-    }
-
-    UNREACHABLE("Trying to add too many successors to the basic block.");
-}
-
 bool BasicBlock::Precedes(IdType bb_id) const
 {
     for (size_t i = 0; i < GetNumSuccessors(); ++i) {
@@ -128,30 +112,10 @@ bool BasicBlock::Precedes(BasicBlock* bb) const
     return Precedes(bb->GetId());
 }
 
-// void BasicBlock::RemoveSucc(BasicBlock* bb)
-// {
-//     assert(bb != nullptr);
-
-//     if (!Precedes(bb)) {
-//         return;
-//     }
-
-//     for (auto succ : succs_) {
-//         if (succ->GetId() == bb->GetId()) {
-//             succ = nullptr;
-//             break;
-//         }
-//     }
-// }
-
 void BasicBlock::AddPredecessor(BasicBlock* bb)
 {
     assert(bb != nullptr);
     assert(!Succeeds(bb));
-
-    // if (Succeeds(bb)) {
-    //     return;
-    // }
 
     preds_.emplace_back(bb);
 }
@@ -422,28 +386,6 @@ void BasicBlock::Dump() const
     }
 
     std::cout << "#########################\n";
-}
-
-void BasicBlock::InvertCondition()
-{
-    assert(GetNumSuccessors() > isa::flag::Flag<isa::flag::BRANCH>::Value::ONE_SUCCESSOR);
-    assert(GetLastInst() != nullptr);
-    assert(GetLastInst()->IsConditional());
-
-    auto opcode = GetLastInst()->GetOpcode();
-
-#define GENERATOR(OPCODE, TYPE, ...)                                                              \
-    if constexpr (isa::InputValue<isa::inst_type::TYPE, isa::input::Type::COND>::value == true && \
-                  isa::HasFlag<isa::inst::Opcode::OPCODE, isa::flag::BRANCH>::value == true) {    \
-        if (opcode == isa::inst::Opcode::OPCODE) {                                                \
-            InvertConditionT<isa::inst::Opcode::OPCODE>();                                        \
-            return;                                                                               \
-        }                                                                                         \
-    }
-    ISA_INSTRUCTION_LIST(GENERATOR);
-#undef GENERATOR
-
-    UNREACHABLE("trying to invert condition in an instruction with no condition");
 }
 
 void BasicBlock::SetFirstInst(std::unique_ptr<InstBase> inst)

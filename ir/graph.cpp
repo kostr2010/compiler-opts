@@ -1,6 +1,8 @@
 #include "graph.h"
 #include "bb.h"
 
+using BranchFlag = isa::flag::Flag<isa::flag::BRANCH>;
+
 BasicBlock* Graph::GetStartBasicBlock() const
 {
     return bb_vector_[BB_START_ID].get();
@@ -70,7 +72,6 @@ void Graph::AddEdge(BasicBlock* from, BasicBlock* to, size_t slot)
     assert(to != nullptr);
     assert(from != nullptr);
 
-    // from->AddSuccsessor(to);
     from->SetSuccsessor(slot, to);
     to->AddPredecessor(from);
 
@@ -79,10 +80,11 @@ void Graph::AddEdge(BasicBlock* from, BasicBlock* to, size_t slot)
 
 void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
 {
+    assert(bb->GetNumSuccessors() == BranchFlag::Value::ONE_SUCCESSOR);
     from->ReplaceSuccessor(to, bb);
     bb->AddPredecessor(from);
     to->ReplacePredecessor(from, bb);
-    bb->AddSuccsessor(to);
+    bb->SetSuccsessor(Conditional::Branch::FALLTHROUGH, to);
 
     analyser_.InvalidateCFGSensitiveActivePasses();
 }
@@ -114,6 +116,70 @@ void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* 
     }
 
     analyser_.InvalidateCFGSensitiveActivePasses();
+}
+
+void Graph::SwapTwoSuccessors(BasicBlock* bb)
+{
+    using FlagBranch = isa::flag::Flag<isa::flag::Type::BRANCH>;
+    assert(bb != nullptr);
+    assert(bb->GetNumSuccessors() == FlagBranch::Value::TWO_SUCCESSORS);
+
+    auto fallthrough = bb->GetSuccessor(Conditional::Branch::FALLTHROUGH);
+    auto branch = bb->GetSuccessor(Conditional::Branch::BRANCH_TRUE);
+
+    bb->SetSuccsessor(Conditional::Branch::FALLTHROUGH, branch);
+    bb->SetSuccsessor(Conditional::Branch::BRANCH_TRUE, fallthrough);
+
+    analyser_.InvalidateCFGSensitiveActivePasses();
+}
+
+template <isa::inst::Opcode OPCODE>
+static void InvertConditionT(Graph* g, InstBase* inst)
+{
+    assert(inst != nullptr);
+    assert(inst->GetBasicBlock() != nullptr);
+
+    using T = isa::inst::Inst<OPCODE>::Type;
+    static_assert(isa::InputValue<T, isa::input::Type::COND>::value == true);
+    static_assert(isa::HasFlag<OPCODE, isa::flag::BRANCH>::value == true);
+    static_assert(std::is_base_of_v<Conditional, T>);
+
+    static_cast<T*>(inst)->Invert();
+
+    using NumBranches = isa::FlagValue<OPCODE, isa::flag::BRANCH>;
+    switch (NumBranches::value) {
+    case BranchFlag::Value::TWO_SUCCESSORS: {
+        g->SwapTwoSuccessors(inst->GetBasicBlock());
+        return;
+    }
+    default: {
+        LOG("Num branches: " << NumBranches::value);
+        UNREACHABLE("Inversion operation is undefined for this number of barnches");
+    }
+    }
+}
+
+void Graph::InvertCondition(BasicBlock* bb)
+{
+    assert(bb->GetNumSuccessors() > isa::flag::Flag<isa::flag::BRANCH>::Value::ONE_SUCCESSOR);
+    assert(bb->GetLastInst() != nullptr);
+    assert(bb->GetLastInst()->IsConditional());
+
+    auto inst = bb->GetLastInst();
+    auto opcode = inst->GetOpcode();
+
+#define GENERATOR(OPCODE, TYPE, ...)                                                              \
+    if constexpr (isa::InputValue<isa::inst_type::TYPE, isa::input::Type::COND>::value == true && \
+                  isa::HasFlag<isa::inst::Opcode::OPCODE, isa::flag::BRANCH>::value == true) {    \
+        if (opcode == isa::inst::Opcode::OPCODE) {                                                \
+            InvertConditionT<isa::inst::Opcode::OPCODE>(this, inst);                              \
+            return;                                                                               \
+        }                                                                                         \
+    }
+    ISA_INSTRUCTION_LIST(GENERATOR);
+#undef GENERATOR
+
+    UNREACHABLE("trying to invert condition in an instruction with no condition");
 }
 
 BasicBlock* Graph::SplitBasicBlock(InstBase* inst_after)

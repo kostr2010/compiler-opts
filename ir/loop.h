@@ -32,6 +32,8 @@ class Loop
     void AddBackEdge(BasicBlock* bb);
     void ClearBackEdges();
 
+    bool Inside(const Loop* other) const;
+
     void Dump();
 
   private:
@@ -46,7 +48,7 @@ class Loop
     Loop* outer_loop_ = nullptr;
     std::vector<Loop*> inner_loops_ = {};
 
-    bool is_reducible_ = false;
+    bool is_reducible_ = true;
 };
 
 #endif

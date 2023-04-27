@@ -5,6 +5,7 @@
 #include "marker/marker_factory.h"
 
 #include <algorithm>
+#include <set>
 
 bool LoopAnalysis::RunPass()
 {
@@ -21,6 +22,8 @@ bool LoopAnalysis::RunPass()
     PopulateLoops();
     BuildLoopTree();
     SetValid(true);
+
+    Check();
 
     return true;
 }
@@ -75,14 +78,17 @@ void LoopAnalysis::PopulateLoop(Loop* loop)
             RunLoopSearch(loop, bck, markers);
         }
     } else {
-        for (const auto& bck : loop->GetBackEdges()) {
-            if (bck->GetLoop() != nullptr) {
-                continue;
-            }
+        assert(loop->GetHeader() != nullptr);
+        // assert(loop->GetOuterLoop() != nullptr);
+        // auto header = loop->GetHeader();
+        loop->GetHeader()->SetLoop(loop->GetOuterLoop());
+        // for (const auto& bck : loop->GetBackEdges()) {
+        //     if (bck->GetLoop() == nullptr) {
+        //         bck->SetLoop(loop);
+        //     }
 
-            bck->SetLoop(loop);
-            loop->AddBlock(bck);
-        }
+        //     loop->AddBlock(bck);
+        // }
     }
 }
 
@@ -285,5 +291,36 @@ void LoopAnalysis::RecalculateLoopsReducibility()
 
     for (const auto& loop : loops_) {
         loop->CalculateReducibility();
+    }
+}
+
+void LoopAnalysis::Check()
+{
+    std::set<IdType> bbs{};
+
+    for (const auto& loop : loops_) {
+        if (!loop->IsReducible()) {
+            continue;
+        }
+
+        if (!loop->IsRoot()) {
+            assert(!bbs.contains(loop->GetHeader()->GetId()));
+            assert(loop->GetId() == loop->GetHeader()->GetLoop()->GetId());
+            bbs.insert(loop->GetHeader()->GetId());
+        }
+
+        for (const auto& bb : loop->GetBlocks()) {
+            assert(!bbs.contains(bb->GetId()));
+            assert(bb->GetLoop()->GetId() == loop->GetId());
+            bbs.insert(bb->GetId());
+        }
+    }
+
+    auto rpo = graph_->GetAnalyser()->GetValidPass<RPO>()->GetBlocks();
+    assert(bbs.size() == rpo.size());
+
+    for (const auto& bb : rpo) {
+        assert(bb->GetLoop() != nullptr);
+        assert(bb->GetLoop()->IsReducible());
     }
 }

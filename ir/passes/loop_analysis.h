@@ -56,6 +56,7 @@ class LoopAnalysis : public Pass
     void ResetState();
     void InitStartLoop();
     void RecalculateLoopsReducibility();
+    void Check();
 
     std::unordered_map<IdType, size_t> id_to_dfs_idx_;
 

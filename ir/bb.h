@@ -27,7 +27,6 @@ class BasicBlock : public marker::Markable
     }
 
     GETTER(Predecessors, preds_);
-    // GETTER(Successors, succs_);
 
     auto GetSuccessors() const
     {
@@ -93,48 +92,12 @@ class BasicBlock : public marker::Markable
     // only graph can manipulate CFG
     friend Graph;
     void SetSuccsessor(size_t pos, BasicBlock* bb);
-    void AddSuccsessor(BasicBlock* bb);
-
-    // void RemoveSucc(BasicBlock* bb);
 
     void AddPredecessor(BasicBlock* bb);
     void RemovePredecessor(BasicBlock* bb);
 
     void ReplaceSuccessor(BasicBlock* bb_old, BasicBlock* bb_new);
     void ReplacePredecessor(BasicBlock* bb_old, BasicBlock* bb_new);
-
-    void InvertCondition();
-
-    template <isa::inst::Opcode OPCODE>
-    void InvertConditionT()
-    {
-        assert(GetLastInst() != nullptr);
-
-        using T = isa::inst::Inst<OPCODE>::Type;
-        static_assert(isa::InputValue<T, isa::input::Type::COND>::value == true);
-        static_assert(isa::HasFlag<OPCODE, isa::flag::BRANCH>::value == true);
-        static_assert(std::is_base_of_v<Conditional, T>);
-
-        static_cast<T*>(GetLastInst())->Invert();
-
-        using BranchFlag = isa::flag::Flag<isa::flag::BRANCH>;
-        using NumBranches = isa::FlagValue<OPCODE, isa::flag::BRANCH>;
-        switch (NumBranches::value) {
-        case BranchFlag::Value::TWO_SUCCESSORS: {
-            auto fallthrough = GetSuccessor(Conditional::Branch::FALLTHROUGH);
-            auto branch = GetSuccessor(Conditional::Branch::BRANCH_TRUE);
-
-            SetSuccsessor(Conditional::Branch::FALLTHROUGH, branch);
-            SetSuccsessor(Conditional::Branch::BRANCH_TRUE, fallthrough);
-
-            return;
-        }
-        default: {
-            LOG("Num branches: " << NumBranches::value);
-            UNREACHABLE("Inversion operation is undefined for this number of barnches");
-        }
-        }
-    }
 
     void SetFirstInst(std::unique_ptr<InstBase> inst);
 

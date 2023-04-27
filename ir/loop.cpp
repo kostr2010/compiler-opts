@@ -54,6 +54,19 @@ void Loop::ClearBackEdges()
     back_edges_.clear();
 }
 
+bool Loop::Inside(const Loop* other) const
+{
+    assert(other != nullptr);
+    auto* loop = GetOuterLoop();
+    while (loop != nullptr) {
+        if (loop == other) {
+            return true;
+        }
+        loop = loop->GetOuterLoop();
+    }
+    return false;
+}
+
 void Loop::Dump()
 {
     std::cout << "loop #" << id_ << "\n";
