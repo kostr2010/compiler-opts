@@ -76,7 +76,7 @@ TEST(TestLinearOrder, Example0)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, Example0_inverted)
@@ -151,7 +151,7 @@ TEST(TestLinearOrder, Example0_inverted)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, Example1)
@@ -222,7 +222,7 @@ TEST(TestLinearOrder, Example1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, Diamond)
@@ -277,7 +277,7 @@ TEST(TestLinearOrder, Diamond)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, DoubleDiamond)
@@ -342,7 +342,7 @@ TEST(TestLinearOrder, DoubleDiamond)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, TripleDiamond)
@@ -421,7 +421,7 @@ TEST(TestLinearOrder, TripleDiamond)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, LoopExample2)
@@ -538,7 +538,7 @@ TEST(TestLinearOrder, LoopExample2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, LoopExamplePhi)
@@ -614,7 +614,7 @@ TEST(TestLinearOrder, LoopExamplePhi)
     b.ConstructCFG();
     b.ConstructDFG();
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, LoopExampleSeparateBck)
@@ -683,7 +683,7 @@ TEST(TestLinearOrder, LoopExampleSeparateBck)
 
     b.ConstructCFG();
     b.ConstructDFG();
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, LoopExample4)
@@ -745,7 +745,7 @@ TEST(TestLinearOrder, LoopExample4)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, LoopExample5)
@@ -816,7 +816,7 @@ TEST(TestLinearOrder, LoopExample5)
     b.ConstructCFG();
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, LoopExample6)
@@ -899,7 +899,7 @@ TEST(TestLinearOrder, LoopExample6)
     b.ConstructCFG();
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }
 
 TEST(TestLinearOrder, LoopExample3)
@@ -993,5 +993,5 @@ TEST(TestLinearOrder, LoopExample3)
     b.ConstructCFG();
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
-    g.GetAnalyser()->GetValidPass<LinearOrder>();
+    g.GetPassManager()->GetValidPass<LinearOrder>();
 }

@@ -1,7 +1,7 @@
 #include "bb.h"
 #include "graph.h"
 #include "graph_builder.h"
-#include "macros.h"
+#include "utils/macros.h"
 
 #include "gtest/gtest.h"
 
@@ -85,9 +85,9 @@ TEST(TestInlining, Example0)
     // DUMP(caller);
     // DUMP(callee);
 
-    caller.GetAnalyser()->GetValidPass<Inlining>();
-    caller.GetAnalyser()->GetValidPass<DCE>();
-    caller.GetAnalyser()->GetValidPass<DBE>();
+    caller.GetPassManager()->GetValidPass<Inlining>();
+    caller.GetPassManager()->GetValidPass<DCE>();
+    caller.GetPassManager()->GetValidPass<DBE>();
 
     // DUMP(caller);
     // DUMP(callee);
@@ -206,9 +206,9 @@ TEST(TestInlining, Example1)
     // DUMP(caller);
     // DUMP(callee);
 
-    caller.GetAnalyser()->GetValidPass<Inlining>();
-    caller.GetAnalyser()->GetValidPass<DCE>();
-    caller.GetAnalyser()->GetValidPass<DBE>();
+    caller.GetPassManager()->GetValidPass<Inlining>();
+    caller.GetPassManager()->GetValidPass<DCE>();
+    caller.GetPassManager()->GetValidPass<DBE>();
 
     // DUMP(caller);
     // DUMP(callee);
@@ -414,9 +414,9 @@ TEST(TestInlining, Example2)
     // DUMP(caller);
     // DUMP(callee);
 
-    caller.GetAnalyser()->GetValidPass<Inlining>();
-    caller.GetAnalyser()->GetValidPass<DCE>();
-    caller.GetAnalyser()->GetValidPass<DBE>();
+    caller.GetPassManager()->GetValidPass<Inlining>();
+    caller.GetPassManager()->GetValidPass<DCE>();
+    caller.GetPassManager()->GetValidPass<DBE>();
 
     // DUMP(caller);
     // DUMP(callee);
@@ -613,9 +613,9 @@ TEST(TestInlining, Example3)
     // DUMP(caller);
     // DUMP(callee);
 
-    caller.GetAnalyser()->GetValidPass<Inlining>();
-    caller.GetAnalyser()->GetValidPass<DCE>();
-    caller.GetAnalyser()->GetValidPass<DBE>();
+    caller.GetPassManager()->GetValidPass<Inlining>();
+    caller.GetPassManager()->GetValidPass<DCE>();
+    caller.GetPassManager()->GetValidPass<DBE>();
 
     // DUMP(caller);
     // DUMP(callee);

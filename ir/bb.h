@@ -9,11 +9,11 @@
 #include <string>
 #include <vector>
 
-#include "inst_.h"
+#include "inst.h"
 #include "loop.h"
-#include "macros.h"
-#include "marker/markable.h"
 #include "typedefs.h"
+#include "utils/macros.h"
+#include "utils/marker/markable.h"
 
 #include "isa/isa.h"
 

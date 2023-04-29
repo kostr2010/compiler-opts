@@ -5,7 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(compiler_course CXX)
 
+include_directories(${PROJECT_SOURCE_DIR})
+
 add_subdirectory(ir)
+add_subdirectory(pass)
 add_subdirectory(utils)
 add_subdirectory(tests)
 add_subdirectory(third-party)

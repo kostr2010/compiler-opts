@@ -1,8 +1,8 @@
 #ifndef __LOOP_H_INCLUDED__
 #define __LOOP_H_INCLUDED__
 
-#include "macros.h"
 #include "typedefs.h"
+#include "utils/macros.h"
 
 #include <vector>
 

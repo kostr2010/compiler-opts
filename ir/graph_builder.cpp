@@ -221,7 +221,7 @@ bool GraphBuilder::RunChecks()
     }
 
     // check inputs of variable length
-    auto analyser = graph_->GetAnalyser();
+    auto analyser = graph_->GetPassManager();
     auto rpo = analyser->GetValidPass<RPO>()->GetBlocks();
     for (auto bb : rpo) {
         for (size_t i = 0; i < bb->GetNumSuccessors(); ++i) {

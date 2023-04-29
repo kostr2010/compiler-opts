@@ -63,7 +63,7 @@ TEST(TestDCE, Example1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -128,7 +128,7 @@ TEST(TestDCE, Example2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -196,7 +196,7 @@ TEST(TestDCE, Example3)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -315,7 +315,7 @@ TEST(TestDCE, Example4)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);

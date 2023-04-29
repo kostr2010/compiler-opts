@@ -9,9 +9,8 @@
 
 #include "bb.h"
 #include "graph.h"
-#include "ir_isa.h"
-#include "macros.h"
 #include "typedefs.h"
+#include "utils/macros.h"
 
 class InstBase;
 

@@ -8,8 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "analyser.h"
-#include "ir_isa.h"
+#include "pass/pass_manager.h"
 #include "typedefs.h"
 
 class BasicBlock;
@@ -19,7 +18,7 @@ class Graph
 {
   public:
     static constexpr IdType BB_START_ID = 0;
-    Graph() : analyser_{ this }
+    Graph() : pass_mgr_{ this }
     {
         InitStartBlock();
     }
@@ -50,9 +49,9 @@ class Graph
 
     void Dump(std::string name = "");
 
-    Analyser* GetAnalyser()
+    PassManager* GetPassManager()
     {
-        return &analyser_;
+        return &pass_mgr_;
     }
 
   private:
@@ -62,7 +61,7 @@ class Graph
 
     IdType bb_id_counter_{};
 
-    Analyser analyser_;
+    PassManager pass_mgr_;
 
     // Metadata metadata;
 };

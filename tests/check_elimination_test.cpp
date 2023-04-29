@@ -63,7 +63,7 @@ TEST(TestCheckElimination, TestSameCheckSameInput)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -140,7 +140,7 @@ TEST(TestCheckElimination, TestSameCheckDiffInput)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -230,7 +230,7 @@ TEST(TestCheckElimination, TestDiffCheckSameInput)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -316,7 +316,7 @@ TEST(TestCheckElimination, TestDiffCheckDiffInput)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -424,8 +424,8 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInput)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
-    g.GetAnalyser()->GetValidPass<DBE>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<DBE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -528,8 +528,8 @@ TEST(TestCheckElimination, TestMultipleSameCheckSameInputLeaveNotDominated)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
-    g.GetAnalyser()->GetValidPass<DBE>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<DBE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -657,9 +657,9 @@ TEST(TestCheckElimination, TestCheckSizeEquivalence)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
-    g.GetAnalyser()->GetValidPass<DCE>();
-    g.GetAnalyser()->GetValidPass<DBE>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<DBE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -795,10 +795,10 @@ TEST(TestCheckElimination, TestRemoveRedundantChecks)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
-    g.GetAnalyser()->GetValidPass<DBE>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<DBE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -893,10 +893,10 @@ TEST(TestCheckElimination, TestWithPeepholes)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
-    g.GetAnalyser()->GetValidPass<DCE>();
-    g.GetAnalyser()->GetValidPass<DBE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<DBE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_EQ(bb_start->GetFirstInst(), nullptr);
@@ -947,10 +947,10 @@ TEST(TestCheckElimination, TestNoRemoveNotEquivalent)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<CheckElimination>();
-    g.GetAnalyser()->GetValidPass<DCE>();
-    g.GetAnalyser()->GetValidPass<DBE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<CheckElimination>();
+    g.GetPassManager()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<DBE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);

@@ -75,7 +75,7 @@ void Graph::AddEdge(BasicBlock* from, BasicBlock* to, size_t slot)
     from->SetSuccsessor(slot, to);
     to->AddPredecessor(from);
 
-    analyser_.InvalidateCFGSensitiveActivePasses();
+    pass_mgr_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
@@ -86,7 +86,7 @@ void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
     to->ReplacePredecessor(from, bb);
     bb->SetSuccsessor(Conditional::Branch::FALLTHROUGH, to);
 
-    analyser_.InvalidateCFGSensitiveActivePasses();
+    pass_mgr_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
@@ -100,7 +100,7 @@ void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
     }
     AddEdge(bb, before, Conditional::Branch::FALLTHROUGH);
 
-    analyser_.InvalidateCFGSensitiveActivePasses();
+    pass_mgr_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ)
@@ -115,7 +115,7 @@ void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* 
         new_succ->AddPredecessor(bb);
     }
 
-    analyser_.InvalidateCFGSensitiveActivePasses();
+    pass_mgr_.InvalidateCFGSensitiveActivePasses();
 }
 
 void Graph::SwapTwoSuccessors(BasicBlock* bb)
@@ -130,7 +130,7 @@ void Graph::SwapTwoSuccessors(BasicBlock* bb)
     bb->SetSuccsessor(Conditional::Branch::FALLTHROUGH, branch);
     bb->SetSuccsessor(Conditional::Branch::BRANCH_TRUE, fallthrough);
 
-    analyser_.InvalidateCFGSensitiveActivePasses();
+    pass_mgr_.InvalidateCFGSensitiveActivePasses();
 }
 
 template <isa::inst::Opcode OPCODE>
@@ -209,7 +209,7 @@ BasicBlock* Graph::SplitBasicBlock(InstBase* inst_after)
         inst->SetBasicBlock(bb_new);
     }
 
-    analyser_.InvalidateCFGSensitiveActivePasses();
+    pass_mgr_.InvalidateCFGSensitiveActivePasses();
 
     return bb_new;
 }
@@ -222,5 +222,5 @@ void Graph::DestroyBasicBlock(BasicBlock* bb)
 
     bb_vector_.at(bb->GetId()).reset(nullptr);
 
-    analyser_.InvalidateCFGSensitiveActivePasses();
+    pass_mgr_.InvalidateCFGSensitiveActivePasses();
 }

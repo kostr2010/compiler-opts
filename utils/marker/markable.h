@@ -4,9 +4,9 @@
 #include <array>
 #include <cstdint>
 
-#include "macros.h"
 #include "marker.h"
 #include "marking_params.h"
+#include "utils/macros.h"
 
 namespace marker {
 class Markable

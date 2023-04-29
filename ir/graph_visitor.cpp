@@ -1,5 +1,5 @@
 #include "graph_visitor.h"
-#include "inst_.h"
+#include "inst.h"
 
 void GraphVisitor::VisitDefault(InstBase* inst)
 {

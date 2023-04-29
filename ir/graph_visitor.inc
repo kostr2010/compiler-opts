@@ -3,7 +3,7 @@
 #define GEN_BLOCK_ORDER_FUNCTION(CLASS, PASS)                                                     \
     std::vector<BasicBlock*> CLASS ::BlockOrder() const                                           \
     {                                                                                             \
-        return graph_->GetAnalyser()->GetValidPass<PASS>()->GetBlocks();                          \
+        return graph_->GetPassManager()->GetValidPass<PASS>()->GetBlocks();                       \
     }
 
 #define GEN_VISIT_FUNCTIONS(CLASS)                                                                \
@@ -48,7 +48,7 @@
                                                                                                   \
     std::vector<BasicBlock*> CLASS ::BlockOrder() const                                           \
     {                                                                                             \
-        return graph_->GetAnalyser()->GetValidPass<PASS>()->GetBlocks();                          \
+        return graph_->GetPassManager()->GetValidPass<PASS>()->GetBlocks();                       \
     }
 
 public:

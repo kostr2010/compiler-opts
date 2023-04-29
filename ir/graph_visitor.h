@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "isa/isa.h"
-#include "macros.h"
+#include "utils/macros.h"
 
 class Graph;
 class BasicBlock;

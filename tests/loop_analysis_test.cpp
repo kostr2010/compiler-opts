@@ -131,8 +131,8 @@ TEST(TestLoopAnalysis, Example1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
-    auto rpo_pass = g.GetAnalyser()->GetValidPass<RPO>();
+    auto loop_pass = g.GetPassManager()->GetValidPass<LoopAnalysis>();
+    auto rpo_pass = g.GetPassManager()->GetValidPass<RPO>();
     auto root = loop_pass->GetRootLoop();
 
     ASSERT_EQ(root->GetBlocks().size(), rpo_pass->GetBlocks().size());
@@ -257,7 +257,7 @@ TEST(TestLoopAnalysis, Example2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
+    auto loop_pass = g.GetPassManager()->GetValidPass<LoopAnalysis>();
     auto root = loop_pass->GetRootLoop();
 
     ASSERT_TRUE(root->GetBackEdges().empty());
@@ -408,7 +408,7 @@ TEST(TestLoopAnalysis, Example3)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
+    auto loop_pass = g.GetPassManager()->GetValidPass<LoopAnalysis>();
     auto root = loop_pass->GetRootLoop();
 
     ASSERT_TRUE(root->GetBackEdges().empty());
@@ -504,7 +504,7 @@ TEST(TestLoopAnalysis, Example4)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
+    auto loop_pass = g.GetPassManager()->GetValidPass<LoopAnalysis>();
     auto root = loop_pass->GetRootLoop();
 
     ASSERT_TRUE(root->GetBackEdges().empty());
@@ -600,7 +600,7 @@ TEST(TestLoopAnalysis, Example5)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
+    auto loop_pass = g.GetPassManager()->GetValidPass<LoopAnalysis>();
     auto root = loop_pass->GetRootLoop();
 
     ASSERT_TRUE(root->GetBackEdges().empty());
@@ -708,7 +708,7 @@ TEST(TestLoopAnalysis, Example6)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
+    auto loop_pass = g.GetPassManager()->GetValidPass<LoopAnalysis>();
     auto root = loop_pass->GetRootLoop();
 
     ASSERT_TRUE(root->GetBackEdges().empty());
@@ -817,7 +817,7 @@ TEST(TestLoopAnalysis, SeparateBackedges1)
     b.ConstructCFG();
     b.ConstructDFG();
 
-    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
+    auto loop_pass = g.GetPassManager()->GetValidPass<LoopAnalysis>();
 
     auto start_bb = g.GetStartBasicBlock();
 
@@ -1018,7 +1018,7 @@ TEST(TestLoopAnalysis, TestAddPreheaderPhi1)
     b.ConstructCFG();
     b.ConstructDFG();
 
-    auto loop_pass = g.GetAnalyser()->GetValidPass<LoopAnalysis>();
+    auto loop_pass = g.GetPassManager()->GetValidPass<LoopAnalysis>();
 
     auto start_bb = g.GetStartBasicBlock();
 

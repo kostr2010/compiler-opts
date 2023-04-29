@@ -51,8 +51,8 @@ TEST(TestPeepholes, FoldADD_1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -98,8 +98,8 @@ TEST(TestPeepholes, FoldADD_2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -152,8 +152,8 @@ TEST(TestPeepholes, MatchADD_zero_1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -201,8 +201,8 @@ TEST(TestPeepholes, MatchADD_zero_2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -255,8 +255,8 @@ TEST(TestPeepholes, MatchADD_after_sub_1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -315,8 +315,8 @@ TEST(TestPeepholes, MatchADD_after_sub_2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -381,8 +381,8 @@ TEST(TestPeepholes, MatchADD_after_sub_3)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -453,8 +453,8 @@ TEST(TestPeepholes, MatchADD_same_value_1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -510,8 +510,8 @@ TEST(TestPeepholes, MatchADD_fold_to_ADDI_1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -567,8 +567,8 @@ TEST(TestPeepholes, MatchADD_fold_to_ADDI_2)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -619,8 +619,8 @@ TEST(TestPeepholes, FoldASHR)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -672,8 +672,8 @@ TEST(TestPeepholes, MatchASHR_zero_0)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -723,8 +723,8 @@ TEST(TestPeepholes, MatchASHR_zero_1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -784,8 +784,8 @@ TEST(TestPeepholes, MatchASHR_fold_to_ASHRI)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -836,8 +836,8 @@ TEST(TestPeepholes, FoldXOR_1)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -888,8 +888,8 @@ TEST(TestPeepholes, MatchXOR_same_value)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -951,8 +951,8 @@ TEST(TestPeepholes, MatchXOR_zero)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -1000,8 +1000,8 @@ TEST(TestPeepholes, MatchXOR_zero_)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -1047,8 +1047,8 @@ TEST(TestPeepholes, MatchXOR_fold_to_XORI)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
@@ -1104,8 +1104,8 @@ TEST(TestPeepholes, MatchXOR_fold_to_XORI_)
     b.ConstructDFG();
     ASSERT_TRUE(b.RunChecks());
 
-    g.GetAnalyser()->GetValidPass<Peepholes>();
-    g.GetAnalyser()->GetValidPass<DCE>();
+    g.GetPassManager()->GetValidPass<Peepholes>();
+    g.GetPassManager()->GetValidPass<DCE>();
 
     auto bb_start = g.GetBasicBlock(START);
     ASSERT_NE(bb_start->GetFirstInst(), nullptr);
