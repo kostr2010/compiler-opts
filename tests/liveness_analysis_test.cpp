@@ -1,0 +1,427 @@
+#include "bb.h"
+#include "graph.h"
+#include "graph_builder.h"
+
+#include "gtest/gtest.h"
+
+#define DUMP_LIVE_RANGE(NAME) std::cout << #NAME << ": " << pass->GetInstLiveRange(NAME) << "\n";
+
+TEST(TestLiveness, Example0)
+{
+    /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
+    +---+     +-------+
+    | C | <-- |   A   | <+
+    +---+     +-------+  |
+                |        |
+                |        |
+                v        |
+              +-------+  |
+              |   B   | -+
+              +-------+
+    */
+
+    Graph g;
+    GraphBuilder b(&g);
+
+    auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(10);
+    auto C2 = b.NewConst(20);
+
+    auto A = b.NewBlock();
+    auto PHI0 = b.NewInst<isa::inst::Opcode::PHI>();
+    auto PHI1 = b.NewInst<isa::inst::Opcode::PHI>();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
+
+    auto B = b.NewBlock();
+    auto I0 = b.NewInst<isa::inst::Opcode::MUL>();
+    auto I1 = b.NewInst<isa::inst::Opcode::SUB>();
+
+    auto C = b.NewBlock();
+    auto I2 = b.NewInst<isa::inst::Opcode::ADD>();
+    auto RET = b.NewInst<isa::inst::Opcode::RETURN>();
+
+    b.SetInputs(PHI0, { { C0, Graph::BB_START_ID }, { I0, B } });
+    b.SetInputs(PHI1, { { C1, Graph::BB_START_ID }, { I1, B } });
+
+    b.SetInputs(IF0, PHI0, C0);
+
+    b.SetInputs(I0, PHI0, PHI1);
+    b.SetInputs(I1, PHI1, C0);
+    b.SetInputs(I2, C2, PHI0);
+    b.SetInputs(RET, I2);
+
+    b.SetSuccessors(START, { A });
+    b.SetSuccessors(A, { B, C });
+    b.SetSuccessors(B, { A });
+
+    b.ConstructCFG();
+    b.ConstructDFG();
+    ASSERT_TRUE(b.RunChecks());
+
+    auto pass = g.GetPassManager()->GetValidPass<LivenessAnalysis>();
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(START), Range(0, 8));
+    ASSERT_EQ(pass->GetInstLiveNumber(C0), 2);
+    ASSERT_EQ(pass->GetInstLiveNumber(C1), 4);
+    ASSERT_EQ(pass->GetInstLiveNumber(C2), 6);
+
+    // A PREHEADER
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(g.GetStartBasicBlock()->GetSuccessor(0)->GetId()),
+              Range(8, 10));
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(A), Range(10, 14));
+    ASSERT_EQ(pass->GetInstLiveNumber(PHI0), 10);
+    ASSERT_EQ(pass->GetInstLiveNumber(PHI1), 10);
+    ASSERT_EQ(pass->GetInstLiveNumber(IF0), 12);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(B), Range(14, 22));
+    ASSERT_EQ(pass->GetInstLiveNumber(I0), 16);
+    ASSERT_EQ(pass->GetInstLiveNumber(I1), 18);
+    // JMP
+    ASSERT_EQ(pass->GetInstLiveNumber(g.GetBasicBlock(B)->GetLastInst()->GetId()), 20);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(C), Range(22, 28));
+    ASSERT_EQ(pass->GetInstLiveNumber(I2), 24);
+    ASSERT_EQ(pass->GetInstLiveNumber(RET), 26);
+
+    ASSERT_EQ(pass->GetInstLiveRange(C0), Range(2, 22));
+    ASSERT_EQ(pass->GetInstLiveRange(C1), Range(4, 10));
+    ASSERT_EQ(pass->GetInstLiveRange(C2), Range(6, 24));
+
+    ASSERT_EQ(pass->GetInstLiveRange(PHI0), Range(10, 24));
+    ASSERT_EQ(pass->GetInstLiveRange(PHI1), Range(10, 18));
+    ASSERT_EQ(pass->GetInstLiveRange(IF0), Range(12, 14));
+
+    ASSERT_EQ(pass->GetInstLiveRange(I0), Range(16, 22));
+    ASSERT_EQ(pass->GetInstLiveRange(I1), Range(18, 22));
+    ASSERT_EQ(pass->GetInstLiveRange(I2), Range(24, 26));
+
+    ASSERT_EQ(pass->GetInstLiveRange(RET), Range(26, 28));
+}
+
+TEST(TestLiveness, Example0_inverted)
+{
+    /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
+    +---+     +-------+
+    | C | <-- |   A   | <+
+    +---+     +-------+  |
+                |        |
+                |        |
+                v        |
+              +-------+  |
+              |   B   | -+
+              +-------+
+    */
+
+    Graph g;
+    GraphBuilder b(&g);
+
+    auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(10);
+    auto C2 = b.NewConst(20);
+
+    auto A = b.NewBlock();
+    auto PHI0 = b.NewInst<isa::inst::Opcode::PHI>();
+    auto PHI1 = b.NewInst<isa::inst::Opcode::PHI>();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
+
+    auto B = b.NewBlock();
+    auto I0 = b.NewInst<isa::inst::Opcode::MUL>();
+    auto I1 = b.NewInst<isa::inst::Opcode::SUB>();
+
+    auto C = b.NewBlock();
+    auto I2 = b.NewInst<isa::inst::Opcode::ADD>();
+    auto RET = b.NewInst<isa::inst::Opcode::RETURN>();
+
+    b.SetInputs(PHI0, { { C0, Graph::BB_START_ID }, { I0, B } });
+    b.SetInputs(PHI1, { { C1, Graph::BB_START_ID }, { I1, B } });
+
+    b.SetInputs(IF0, C0, PHI0);
+
+    b.SetInputs(I0, PHI0, PHI1);
+    b.SetInputs(I1, PHI1, C0);
+    b.SetInputs(I2, C2, PHI0);
+    b.SetInputs(RET, I2);
+
+    b.SetSuccessors(START, { A });
+    b.SetSuccessors(A, { B, C });
+    b.SetSuccessors(B, { A });
+
+    b.ConstructCFG();
+    b.ConstructDFG();
+    ASSERT_TRUE(b.RunChecks());
+
+    auto pass = g.GetPassManager()->GetValidPass<LivenessAnalysis>();
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(START), Range(0, 8));
+    ASSERT_EQ(pass->GetInstLiveNumber(C0), 2);
+    ASSERT_EQ(pass->GetInstLiveNumber(C1), 4);
+    ASSERT_EQ(pass->GetInstLiveNumber(C2), 6);
+
+    // A PREHEADER
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(g.GetStartBasicBlock()->GetSuccessor(0)->GetId()),
+              Range(8, 10));
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(A), Range(10, 14));
+    ASSERT_EQ(pass->GetInstLiveNumber(PHI0), 10);
+    ASSERT_EQ(pass->GetInstLiveNumber(PHI1), 10);
+    ASSERT_EQ(pass->GetInstLiveNumber(IF0), 12);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(B), Range(14, 22));
+    ASSERT_EQ(pass->GetInstLiveNumber(I0), 16);
+    ASSERT_EQ(pass->GetInstLiveNumber(I1), 18);
+    // JMP
+    ASSERT_EQ(pass->GetInstLiveNumber(g.GetBasicBlock(B)->GetLastInst()->GetId()), 20);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(C), Range(22, 28));
+    ASSERT_EQ(pass->GetInstLiveNumber(I2), 24);
+    ASSERT_EQ(pass->GetInstLiveNumber(RET), 26);
+
+    ASSERT_EQ(pass->GetInstLiveRange(C0), Range(2, 22));
+    ASSERT_EQ(pass->GetInstLiveRange(C1), Range(4, 10));
+    ASSERT_EQ(pass->GetInstLiveRange(C2), Range(6, 24));
+
+    ASSERT_EQ(pass->GetInstLiveRange(PHI0), Range(10, 24));
+    ASSERT_EQ(pass->GetInstLiveRange(PHI1), Range(10, 18));
+    ASSERT_EQ(pass->GetInstLiveRange(IF0), Range(12, 14));
+
+    ASSERT_EQ(pass->GetInstLiveRange(I0), Range(16, 22));
+    ASSERT_EQ(pass->GetInstLiveRange(I1), Range(18, 22));
+    ASSERT_EQ(pass->GetInstLiveRange(I2), Range(24, 26));
+
+    ASSERT_EQ(pass->GetInstLiveRange(RET), Range(26, 28));
+}
+
+TEST(TestLiveness, Example1)
+{
+    /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
+    +---+     +-------+
+    | B | <-- |   A   |
+    +---+     +-------+
+                |
+                |
+                v
+              +-------+
+              |   C   |
+              +-------+
+                |
+                |
+                v
+              +-------+
+              |   D   |
+              +-------+
+    */
+
+    Graph g;
+    GraphBuilder b(&g);
+
+    auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(10);
+    auto C2 = b.NewConst(20);
+
+    auto A = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
+
+    auto B = b.NewBlock();
+    auto I0 = b.NewInst<isa::inst::Opcode::MUL>();
+    auto I1 = b.NewInst<isa::inst::Opcode::SUB>();
+    auto RET0 = b.NewInst<isa::inst::Opcode::RETURN>();
+
+    auto C = b.NewBlock();
+    auto I2 = b.NewInst<isa::inst::Opcode::ADD>();
+
+    auto D = b.NewBlock();
+    auto RET1 = b.NewInst<isa::inst::Opcode::RETURN>();
+
+    b.SetInputs(IF0, C0, C1);
+
+    b.SetInputs(I0, C0, C1);
+    b.SetInputs(I1, C1, I0);
+    b.SetInputs(I2, C2, C0);
+
+    b.SetInputs(RET0, I1);
+    b.SetInputs(RET1, I2);
+
+    b.SetSuccessors(START, { A });
+    b.SetSuccessors(A, { C, B });
+    b.SetSuccessors(C, { D });
+
+    b.ConstructCFG();
+    b.ConstructDFG();
+    ASSERT_TRUE(b.RunChecks());
+
+    auto pass = g.GetPassManager()->GetValidPass<LivenessAnalysis>();
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(START), Range(0, 8));
+    ASSERT_EQ(pass->GetInstLiveNumber(C0), 2);
+    ASSERT_EQ(pass->GetInstLiveNumber(C1), 4);
+    ASSERT_EQ(pass->GetInstLiveNumber(C2), 6);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(A), Range(8, 12));
+    ASSERT_EQ(pass->GetInstLiveNumber(IF0), 10);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(B), Range(20, 28));
+    ASSERT_EQ(pass->GetInstLiveNumber(I0), 22);
+    ASSERT_EQ(pass->GetInstLiveNumber(I1), 24);
+    ASSERT_EQ(pass->GetInstLiveNumber(RET0), 26);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(C), Range(12, 16));
+    ASSERT_EQ(pass->GetInstLiveNumber(I2), 14);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(D), Range(16, 20));
+    ASSERT_EQ(pass->GetInstLiveNumber(RET1), 18);
+
+    ASSERT_EQ(pass->GetInstLiveRange(C0), Range(2, 22));
+    ASSERT_EQ(pass->GetInstLiveRange(C1), Range(4, 24));
+    ASSERT_EQ(pass->GetInstLiveRange(C2), Range(6, 14));
+
+    ASSERT_EQ(pass->GetInstLiveRange(IF0), Range(10, 12));
+
+    ASSERT_EQ(pass->GetInstLiveRange(I0), Range(22, 24));
+    ASSERT_EQ(pass->GetInstLiveRange(I1), Range(24, 26));
+    ASSERT_EQ(pass->GetInstLiveRange(I2), Range(14, 18));
+
+    ASSERT_EQ(pass->GetInstLiveRange(RET0), Range(26, 28));
+    ASSERT_EQ(pass->GetInstLiveRange(RET1), Range(18, 20));
+}
+
+TEST(TestLiveness, Example2)
+{
+    /*
+              +-------+
+              | START |
+              +-------+
+                |
+                |
+                v
+    +---+     +-------+
+    | C | <-- |   A   |
+    +---+     +-------+
+      |         |
+      |         |
+      |         v
+      |       +-------+
+      |       |   B   |
+      |       +-------+
+      |         |
+      |         |
+      |         v
+      |       +-------+
+      +-----> |   D   |
+              +-------+
+                |
+                |
+                v
+              +-------+
+              |   E   |
+              +-------+
+    */
+
+    Graph g;
+    GraphBuilder b(&g);
+
+    auto START = Graph::BB_START_ID;
+    auto C0 = b.NewConst(1);
+    auto C1 = b.NewConst(10);
+    auto C2 = b.NewConst(20);
+
+    auto A = b.NewBlock();
+    auto IF0 = b.NewInst<isa::inst::Opcode::IF>(Conditional::Type::EQ);
+
+    auto B = b.NewBlock();
+    auto I0 = b.NewInst<isa::inst::Opcode::MUL>();
+    auto I1 = b.NewInst<isa::inst::Opcode::SUB>();
+
+    auto C = b.NewBlock();
+    auto I2 = b.NewInst<isa::inst::Opcode::ADD>();
+
+    auto D = b.NewBlock();
+    auto PHI = b.NewInst<isa::inst::Opcode::PHI>();
+    auto I3 = b.NewInst<isa::inst::Opcode::ADD>();
+
+    auto E = b.NewBlock();
+    auto RET = b.NewInst<isa::inst::Opcode::RETURN>();
+
+    b.SetInputs(IF0, C1, C0);
+
+    b.SetInputs(I0, C0, C1);
+    b.SetInputs(I1, I0, C0);
+    b.SetInputs(I2, C2, C0);
+    b.SetInputs(I3, PHI, C1);
+
+    b.SetInputs(PHI, { { I2, C }, { I1, B } });
+    b.SetInputs(RET, I3);
+
+    b.SetSuccessors(START, { A });
+    b.SetSuccessors(A, { C, B });
+    b.SetSuccessors(B, { D });
+    b.SetSuccessors(C, { D });
+    b.SetSuccessors(D, { E });
+
+    b.ConstructCFG();
+    b.ConstructDFG();
+    ASSERT_TRUE(b.RunChecks());
+
+    auto pass = g.GetPassManager()->GetValidPass<LivenessAnalysis>();
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(START), Range(0, 8));
+    ASSERT_EQ(pass->GetInstLiveNumber(C0), 2);
+    ASSERT_EQ(pass->GetInstLiveNumber(C1), 4);
+    ASSERT_EQ(pass->GetInstLiveNumber(C2), 6);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(A), Range(8, 12));
+    ASSERT_EQ(pass->GetInstLiveNumber(IF0), 10);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(B), Range(24, 32));
+    ASSERT_EQ(pass->GetInstLiveNumber(I0), 26);
+    ASSERT_EQ(pass->GetInstLiveNumber(I1), 28);
+    // JMP
+    ASSERT_EQ(pass->GetInstLiveNumber(g.GetBasicBlock(B)->GetLastInst()->GetId()), 30);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(C), Range(12, 16));
+    ASSERT_EQ(pass->GetInstLiveNumber(I2), 14);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(D), Range(16, 20));
+    ASSERT_EQ(pass->GetInstLiveNumber(PHI), 16);
+    ASSERT_EQ(pass->GetInstLiveNumber(I3), 18);
+
+    ASSERT_EQ(pass->GetBasicBlockLiveRange(E), Range(20, 24));
+    ASSERT_EQ(pass->GetInstLiveNumber(RET), 22);
+
+    ASSERT_EQ(pass->GetInstLiveRange(C0), Range(2, 28));
+    ASSERT_EQ(pass->GetInstLiveRange(C1), Range(4, 26));
+    ASSERT_EQ(pass->GetInstLiveRange(C2), Range(6, 14));
+
+    ASSERT_EQ(pass->GetInstLiveRange(IF0), Range(10, 12));
+
+    ASSERT_EQ(pass->GetInstLiveRange(I0), Range(26, 28));
+    ASSERT_EQ(pass->GetInstLiveRange(I1), Range(28, 32));
+    ASSERT_EQ(pass->GetInstLiveRange(I2), Range(14, 16));
+    ASSERT_EQ(pass->GetInstLiveRange(I3), Range(18, 22));
+
+    ASSERT_EQ(pass->GetInstLiveRange(PHI), Range(16, 18));
+    ASSERT_EQ(pass->GetInstLiveRange(RET), Range(22, 24));
+}
+
+#undef DUMP_LIVE_RANGE

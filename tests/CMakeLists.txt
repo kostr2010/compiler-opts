@@ -1,4 +1,5 @@
 set(TESTS 
+    # passes
     rpo_test.cpp
     dom_tree_test.cpp
     loop_analysis_test.cpp
@@ -9,6 +10,9 @@ set(TESTS
     inlining_test.cpp
     check_elimination_test.cpp
     linear_order_test.cpp
+    liveness_analysis_test.cpp
+    # utils
+    range_test.cpp
     )
 
 add_executable(gtests ${TESTS})

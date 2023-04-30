@@ -11,12 +11,13 @@
 #include "pass/dom_tree.h"
 #include "pass/inlining.h"
 #include "pass/linear_order.h"
+#include "pass/liveness_analysis.h"
 #include "pass/loop_analysis.h"
 #include "pass/peepholes.h"
 #include "pass/po.h"
 #include "pass/rpo.h"
 
 using DefaultPasses = PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO, Peepholes, DCE, Inlining,
-                               DBE, CheckElimination, LinearOrder>;
+                               DBE, CheckElimination, LinearOrder, LivenessAnalysis>;
 
 #endif

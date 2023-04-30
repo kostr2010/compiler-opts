@@ -14,4 +14,4 @@ add_library(passes SHARED
     dbe.cpp
     pass_manager.cpp
 )
-target_link_libraries(passes marker)
+target_link_libraries(passes marker range)

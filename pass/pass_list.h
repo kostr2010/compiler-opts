@@ -17,26 +17,31 @@ class PassList
 
     template <typename Type>
     struct is_one_of<Type> : std::false_type
-    {};
+    {
+    };
 
     template <typename Type, typename... Pack>
     struct is_one_of<Type, Type, Pack...> : std::true_type
-    {};
+    {
+    };
 
     template <typename Type, typename T0, typename... Pack>
     struct is_one_of<Type, T0, Pack...> : is_one_of<Type, Pack...>
-    {};
+    {
+    };
 
     template <typename Type, size_t IDX, typename... Pack>
     struct get_pass_idx;
 
     template <typename Type, size_t IDX, typename T, typename... Pack>
     struct get_pass_idx<Type, IDX, T, Pack...> : get_pass_idx<Type, IDX + 1, Pack...>
-    {};
+    {
+    };
 
     template <typename Type, size_t IDX, typename... Pack>
     struct get_pass_idx<Type, IDX, Type, Pack...> : std::integral_constant<size_t, IDX>
-    {};
+    {
+    };
 
   public:
     using Passes = std::tuple<Types...>;
