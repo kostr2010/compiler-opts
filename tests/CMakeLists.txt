@@ -11,6 +11,7 @@ set(TESTS
     check_elimination_test.cpp
     linear_order_test.cpp
     liveness_analysis_test.cpp
+    regalloc_test.cpp
     # utils
     range_test.cpp
     )

@@ -38,7 +38,8 @@ void InstBase::Dump() const
     } else {
         std::cout << bb_->GetId() << "\n";
     }
-    std::cout << "#\tinst_opcode:." << OP_TO_STR[opcode_] << " (" << (int)opcode_ << ")\n";
+    std::cout << "#\tinst_opcode:." << OP_TO_STR[opcode_] << " (" << static_cast<int>(opcode_)
+              << ")\n";
     std::cout << "#\tinst prev:...";
     if (prev_ == nullptr) {
         std::cout << "NULL\n";
@@ -475,13 +476,13 @@ uint64_t isa::inst_type::CONST::GetValRaw() const
 int64_t isa::inst_type::CONST::GetValInt() const
 {
     assert(GetDataType() == InstBase::DataType::INT);
-    return (int64_t)val_;
+    return static_cast<int64_t>(val_);
 }
 
 double isa::inst_type::CONST::GetValDouble() const
 {
     assert(GetDataType() == InstBase::DataType::DOUBLE);
-    return std::bit_cast<float, uint32_t>((uint32_t)val_);
+    return std::bit_cast<float, uint32_t>(static_cast<uint32_t>(val_));
 }
 
 float isa::inst_type::CONST::GetValFloat() const

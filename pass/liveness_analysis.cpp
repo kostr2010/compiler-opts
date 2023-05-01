@@ -46,9 +46,6 @@ void LivenessAnalysis::Init()
             inst_live_numbers_[phi->GetId()] = cur_live_number;
 
             cur_linear_number += LINEAR_NUMBER_STEP;
-
-            LOG("PHI:  " << phi->GetId() << ", LIVE_NUM: " << inst_live_numbers_[phi->GetId()]
-                         << ", LIN_NUM: " << inst_linear_numbers_[phi->GetId()]);
         }
 
         cur_live_number += LIVE_NUMBER_STEP;
@@ -59,12 +56,9 @@ void LivenessAnalysis::Init()
 
             cur_linear_number += LINEAR_NUMBER_STEP;
             cur_live_number += LIVE_NUMBER_STEP;
-            LOG("INST: " << inst->GetId() << ", LIVE_NUM: " << inst_live_numbers_[inst->GetId()]
-                         << ", LIN_NUM: " << inst_linear_numbers_[inst->GetId()]);
         }
 
         size_t bb_end = cur_live_number;
-        LOG("BB: " << bb->GetId() << ", LIVE_RANGE: " << Range(bb_start, bb_end));
         bb_live_ranges_.emplace(bb->GetId(), Range(bb_start, bb_end));
     }
 }

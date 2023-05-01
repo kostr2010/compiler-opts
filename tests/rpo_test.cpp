@@ -6,7 +6,7 @@
 
 static inline char IdToChar(IdType id)
 {
-    return (id == 0) ? '0' : (char)('A' + id - 1);
+    return (id == 0) ? '0' : static_cast<char>('A' + id - 1);
 }
 
 TEST(TestRPO, Example1)

@@ -16,7 +16,7 @@
 #include <iostream>
 #include <tuple>
 
-#include "ir/isa/isa.h"
+#include "isa/isa.h"
 
 template <typename INST, typename ACC>
 struct BranchNumAccumulator

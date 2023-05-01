@@ -119,7 +119,7 @@ void Inlining::UpdateDFGReturns()
         }
     } break;
     default:
-        assert(false);
+        UNREACHABLE("invalid return instruction");
     }
 }
 

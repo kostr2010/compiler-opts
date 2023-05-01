@@ -484,7 +484,11 @@ class isa::inst_type::CONST : public InstBase
 
         if constexpr (std::numeric_limits<T>::is_integer) {
             SetDataType(InstBase::DataType::INT);
-            val_ = val;
+            if constexpr (std::is_signed<T>::value) {
+                val_ = std::bit_cast<uint64_t, int64_t>(val);
+            } else {
+                val_ = static_cast<uint64_t>(val);
+            }
         } else if constexpr (std::is_same_v<T, float>) {
             SetDataType(InstBase::DataType::FLOAT);
             val_ = std::bit_cast<uint32_t, float>(val);

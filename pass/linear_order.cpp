@@ -168,7 +168,6 @@ void LinearOrder::Check()
     assert(sz == graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks().size());
 
     for (size_t i = 0; i < sz; ++i) {
-        using BranchFlag = isa::flag::Flag<isa::flag::BRANCH>;
         auto bb = linear_bb_[i];
         if (bb->GetNumSuccessors() > BranchFlag::Value::ONE_SUCCESSOR) {
             for (size_t s = 0; s < bb->GetNumSuccessors(); ++s) {
