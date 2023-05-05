@@ -21,7 +21,7 @@ class DCE : public Pass
     {
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
   private:
     void Mark(const Markers markers);

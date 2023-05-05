@@ -8,7 +8,7 @@ Inlining::Inlining(Graph* graph) : Pass(graph)
 {
 }
 
-bool Inlining::RunPass()
+bool Inlining::Run()
 {
     VisitGraph();
     return true;

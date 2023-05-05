@@ -40,6 +40,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 add_subdirectory(ir)
 add_subdirectory(pass)
 add_subdirectory(utils)
+add_subdirectory(codegen)
 add_subdirectory(tests)
 add_subdirectory(third-party)
 

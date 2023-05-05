@@ -15,7 +15,7 @@ class Inlining : public Pass, public GraphVisitor
   public:
     Inlining(Graph* graph);
 
-    bool RunPass() override;
+    bool Run() override;
 
   private:
     void ResetState();

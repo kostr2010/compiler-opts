@@ -36,7 +36,7 @@ BasicBlock* LinearOrder::InsertJumpBasicBlock(BasicBlock* prev, BasicBlock* next
     return bb_new;
 }
 
-bool LinearOrder::RunPass()
+bool LinearOrder::Run()
 {
     ResetState();
 

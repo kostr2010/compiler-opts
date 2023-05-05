@@ -16,7 +16,7 @@ class CheckElimination : public Pass, public GraphVisitor
     {
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
   private:
     void RemoveRedundantChecks();

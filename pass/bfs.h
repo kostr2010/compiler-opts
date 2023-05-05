@@ -22,7 +22,7 @@ class BFS : public Pass
     {
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
     std::vector<BasicBlock*> GetBlocks();
 

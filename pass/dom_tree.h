@@ -15,7 +15,7 @@ class DomTree : public Pass
     {
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
   private:
     struct Node

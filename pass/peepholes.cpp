@@ -73,7 +73,7 @@ static bool FoldBinOpToBinImmOp(InstBase* i)
 
 GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(Peepholes, RPO);
 
-bool Peepholes::RunPass()
+bool Peepholes::Run()
 {
     VisitGraph();
 

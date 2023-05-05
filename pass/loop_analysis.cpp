@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <set>
 
-bool LoopAnalysis::RunPass()
+bool LoopAnalysis::Run()
 {
     ResetState();
     graph_->GetPassManager()->GetValidPass<DomTree>();
@@ -288,7 +288,7 @@ void LoopAnalysis::RecalculateLoopsReducibility()
         return;
     }
 
-    analyser->RunPass<DomTree>();
+    analyser->Run<DomTree>();
 
     for (const auto& loop : loops_) {
         loop->CalculateReducibility();

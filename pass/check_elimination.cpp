@@ -62,7 +62,7 @@ static void DeleteDominatedChecks(InstBase* inst, EquivalenceCriterion eq_criter
 template <isa::inst::Opcode OPCODE>
 static bool CheckRedundancy(InstBase* check);
 
-bool CheckElimination::RunPass()
+bool CheckElimination::Run()
 {
     graph_->GetPassManager()->GetValidPass<DomTree>();
     graph_->GetPassManager()->GetValidPass<LoopAnalysis>();

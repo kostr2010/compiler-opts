@@ -5,7 +5,7 @@
 #include "ir/bb.h"
 #include "ir/graph.h"
 
-bool DomTree::RunPass()
+bool DomTree::Run()
 {
     graph_->ClearDominators();
 

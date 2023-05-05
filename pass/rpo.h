@@ -22,12 +22,12 @@ class RPO : public Pass
     {
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
     std::vector<BasicBlock*> GetBlocks();
 
   private:
-    void RunPass_(BasicBlock* cur_bb, const Markers markers);
+    void Run_(BasicBlock* cur_bb, const Markers markers);
     void ResetState();
 
     std::vector<BasicBlock*> rpo_bb_{};

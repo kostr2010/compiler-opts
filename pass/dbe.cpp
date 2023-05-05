@@ -2,7 +2,7 @@
 #include "ir/bb.h"
 #include "ir/graph.h"
 
-bool DBE::RunPass()
+bool DBE::Run()
 {
     for (const auto& bb : graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks()) {
         if (bb->IsStartBlock()) {

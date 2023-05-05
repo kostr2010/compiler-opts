@@ -15,10 +15,9 @@
 #include "loop_analysis.h"
 #include "peepholes.h"
 #include "po.h"
-#include "regalloc.h"
 #include "rpo.h"
 
 using DefaultPasses = PassList<DomTree, LoopAnalysis, DFS, BFS, RPO, PO, Peepholes, DCE, Inlining,
-                               DBE, CheckElimination, LinearOrder, LivenessAnalysis, Regalloc>;
+                               DBE, CheckElimination, LinearOrder, LivenessAnalysis>;
 
 #endif

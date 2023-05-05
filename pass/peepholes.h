@@ -14,7 +14,7 @@ class Peepholes : public Pass, public GraphVisitor
     {
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
   private:
     void ReplaceWithIntegralConst(InstBase* inst, int64_t val);

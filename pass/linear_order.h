@@ -14,7 +14,7 @@ class LinearOrder : public Pass
     {
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
     std::vector<BasicBlock*> GetBlocks();
 

@@ -15,16 +15,6 @@ class InstBase;
 class LivenessAnalysis : public Pass
 {
   public:
-    // struct LiveRange
-    // {
-    //     LiveRange(const Range& r) : range(r){};
-    //     LiveRange(Range&& r) : range(std::move(r)){};
-
-    //     Range range;
-    //     bool is_on_stack = false;
-    //     size_t slot = 0;
-    // };
-
     static constexpr size_t LIVE_NUMBER_STEP = 2;
     static constexpr size_t LINEAR_NUMBER_STEP = 1;
 
@@ -32,11 +22,22 @@ class LivenessAnalysis : public Pass
     {
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
-    Range GetInstLiveRange(IdType inst_id) const;
-    size_t GetInstLiveNumber(IdType inst_id) const;
-    Range GetBasicBlockLiveRange(IdType inst_id) const;
+    auto GetInstLiveNumbers() const
+    {
+        return inst_live_numbers_;
+    }
+
+    auto GetInstLiveRanges() const
+    {
+        return inst_live_ranges_;
+    }
+
+    auto GetBasicBlockLiveRanges() const
+    {
+        return bb_live_ranges_;
+    }
 
   private:
     using LiveSet = std::set<InstBase*>;
@@ -49,11 +50,11 @@ class LivenessAnalysis : public Pass
     void CalculateInitialLiveSet(BasicBlock* bb);
     void ResetState();
 
-    std::unordered_map<IdType, size_t> inst_linear_numbers_{};
-    std::unordered_map<IdType, size_t> inst_live_numbers_{};
-    std::unordered_map<IdType, Range> inst_live_ranges_{};
-    std::unordered_map<IdType, Range> bb_live_ranges_{};
-    std::unordered_map<IdType, LiveSet> bb_live_sets_{};
+    std::unordered_map<InstBase*, size_t> inst_linear_numbers_{};
+    std::unordered_map<InstBase*, size_t> inst_live_numbers_{};
+    std::unordered_map<InstBase*, Range> inst_live_ranges_{};
+    std::unordered_map<BasicBlock*, Range> bb_live_ranges_{};
+    std::unordered_map<BasicBlock*, LiveSet> bb_live_sets_{};
 };
 
 template <>

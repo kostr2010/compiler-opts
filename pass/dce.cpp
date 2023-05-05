@@ -3,7 +3,7 @@
 #include "ir/graph.h"
 #include "utils/marker/marker_factory.h"
 
-bool DCE::RunPass()
+bool DCE::Run()
 {
     Markers markers = { marker::MarkerFactory::AcquireMarker() };
 

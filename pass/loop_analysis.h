@@ -35,7 +35,7 @@ class LoopAnalysis : public Pass
         InitStartLoop();
     }
 
-    bool RunPass() override;
+    bool Run() override;
 
     Loop* GetRootLoop()
     {

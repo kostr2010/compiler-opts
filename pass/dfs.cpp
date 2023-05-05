@@ -3,12 +3,12 @@
 #include "ir/graph.h"
 #include "utils/marker/marker_factory.h"
 
-bool DFS::RunPass()
+bool DFS::Run()
 {
     Markers markers = { marker::MarkerFactory::AcquireMarker() };
 
     ResetState();
-    RunPass_(graph_->GetStartBasicBlock(), markers);
+    Run_(graph_->GetStartBasicBlock(), markers);
 
     SetValid(true);
 
@@ -20,7 +20,7 @@ std::vector<BasicBlock*> DFS::GetBlocks()
     return dfs_bb_;
 }
 
-void DFS::RunPass_(BasicBlock* cur_bb, const Markers markers)
+void DFS::Run_(BasicBlock* cur_bb, const Markers markers)
 {
     cur_bb->SetMark(&markers[Marks::VISITED]);
     dfs_bb_.push_back(cur_bb);
@@ -29,7 +29,7 @@ void DFS::RunPass_(BasicBlock* cur_bb, const Markers markers)
         if (succ->ProbeMark(&markers[Marks::VISITED])) {
             continue;
         }
-        RunPass_(succ, markers);
+        Run_(succ, markers);
     }
 }
 

@@ -26,7 +26,7 @@ class Pass
     virtual ~Pass() = default;
     GETTER_SETTER(Valid, bool, is_valid_);
 
-    virtual bool RunPass() = 0;
+    virtual bool Run() = 0;
 
   protected:
     Graph* graph_;

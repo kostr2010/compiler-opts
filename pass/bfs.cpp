@@ -5,7 +5,7 @@
 
 #include <list>
 
-bool BFS::RunPass()
+bool BFS::Run()
 {
     ResetState();
 

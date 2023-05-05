@@ -3,12 +3,12 @@
 #include "ir/graph.h"
 #include "utils/marker/marker_factory.h"
 
-bool RPO::RunPass()
+bool RPO::Run()
 {
     Markers markers = { marker::MarkerFactory::AcquireMarker() };
 
     ResetState();
-    RunPass_(graph_->GetStartBasicBlock(), markers);
+    Run_(graph_->GetStartBasicBlock(), markers);
     SetValid(true);
 
     return true;
@@ -19,7 +19,7 @@ std::vector<BasicBlock*> RPO::GetBlocks()
     return rpo_bb_;
 }
 
-void RPO::RunPass_(BasicBlock* cur_bb, const Markers markers)
+void RPO::Run_(BasicBlock* cur_bb, const Markers markers)
 {
     if (cur_bb->SetMark(&markers[Marks::VISITED])) {
         return;
@@ -28,7 +28,7 @@ void RPO::RunPass_(BasicBlock* cur_bb, const Markers markers)
     rpo_bb_.push_back(cur_bb);
 
     for (const auto succ : cur_bb->GetSuccessors()) {
-        RunPass_(succ, markers);
+        Run_(succ, markers);
     }
 }
 

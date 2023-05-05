@@ -4,7 +4,38 @@
 
 #include "gtest/gtest.h"
 
-#define DUMP_LIVE_RANGE(NAME) std::cout << #NAME << ": " << pass->GetInstLiveRange(NAME) << "\n";
+static size_t GetInstLiveNumber(const LivenessAnalysis* pass, IdType id)
+{
+    for (const auto& elem : pass->GetInstLiveNumbers()) {
+        if (elem.first->GetId() == id) {
+            return elem.second;
+        }
+    }
+
+    UNREACHABLE("fail");
+}
+
+static Range GetInstLiveRange(const LivenessAnalysis* pass, IdType id)
+{
+    for (const auto& elem : pass->GetInstLiveRanges()) {
+        if (elem.first->GetId() == id) {
+            return elem.second;
+        }
+    }
+
+    UNREACHABLE("fail");
+}
+
+static Range GetBasicBlockLiveRange(const LivenessAnalysis* pass, IdType id)
+{
+    for (const auto& elem : pass->GetBasicBlockLiveRanges()) {
+        if (elem.first->GetId() == id) {
+            return elem.second;
+        }
+    }
+
+    UNREACHABLE("fail");
+}
 
 TEST(TestLiveness, Example0)
 {
@@ -66,44 +97,46 @@ TEST(TestLiveness, Example0)
     ASSERT_TRUE(b.RunChecks());
 
     auto pass = g.GetPassManager()->GetValidPass<LivenessAnalysis>();
+    auto i_ranges = pass->GetInstLiveRanges();
+    auto bb_ranges = pass->GetBasicBlockLiveRanges();
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(START), Range(0, 8));
-    ASSERT_EQ(pass->GetInstLiveNumber(C0), 2);
-    ASSERT_EQ(pass->GetInstLiveNumber(C1), 4);
-    ASSERT_EQ(pass->GetInstLiveNumber(C2), 6);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, START), Range(0, 8));
+    ASSERT_EQ(GetInstLiveNumber(pass, C0), 2);
+    ASSERT_EQ(GetInstLiveNumber(pass, C1), 4);
+    ASSERT_EQ(GetInstLiveNumber(pass, C2), 6);
 
     // A PREHEADER
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(g.GetStartBasicBlock()->GetSuccessor(0)->GetId()),
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, g.GetStartBasicBlock()->GetSuccessor(0)->GetId()),
               Range(8, 10));
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(A), Range(10, 14));
-    ASSERT_EQ(pass->GetInstLiveNumber(PHI0), 10);
-    ASSERT_EQ(pass->GetInstLiveNumber(PHI1), 10);
-    ASSERT_EQ(pass->GetInstLiveNumber(IF0), 12);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, A), Range(10, 14));
+    ASSERT_EQ(GetInstLiveNumber(pass, PHI0), 10);
+    ASSERT_EQ(GetInstLiveNumber(pass, PHI1), 10);
+    ASSERT_EQ(GetInstLiveNumber(pass, IF0), 12);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(B), Range(14, 22));
-    ASSERT_EQ(pass->GetInstLiveNumber(I0), 16);
-    ASSERT_EQ(pass->GetInstLiveNumber(I1), 18);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, B), Range(14, 22));
+    ASSERT_EQ(GetInstLiveNumber(pass, I0), 16);
+    ASSERT_EQ(GetInstLiveNumber(pass, I1), 18);
     // JMP
-    ASSERT_EQ(pass->GetInstLiveNumber(g.GetBasicBlock(B)->GetLastInst()->GetId()), 20);
+    ASSERT_EQ(GetInstLiveNumber(pass, g.GetBasicBlock(B)->GetLastInst()->GetId()), 20);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(C), Range(22, 28));
-    ASSERT_EQ(pass->GetInstLiveNumber(I2), 24);
-    ASSERT_EQ(pass->GetInstLiveNumber(RET), 26);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, C), Range(22, 28));
+    ASSERT_EQ(GetInstLiveNumber(pass, I2), 24);
+    ASSERT_EQ(GetInstLiveNumber(pass, RET), 26);
 
-    ASSERT_EQ(pass->GetInstLiveRange(C0), Range(2, 22));
-    ASSERT_EQ(pass->GetInstLiveRange(C1), Range(4, 10));
-    ASSERT_EQ(pass->GetInstLiveRange(C2), Range(6, 24));
+    ASSERT_EQ(GetInstLiveRange(pass, C0), Range(2, 22));
+    ASSERT_EQ(GetInstLiveRange(pass, C1), Range(4, 10));
+    ASSERT_EQ(GetInstLiveRange(pass, C2), Range(6, 24));
 
-    ASSERT_EQ(pass->GetInstLiveRange(PHI0), Range(10, 24));
-    ASSERT_EQ(pass->GetInstLiveRange(PHI1), Range(10, 18));
-    ASSERT_EQ(pass->GetInstLiveRange(IF0), Range(12, 14));
+    ASSERT_EQ(GetInstLiveRange(pass, PHI0), Range(10, 24));
+    ASSERT_EQ(GetInstLiveRange(pass, PHI1), Range(10, 18));
+    ASSERT_EQ(GetInstLiveRange(pass, IF0), Range(12, 14));
 
-    ASSERT_EQ(pass->GetInstLiveRange(I0), Range(16, 22));
-    ASSERT_EQ(pass->GetInstLiveRange(I1), Range(18, 22));
-    ASSERT_EQ(pass->GetInstLiveRange(I2), Range(24, 26));
+    ASSERT_EQ(GetInstLiveRange(pass, I0), Range(16, 22));
+    ASSERT_EQ(GetInstLiveRange(pass, I1), Range(18, 22));
+    ASSERT_EQ(GetInstLiveRange(pass, I2), Range(24, 26));
 
-    ASSERT_EQ(pass->GetInstLiveRange(RET), Range(26, 28));
+    ASSERT_EQ(GetInstLiveRange(pass, RET), Range(26, 28));
 }
 
 TEST(TestLiveness, Example0_inverted)
@@ -167,43 +200,43 @@ TEST(TestLiveness, Example0_inverted)
 
     auto pass = g.GetPassManager()->GetValidPass<LivenessAnalysis>();
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(START), Range(0, 8));
-    ASSERT_EQ(pass->GetInstLiveNumber(C0), 2);
-    ASSERT_EQ(pass->GetInstLiveNumber(C1), 4);
-    ASSERT_EQ(pass->GetInstLiveNumber(C2), 6);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, START), Range(0, 8));
+    ASSERT_EQ(GetInstLiveNumber(pass, C0), 2);
+    ASSERT_EQ(GetInstLiveNumber(pass, C1), 4);
+    ASSERT_EQ(GetInstLiveNumber(pass, C2), 6);
 
     // A PREHEADER
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(g.GetStartBasicBlock()->GetSuccessor(0)->GetId()),
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, g.GetStartBasicBlock()->GetSuccessor(0)->GetId()),
               Range(8, 10));
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(A), Range(10, 14));
-    ASSERT_EQ(pass->GetInstLiveNumber(PHI0), 10);
-    ASSERT_EQ(pass->GetInstLiveNumber(PHI1), 10);
-    ASSERT_EQ(pass->GetInstLiveNumber(IF0), 12);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, A), Range(10, 14));
+    ASSERT_EQ(GetInstLiveNumber(pass, PHI0), 10);
+    ASSERT_EQ(GetInstLiveNumber(pass, PHI1), 10);
+    ASSERT_EQ(GetInstLiveNumber(pass, IF0), 12);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(B), Range(14, 22));
-    ASSERT_EQ(pass->GetInstLiveNumber(I0), 16);
-    ASSERT_EQ(pass->GetInstLiveNumber(I1), 18);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, B), Range(14, 22));
+    ASSERT_EQ(GetInstLiveNumber(pass, I0), 16);
+    ASSERT_EQ(GetInstLiveNumber(pass, I1), 18);
     // JMP
-    ASSERT_EQ(pass->GetInstLiveNumber(g.GetBasicBlock(B)->GetLastInst()->GetId()), 20);
+    ASSERT_EQ(GetInstLiveNumber(pass, g.GetBasicBlock(B)->GetLastInst()->GetId()), 20);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(C), Range(22, 28));
-    ASSERT_EQ(pass->GetInstLiveNumber(I2), 24);
-    ASSERT_EQ(pass->GetInstLiveNumber(RET), 26);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, C), Range(22, 28));
+    ASSERT_EQ(GetInstLiveNumber(pass, I2), 24);
+    ASSERT_EQ(GetInstLiveNumber(pass, RET), 26);
 
-    ASSERT_EQ(pass->GetInstLiveRange(C0), Range(2, 22));
-    ASSERT_EQ(pass->GetInstLiveRange(C1), Range(4, 10));
-    ASSERT_EQ(pass->GetInstLiveRange(C2), Range(6, 24));
+    ASSERT_EQ(GetInstLiveRange(pass, C0), Range(2, 22));
+    ASSERT_EQ(GetInstLiveRange(pass, C1), Range(4, 10));
+    ASSERT_EQ(GetInstLiveRange(pass, C2), Range(6, 24));
 
-    ASSERT_EQ(pass->GetInstLiveRange(PHI0), Range(10, 24));
-    ASSERT_EQ(pass->GetInstLiveRange(PHI1), Range(10, 18));
-    ASSERT_EQ(pass->GetInstLiveRange(IF0), Range(12, 14));
+    ASSERT_EQ(GetInstLiveRange(pass, PHI0), Range(10, 24));
+    ASSERT_EQ(GetInstLiveRange(pass, PHI1), Range(10, 18));
+    ASSERT_EQ(GetInstLiveRange(pass, IF0), Range(12, 14));
 
-    ASSERT_EQ(pass->GetInstLiveRange(I0), Range(16, 22));
-    ASSERT_EQ(pass->GetInstLiveRange(I1), Range(18, 22));
-    ASSERT_EQ(pass->GetInstLiveRange(I2), Range(24, 26));
+    ASSERT_EQ(GetInstLiveRange(pass, I0), Range(16, 22));
+    ASSERT_EQ(GetInstLiveRange(pass, I1), Range(18, 22));
+    ASSERT_EQ(GetInstLiveRange(pass, I2), Range(24, 26));
 
-    ASSERT_EQ(pass->GetInstLiveRange(RET), Range(26, 28));
+    ASSERT_EQ(GetInstLiveRange(pass, RET), Range(26, 28));
 }
 
 TEST(TestLiveness, Example1)
@@ -273,37 +306,37 @@ TEST(TestLiveness, Example1)
 
     auto pass = g.GetPassManager()->GetValidPass<LivenessAnalysis>();
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(START), Range(0, 8));
-    ASSERT_EQ(pass->GetInstLiveNumber(C0), 2);
-    ASSERT_EQ(pass->GetInstLiveNumber(C1), 4);
-    ASSERT_EQ(pass->GetInstLiveNumber(C2), 6);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, START), Range(0, 8));
+    ASSERT_EQ(GetInstLiveNumber(pass, C0), 2);
+    ASSERT_EQ(GetInstLiveNumber(pass, C1), 4);
+    ASSERT_EQ(GetInstLiveNumber(pass, C2), 6);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(A), Range(8, 12));
-    ASSERT_EQ(pass->GetInstLiveNumber(IF0), 10);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, A), Range(8, 12));
+    ASSERT_EQ(GetInstLiveNumber(pass, IF0), 10);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(B), Range(20, 28));
-    ASSERT_EQ(pass->GetInstLiveNumber(I0), 22);
-    ASSERT_EQ(pass->GetInstLiveNumber(I1), 24);
-    ASSERT_EQ(pass->GetInstLiveNumber(RET0), 26);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, B), Range(20, 28));
+    ASSERT_EQ(GetInstLiveNumber(pass, I0), 22);
+    ASSERT_EQ(GetInstLiveNumber(pass, I1), 24);
+    ASSERT_EQ(GetInstLiveNumber(pass, RET0), 26);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(C), Range(12, 16));
-    ASSERT_EQ(pass->GetInstLiveNumber(I2), 14);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, C), Range(12, 16));
+    ASSERT_EQ(GetInstLiveNumber(pass, I2), 14);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(D), Range(16, 20));
-    ASSERT_EQ(pass->GetInstLiveNumber(RET1), 18);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, D), Range(16, 20));
+    ASSERT_EQ(GetInstLiveNumber(pass, RET1), 18);
 
-    ASSERT_EQ(pass->GetInstLiveRange(C0), Range(2, 22));
-    ASSERT_EQ(pass->GetInstLiveRange(C1), Range(4, 24));
-    ASSERT_EQ(pass->GetInstLiveRange(C2), Range(6, 14));
+    ASSERT_EQ(GetInstLiveRange(pass, C0), Range(2, 22));
+    ASSERT_EQ(GetInstLiveRange(pass, C1), Range(4, 24));
+    ASSERT_EQ(GetInstLiveRange(pass, C2), Range(6, 14));
 
-    ASSERT_EQ(pass->GetInstLiveRange(IF0), Range(10, 12));
+    ASSERT_EQ(GetInstLiveRange(pass, IF0), Range(10, 12));
 
-    ASSERT_EQ(pass->GetInstLiveRange(I0), Range(22, 24));
-    ASSERT_EQ(pass->GetInstLiveRange(I1), Range(24, 26));
-    ASSERT_EQ(pass->GetInstLiveRange(I2), Range(14, 18));
+    ASSERT_EQ(GetInstLiveRange(pass, I0), Range(22, 24));
+    ASSERT_EQ(GetInstLiveRange(pass, I1), Range(24, 26));
+    ASSERT_EQ(GetInstLiveRange(pass, I2), Range(14, 18));
 
-    ASSERT_EQ(pass->GetInstLiveRange(RET0), Range(26, 28));
-    ASSERT_EQ(pass->GetInstLiveRange(RET1), Range(18, 20));
+    ASSERT_EQ(GetInstLiveRange(pass, RET0), Range(26, 28));
+    ASSERT_EQ(GetInstLiveRange(pass, RET1), Range(18, 20));
 }
 
 TEST(TestLiveness, Example2)
@@ -385,43 +418,43 @@ TEST(TestLiveness, Example2)
 
     auto pass = g.GetPassManager()->GetValidPass<LivenessAnalysis>();
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(START), Range(0, 8));
-    ASSERT_EQ(pass->GetInstLiveNumber(C0), 2);
-    ASSERT_EQ(pass->GetInstLiveNumber(C1), 4);
-    ASSERT_EQ(pass->GetInstLiveNumber(C2), 6);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, START), Range(0, 8));
+    ASSERT_EQ(GetInstLiveNumber(pass, C0), 2);
+    ASSERT_EQ(GetInstLiveNumber(pass, C1), 4);
+    ASSERT_EQ(GetInstLiveNumber(pass, C2), 6);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(A), Range(8, 12));
-    ASSERT_EQ(pass->GetInstLiveNumber(IF0), 10);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, A), Range(8, 12));
+    ASSERT_EQ(GetInstLiveNumber(pass, IF0), 10);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(B), Range(24, 32));
-    ASSERT_EQ(pass->GetInstLiveNumber(I0), 26);
-    ASSERT_EQ(pass->GetInstLiveNumber(I1), 28);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, B), Range(24, 32));
+    ASSERT_EQ(GetInstLiveNumber(pass, I0), 26);
+    ASSERT_EQ(GetInstLiveNumber(pass, I1), 28);
     // JMP
-    ASSERT_EQ(pass->GetInstLiveNumber(g.GetBasicBlock(B)->GetLastInst()->GetId()), 30);
+    ASSERT_EQ(GetInstLiveNumber(pass, g.GetBasicBlock(B)->GetLastInst()->GetId()), 30);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(C), Range(12, 16));
-    ASSERT_EQ(pass->GetInstLiveNumber(I2), 14);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, C), Range(12, 16));
+    ASSERT_EQ(GetInstLiveNumber(pass, I2), 14);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(D), Range(16, 20));
-    ASSERT_EQ(pass->GetInstLiveNumber(PHI), 16);
-    ASSERT_EQ(pass->GetInstLiveNumber(I3), 18);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, D), Range(16, 20));
+    ASSERT_EQ(GetInstLiveNumber(pass, PHI), 16);
+    ASSERT_EQ(GetInstLiveNumber(pass, I3), 18);
 
-    ASSERT_EQ(pass->GetBasicBlockLiveRange(E), Range(20, 24));
-    ASSERT_EQ(pass->GetInstLiveNumber(RET), 22);
+    ASSERT_EQ(GetBasicBlockLiveRange(pass, E), Range(20, 24));
+    ASSERT_EQ(GetInstLiveNumber(pass, RET), 22);
 
-    ASSERT_EQ(pass->GetInstLiveRange(C0), Range(2, 28));
-    ASSERT_EQ(pass->GetInstLiveRange(C1), Range(4, 26));
-    ASSERT_EQ(pass->GetInstLiveRange(C2), Range(6, 14));
+    ASSERT_EQ(GetInstLiveRange(pass, C0), Range(2, 28));
+    ASSERT_EQ(GetInstLiveRange(pass, C1), Range(4, 26));
+    ASSERT_EQ(GetInstLiveRange(pass, C2), Range(6, 14));
 
-    ASSERT_EQ(pass->GetInstLiveRange(IF0), Range(10, 12));
+    ASSERT_EQ(GetInstLiveRange(pass, IF0), Range(10, 12));
 
-    ASSERT_EQ(pass->GetInstLiveRange(I0), Range(26, 28));
-    ASSERT_EQ(pass->GetInstLiveRange(I1), Range(28, 32));
-    ASSERT_EQ(pass->GetInstLiveRange(I2), Range(14, 16));
-    ASSERT_EQ(pass->GetInstLiveRange(I3), Range(18, 22));
+    ASSERT_EQ(GetInstLiveRange(pass, I0), Range(26, 28));
+    ASSERT_EQ(GetInstLiveRange(pass, I1), Range(28, 32));
+    ASSERT_EQ(GetInstLiveRange(pass, I2), Range(14, 16));
+    ASSERT_EQ(GetInstLiveRange(pass, I3), Range(18, 22));
 
-    ASSERT_EQ(pass->GetInstLiveRange(PHI), Range(16, 18));
-    ASSERT_EQ(pass->GetInstLiveRange(RET), Range(22, 24));
+    ASSERT_EQ(GetInstLiveRange(pass, PHI), Range(16, 18));
+    ASSERT_EQ(GetInstLiveRange(pass, RET), Range(22, 24));
 }
 
 #undef DUMP_LIVE_RANGE

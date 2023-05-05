@@ -108,7 +108,7 @@ TEST(TestDomTree, Example1)
         ASSERT_EQ(bb->GetImmDominator()->GetId(), F);
     };
 
-    g.GetPassManager()->RunPass<DomTree>();
+    g.GetPassManager()->Run<DomTree>();
     CheckImmDoms();
 }
 
@@ -261,7 +261,7 @@ TEST(TestDomTree, Example2)
         ASSERT_EQ(bb->GetImmDominator()->GetId(), I);
     };
 
-    g.GetPassManager()->RunPass<DomTree>();
+    g.GetPassManager()->Run<DomTree>();
     CheckImmDoms();
 }
 
@@ -389,7 +389,7 @@ TEST(TestDomTree, Example3)
         ASSERT_EQ(bb->GetImmDominator()->GetId(), B);
     };
 
-    g.GetPassManager()->RunPass<DomTree>();
+    g.GetPassManager()->Run<DomTree>();
     CheckImmDoms();
 }
 
@@ -467,7 +467,7 @@ TEST(TestDomTree, Example4)
         ASSERT_EQ(bb->GetImmDominator()->GetId(), D);
     };
 
-    g.GetPassManager()->RunPass<DomTree>();
+    g.GetPassManager()->Run<DomTree>();
     CheckImmDoms();
 }
 
@@ -557,7 +557,7 @@ TEST(TestDomTree, Example5)
         ASSERT_EQ(bb->GetImmDominator()->GetId(), C);
     };
 
-    g.GetPassManager()->RunPass<DomTree>();
+    g.GetPassManager()->Run<DomTree>();
     CheckImmDoms();
 }
 
@@ -663,7 +663,7 @@ TEST(TestDomTree, Example6)
         ASSERT_EQ(bb->GetImmDominator()->GetId(), G);
     };
 
-    g.GetPassManager()->RunPass<DomTree>();
+    g.GetPassManager()->Run<DomTree>();
     CheckImmDoms();
 }
 
@@ -806,6 +806,6 @@ TEST(TestDomTree, Example6)
 //         EXPECT_EQ(bb->GetImmDominator()->GetId(), D);
 //     };
 
-//     g.GetPassManager()->RunPass<DomTree>();
+//     g.GetPassManager()->Run<DomTree>();
 //     CheckImmDoms();
 // }
