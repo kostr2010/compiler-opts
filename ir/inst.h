@@ -56,6 +56,33 @@ class User
     int idx_{ -1 };
 };
 
+struct Location
+{
+    enum class Where
+    {
+        UNSET,
+        REGISTER,
+        STACK,
+    };
+
+    Location(Where l, size_t s);
+    DEFAULT_COPY_SEMANTIC(Location);
+    DEFAULT_MOVE_SEMANTIC(Location);
+    DEFAULT_CTOR(Location);
+    DEFAULT_DTOR(Location);
+
+    bool IsOnStack();
+    bool IsOnRegister();
+    bool IsUnset();
+
+    bool operator==(const Location& other) const;
+
+    Where loc{ Where::UNSET };
+    size_t slot{ 0 };
+};
+
+std::ostream& operator<<(std::ostream& os, const Location& l);
+
 class InstBase : public marker::Markable
 {
   public:
@@ -79,6 +106,7 @@ class InstBase : public marker::Markable
     GETTER(Inputs, inputs_);
     GETTER(Users, users_);
     GETTER(Id, id_);
+    GETTER(Location, loc_);
 
     InstBase* GetNext() const;
     void SetNext(std::unique_ptr<InstBase> next);
@@ -88,6 +116,7 @@ class InstBase : public marker::Markable
     size_t GetNumInputs() const;
     Input GetInput(size_t idx) const;
     void SetInput(size_t idx, InstBase* inst);
+    void SetInput(size_t idx, InstBase* inst, BasicBlock* bb);
     void ReplaceInput(InstBase* old_inst, InstBase* new_inst);
     void ClearInputs();
     void RemoveInput(const Input& input);
@@ -101,6 +130,8 @@ class InstBase : public marker::Markable
     void RemoveUser(const User& user);
     void RemoveUser(InstBase* user);
     void ReplaceUser(const User& user_old, const User& user_new);
+
+    void SetLocation(Location::Where loc, size_t slot);
 
     template <isa::flag::Type FLAG>
     struct FlagPredicate
@@ -171,6 +202,8 @@ class InstBase : public marker::Markable
 
     std::list<User> users_{};
     std::vector<Input> inputs_{};
+
+    Location loc_{};
 };
 
 class Conditional

@@ -9,6 +9,7 @@
 - Graph must have the following properties:
   - each `Graph` must have a `START_BLOCK`. This block is only used to store graph's constants and parameters. Constants and parameters may only be in `START_BLOCK`.
   - [TODO:] each `Graph` must have an `END_BLOCK`. This block must remain empty and all `BasicBlock` without successors must link to it.
+  - [TODO:] make it deductible whether `Instruction` can have users or not
 
 # ISA DESIGN
 

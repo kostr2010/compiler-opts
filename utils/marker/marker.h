@@ -9,32 +9,28 @@
 
 namespace marker {
 
-// RAII class for marker. acquired using MarkerFactory and released upon scope end
+// RAII class for marker. acquired using default constructor and released upon scope end
 class Marker
 {
     friend class MarkerFactory;
 
   public:
     using MarkerGenT = uint16_t;
-    using GenUnset = std::integral_constant<MarkerGenT, 0>;
+    static constexpr MarkerGenT GEN_UNSET = 0;
+
+    Marker();
+    ~Marker();
+    NO_COPY_SEMANTIC(Marker);
+    NO_MOVE_SEMANTIC(Marker);
 
     GETTER(Gen, gen_);
     GETTER(Slot, slot_);
 
-    ~Marker();
-
     bool IsUnset() const;
 
   private:
-    Marker(size_t slot, MarkerGenT gen);
-
-    void Unset();
-
-    NO_COPY_SEMANTIC(Marker);
-    NO_MOVE_SEMANTIC(Marker);
-
-    size_t slot_;
-    MarkerGenT gen_;
+    size_t slot_{};
+    MarkerGenT gen_{};
 };
 
 template <size_t N>

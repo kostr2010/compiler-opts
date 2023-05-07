@@ -2,7 +2,6 @@
 #include "ir/bb.h"
 #include "ir/graph.h"
 #include "ir/loop.h"
-#include "utils/marker/marker_factory.h"
 
 using BranchFlag = isa::flag::Flag<isa::flag::Type::BRANCH>;
 
@@ -92,14 +91,10 @@ void LinearOrder::ProcessLast(BasicBlock* bb)
         break;
     }
     case BranchFlag::Value::ONE_SUCCESSOR: {
-        // LOG("APPEND JMP TO " << bb->GetId());
         AppendJump(bb);
         break;
     }
     case BranchFlag::Value::TWO_SUCCESSORS: {
-        // LOG("INSERT JMP BB BETWEEN: "
-        //     << bb->GetId() << " " <<
-        //     bb->GetSuccessor(Conditional::Branch::FALLTHROUGH)->GetId());
         auto bb_jmp = InsertJumpBasicBlock(bb, bb->GetSuccessor(Conditional::Branch::FALLTHROUGH));
         linear_bb_.push_back(bb_jmp);
         break;
@@ -122,7 +117,6 @@ void LinearOrder::ProcessSingleSuccessor(BasicBlock* bb, BasicBlock* prev)
         (prev->GetLastInst() == nullptr) ? (false) : (prev->GetLastInst()->IsUnconditionalJump());
 
     if (!is_bb_after_prev && !is_last_inst_jump) {
-        // LOG("APPEND JMP TO " << prev->GetId());
         AppendJump(prev);
     }
 }
@@ -139,10 +133,8 @@ void LinearOrder::ProcessTwoSuccessors(BasicBlock* bb, BasicBlock* prev)
     auto bb_t = prev->GetSuccessor(Conditional::Branch::BRANCH_TRUE);
 
     if (bb->GetId() == bb_t->GetId()) {
-        // LOG("INVERTED: " << prev->GetId());
         graph_->InvertCondition(prev);
     } else if (bb->GetId() != bb_f->GetId()) {
-        // LOG("INSERT JMP BB BETWEEN: " << prev->GetId() << " " << bb->GetId());
         auto bb_jmp = InsertJumpBasicBlock(prev, bb_f);
         linear_bb_.push_back(bb_jmp);
     }
@@ -173,13 +165,9 @@ void LinearOrder::Check()
             for (size_t s = 0; s < bb->GetNumSuccessors(); ++s) {
                 if (s == Conditional::Branch::FALLTHROUGH) {
                     assert(i + 1 < sz);
-                    // LOG("bb " << bb->GetId() << ", false " << bb->GetSuccessor(s)->GetId()
-                    //           << ", linear_bb_[i + 1] " << linear_bb_[i + 1]->GetId());
                     assert(bb->GetSuccessor(s)->GetId() == linear_bb_[i + 1]->GetId());
                 } else {
                     assert(i + 1 < sz);
-                    // LOG("bb " << bb->GetId() << ", branch " << bb->GetSuccessor(s)->GetId()
-                    //           << ", linear_bb_[i + 1] " << linear_bb_[i + 1]->GetId());
                     assert(bb->GetSuccessor(s)->GetId() != linear_bb_[i + 1]->GetId());
                 }
             }
@@ -187,8 +175,6 @@ void LinearOrder::Check()
             auto last_inst = bb->GetLastInst();
             if (last_inst == nullptr || !last_inst->IsUnconditionalJump()) {
                 auto succ = bb->GetSuccessor(Conditional::Branch::FALLTHROUGH);
-                // LOG("bb " << bb->GetId() << ", succ " << succ->GetId() << ", linear_bb_[i + 1]"
-                //           << linear_bb_[i + 1]->GetId());
                 assert(succ->GetId() == linear_bb_[i + 1]->GetId());
             }
         }

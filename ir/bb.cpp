@@ -283,30 +283,51 @@ void BasicBlock::UnlinkInst(InstBase* inst)
     auto next = inst->GetNext();
 
     if (prev != nullptr && next != nullptr) {
+        assert(prev != nullptr);
+        assert(next != nullptr);
+
         next->SetPrev(prev);
         prev->SetNext(inst->ReleaseNext());
-    } else {
-        if (prev == nullptr) {
-            if (next != nullptr) {
-                next->SetPrev(nullptr);
-            }
-            if (inst->IsPhi()) {
-                first_phi_.reset(inst->ReleaseNext());
-            } else {
-                first_inst_.reset(inst->ReleaseNext());
-            }
+    } else if (prev == nullptr && next != nullptr) {
+        assert(prev == nullptr);
+        assert(next != nullptr);
+
+        if (inst->IsPhi()) {
+            assert(first_phi_ != nullptr);
+            assert(first_phi_->GetId() == inst->GetId());
+            first_phi_.reset(inst->ReleaseNext());
+        } else {
+            assert(first_inst_ != nullptr);
+            assert(first_inst_->GetId() == inst->GetId());
+            first_inst_.reset(inst->ReleaseNext());
         }
 
-        if (next == nullptr) {
-            if (prev != nullptr) {
-                prev->SetNext(nullptr);
-            }
+        next->SetPrev(nullptr);
+    } else if (prev != nullptr && next == nullptr) {
+        assert(prev != nullptr);
+        assert(next == nullptr);
 
-            if (inst->IsPhi()) {
-                last_phi_ = prev;
-            } else {
-                last_inst_ = prev;
-            }
+        if (inst->IsPhi()) {
+            assert(last_phi_ != nullptr);
+            assert(last_phi_->GetId() == inst->GetId());
+            last_phi_ = prev;
+        } else {
+            assert(last_inst_ != nullptr);
+            assert(last_inst_->GetId() == inst->GetId());
+            last_inst_ = prev;
+        }
+
+        prev->SetNext(nullptr);
+    } else {
+        assert(prev == nullptr);
+        assert(next == nullptr);
+
+        if (inst->IsPhi()) {
+            first_phi_.reset();
+            last_phi_ = nullptr;
+        } else {
+            first_inst_.reset();
+            last_inst_ = nullptr;
         }
     }
 }

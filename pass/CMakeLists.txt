@@ -8,6 +8,7 @@ add_library(passes SHARED
     loop_analysis.cpp
     check_elimination.cpp
     linear_order.cpp
+    linear_scan.cpp
     liveness_analysis.cpp
     peepholes.cpp
     dce.cpp

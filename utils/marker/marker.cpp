@@ -3,8 +3,9 @@
 
 namespace marker {
 
-Marker::Marker(size_t slot, MarkerGenT gen) : slot_{ slot }, gen_{ gen }
+Marker::Marker()
 {
+    MarkerFactory::InitMarker(this);
 }
 
 Marker::~Marker()
@@ -14,12 +15,7 @@ Marker::~Marker()
 
 bool Marker::IsUnset() const
 {
-    return gen_ == GenUnset();
-}
-
-void Marker::Unset()
-{
-    gen_ = GenUnset();
+    return gen_ == GEN_UNSET;
 }
 
 };

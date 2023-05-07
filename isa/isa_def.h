@@ -17,11 +17,12 @@
     GENERATOR(CONST, /* NO INPUTS */)
 
 #define ISA_FLAG_LIST(GENERATOR)                                                                  \
-    GENERATOR(BRANCH, (NO_SUCCESSORS)(ONE_SUCCESSOR)(TWO_SUCCESSORS), )                           \
-    GENERATOR(SYMMETRICAL, /* NO VALUES */, )                                                     \
-    GENERATOR(CALL, /* NO VALUES */, )                                                            \
-    GENERATOR(CHECK, /* NO VALUES */, )                                                           \
-    GENERATOR(NO_DCE, /* NO VALUES */, )
+    GENERATOR(BRANCH, (NO_SUCCESSORS)(ONE_SUCCESSOR)(TWO_SUCCESSORS), ) /* inst controls CFG */   \
+    GENERATOR(SYMMETRICAL, /* NO VALUES */, ) /* inst in1, in2 == inst in2, in1 */                \
+    GENERATOR(CALL, /* NO VALUES */, )        /* instruction contains callee graph */             \
+    GENERATOR(CHECK, /* NO VALUES */, )       /* instruction is check */                          \
+    GENERATOR(NO_DCE, /* NO VALUES */, )      /* instruction can't be eliminated in dce */        \
+    GENERATOR(NO_USE, /* NO VALUES */, )      /* instruction can't have users */
 
 #define ISA_INSTRUCTION_LIST(GENERATOR)                                                           \
     GENERATOR(ADD, BINARY, (SYMMETRICAL), )                                                       \
@@ -51,17 +52,17 @@
     GENERATOR(ORI, BIN_IMM, /* NO FLAGS */, )                                                     \
     GENERATOR(XORI, BIN_IMM, /* NO FLAGS */, )                                                    \
     GENERATOR(CMP, COMPARE, /* NO FLAGS */, )                                                     \
-    GENERATOR(CHECK_ZERO, UNARY, (CHECK)(NO_DCE), )                                               \
-    GENERATOR(CHECK_NULL, UNARY, (CHECK)(NO_DCE), )                                               \
-    GENERATOR(CHECK_SIZE, BINARY, (CHECK)(NO_DCE), )                                              \
+    GENERATOR(CHECK_ZERO, UNARY, (CHECK)(NO_DCE)(NO_USE), )                                       \
+    GENERATOR(CHECK_NULL, UNARY, (CHECK)(NO_DCE)(NO_USE), )                                       \
+    GENERATOR(CHECK_SIZE, BINARY, (CHECK)(NO_DCE)(NO_USE), )                                      \
     /*_(CAST, CastOp )*/                                                                          \
     /*_(CALL_DYNAMIC, CALL, (CALL) | (NO_DCE))*/                                                  \
     GENERATOR(CALL_STATIC, CALL, (CALL)(NO_DCE), )                                                \
     GENERATOR(PHI, PHI, /* NO FLAGS */, )                                                         \
     GENERATOR(CONST, CONST, /* NO FLAGS */, )                                                     \
     GENERATOR(PARAM, NO_INPUT, (NO_DCE), )                                                        \
-    GENERATOR(RETURN, UNARY, (BRANCH, NO_SUCCESSORS)(NO_DCE), )                                   \
-    GENERATOR(RETURN_VOID, NO_INPUT, (BRANCH, NO_SUCCESSORS)(NO_DCE), )                           \
-    GENERATOR(IF_IMM, IF_IMM, (BRANCH, TWO_SUCCESSORS)(NO_DCE), )                                 \
-    GENERATOR(IF, IF, (BRANCH, TWO_SUCCESSORS)(NO_DCE), )                                         \
-    GENERATOR(JMP, NO_INPUT, (BRANCH, ONE_SUCCESSOR)(NO_DCE), )
+    GENERATOR(RETURN, UNARY, (BRANCH, NO_SUCCESSORS)(NO_DCE)(NO_USE), )                           \
+    GENERATOR(RETURN_VOID, NO_INPUT, (BRANCH, NO_SUCCESSORS)(NO_DCE)(NO_USE), )                   \
+    GENERATOR(IF_IMM, IF_IMM, (BRANCH, TWO_SUCCESSORS)(NO_DCE)(NO_USE), )                         \
+    GENERATOR(IF, IF, (BRANCH, TWO_SUCCESSORS)(NO_DCE)(NO_USE), )                                 \
+    GENERATOR(JMP, NO_INPUT, (BRANCH, ONE_SUCCESSOR)(NO_DCE)(NO_USE), )

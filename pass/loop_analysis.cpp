@@ -3,7 +3,6 @@
 #include "ir/bb.h"
 #include "ir/graph.h"
 #include "ir/loop.h"
-#include "utils/marker/marker_factory.h"
 
 #include <algorithm>
 #include <set>
@@ -13,8 +12,7 @@ bool LoopAnalysis::Run()
     ResetState();
     graph_->GetPassManager()->GetValidPass<DomTree>();
 
-    MarkersBckEdges markers_bck = { marker::MarkerFactory::AcquireMarker(),
-                                    marker::MarkerFactory::AcquireMarker() };
+    MarkersBckEdges markers_bck{};
 
     CollectBackEdges(graph_->GetStartBasicBlock(), markers_bck);
     SplitBackEdges();
@@ -71,7 +69,7 @@ void LoopAnalysis::PopulateLoops()
 void LoopAnalysis::PopulateLoop(Loop* loop)
 {
     if (loop->IsReducible()) {
-        MarkersPopulate markers = { marker::MarkerFactory::AcquireMarker() };
+        MarkersPopulate markers{};
 
         loop->GetHeader()->SetMark(&markers[MarksPopulate::GREEN]);
 

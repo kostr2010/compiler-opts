@@ -46,4 +46,5 @@ process_files() {
     done
 }
 
+install_prerequisites
 process_files

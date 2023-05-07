@@ -12,21 +12,18 @@ namespace marker {
 
 class MarkerFactory
 {
-    friend class Marker;
-
   public:
-    NO_COPY_SEMANTIC(MarkerFactory);
-    NO_MOVE_SEMANTIC(MarkerFactory);
-
-    static Marker AcquireMarker();
+    static void InitMarker(Marker* m);
+    static void DisposeMarker(Marker* marker);
 
   private:
     DEFAULT_CTOR(MarkerFactory);
     DEFAULT_DTOR(MarkerFactory);
+    NO_COPY_SEMANTIC(MarkerFactory);
+    NO_MOVE_SEMANTIC(MarkerFactory);
 
     static MarkerFactory* Get();
     static Marker::MarkerGenT NewGen();
-    static void DisposeMarker(Marker* marker);
 
     using MarkerSlotsTracker = std::bitset<NumConcurrentMarkers::value>;
     MarkerSlotsTracker slot_tracker_;

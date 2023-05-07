@@ -2,6 +2,7 @@
 #define __MACROS_H_INCLUDED__
 
 #include <cassert>
+#include <iostream>
 
 #define COMMA() ,
 #define EMPTY()

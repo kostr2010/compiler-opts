@@ -29,7 +29,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
                     -Wno-invalid-memory-model \
                     -Wmaybe-uninitialized \
                     -Wswitch \
-                    -Werror"
+                    -Werror \
+                    -g"
     CACHE STRING "Default CXX options" FORCE)
 set(CMAKE_CXX_STANDARD 20)
 
@@ -46,4 +47,4 @@ add_subdirectory(third-party)
 
 add_executable(test test.cpp)
 target_include_directories(test PRIVATE ${PROJECT_SOURCE_DIR})
-target_link_libraries(test ir)
+target_link_libraries(test ir marker range passes codegen)

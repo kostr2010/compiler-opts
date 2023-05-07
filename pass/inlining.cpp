@@ -2,7 +2,7 @@
 #include "ir/bb.h"
 #include "ir/graph.h"
 
-GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(Inlining, RPO);
+GEN_DEFAULT_VISIT_FUNCTIONS(Inlining, RPO);
 
 Inlining::Inlining(Graph* graph) : Pass(graph)
 {
@@ -11,6 +11,12 @@ Inlining::Inlining(Graph* graph) : Pass(graph)
 bool Inlining::Run()
 {
     VisitGraph();
+
+    for (auto inst : to_delete_) {
+        inst->GetBasicBlock()->UnlinkInst(inst);
+    }
+    to_delete_.clear();
+
     return true;
 }
 
@@ -80,15 +86,16 @@ void Inlining::UpdateDFGReturns()
 
     assert(!rets.empty());
 
-    using ReturnT = typename isa::inst::Inst<isa::inst::Opcode::RETURN>::Type;
-    using RetNumArgs = isa::InputValue<ReturnT, isa::input::Type::VREG>;
+    // only one return type per function, so decide by first one
+    if (rets.front()->GetNumInputs() == 0) {
+        for (const auto& ret : rets) {
+            ret->GetBasicBlock()->UnlinkInst(ret);
+        }
+    } else {
+        assert(rets.front()->GetNumInputs() > 0);
 
-    // only one return type per function
-    switch (rets.front()->GetOpcode()) {
-    case isa::inst::Opcode::RETURN: {
         InstBase* call_ret_res{ nullptr };
         if (rets.size() == 1) {
-            assert(RetNumArgs::value == rets.front()->GetNumInputs());
             call_ret_res = rets.front()->GetInput(0).GetInst();
             call_ret_res->RemoveUser(rets.front());
             rets.front()->GetBasicBlock()->UnlinkInst(rets.front());
@@ -99,7 +106,6 @@ void Inlining::UpdateDFGReturns()
             assert(call_ret_res != nullptr);
 
             for (const auto& ret : rets) {
-                assert(RetNumArgs::value == ret->GetNumInputs());
                 // input is ret's input, but phi's bb is bb, where ret was
                 auto ret_input = ret->GetInput(0).GetInst();
                 ret_phi_->AddInput(ret_input, ret->GetBasicBlock());
@@ -112,14 +118,6 @@ void Inlining::UpdateDFGReturns()
             user.GetInst()->ReplaceInput(call_inst, call_ret_res);
             call_ret_res->AddUser(user);
         }
-    } break;
-    case isa::inst::Opcode::RETURN_VOID: {
-        for (const auto& ret : rets) {
-            ret->GetBasicBlock()->UnlinkInst(ret);
-        }
-    } break;
-    default:
-        UNREACHABLE("invalid return instruction");
     }
 }
 
@@ -186,7 +184,8 @@ void Inlining::InsertInlinedGraph()
     for (const auto& input : cur_call_->GetInputs()) {
         input.GetInst()->RemoveUser(cur_call_);
     }
-    call_block->UnlinkInst(cur_call_);
+    assert(cur_call_->GetBasicBlock()->GetId() == call_block->GetId());
+    to_delete_.push_back(cur_call_);
 
     assert(call_block->GetSuccessor(0) == call_cont_block);
     assert(call_cont_block->GetNumPredecessors() == 1);

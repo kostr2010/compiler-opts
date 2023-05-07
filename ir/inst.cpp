@@ -5,6 +5,54 @@
 #include "inst.h"
 
 // ====================
+// Location
+
+Location::Location(Location::Where l, size_t s) : loc{ l }, slot{ s }
+{
+}
+
+bool Location::IsOnStack()
+{
+    return loc == Location::Where::STACK;
+}
+
+bool Location::IsOnRegister()
+{
+    return loc == Location::Where::REGISTER;
+}
+
+bool Location::IsUnset()
+{
+    return loc == Location::Where::UNSET;
+}
+
+bool Location::operator==(const Location& other) const
+{
+    return (loc == other.loc) && (slot == other.slot);
+}
+
+std::ostream& operator<<(std::ostream& os, const Location& l)
+{
+    switch (l.loc) {
+    case Location::Where::REGISTER:
+        os << "R" << l.slot;
+        break;
+    case Location::Where::STACK:
+        os << "S" << l.slot;
+        break;
+    case Location::Where::UNSET:
+        os << "UNSET";
+        break;
+    default:
+        UNREACHABLE("unhandled location!");
+    }
+    return os;
+}
+
+// Location
+// ====================
+
+// ====================
 // InstBase
 
 Input InstBase::GetInput(size_t idx) const
@@ -16,11 +64,22 @@ Input InstBase::GetInput(size_t idx) const
 
 void InstBase::SetInput(size_t idx, InstBase* inst)
 {
+    assert(!IsDynamic());
     assert(inst != nullptr);
     assert(idx < GetNumInputs());
 
     inst->users_.push_back(User(this, idx));
     inputs_[idx] = Input(inst, inst->GetBasicBlock());
+}
+
+void InstBase::SetInput(size_t idx, InstBase* inst, BasicBlock* bb)
+{
+    assert(IsDynamic());
+    assert(inst != nullptr);
+    assert(idx < GetNumInputs());
+
+    inst->users_.push_back(User(this, idx));
+    inputs_[idx] = Input(inst, bb);
 }
 
 void InstBase::Dump() const
@@ -126,6 +185,14 @@ void InstBase::ReplaceInput(InstBase* old_inst, InstBase* new_inst)
     }
 }
 
+void InstBase::SetLocation(Location::Where loc, size_t slot)
+{
+    assert(!HasFlag<isa::flag::Type::NO_USE>());
+
+    loc_.loc = loc;
+    loc_.slot = slot;
+}
+
 template <isa::inst::Opcode OP>
 using VregValue = isa::InputValue<typename isa::inst::Inst<OP>::Type, isa::input::Type::VREG>;
 
@@ -151,18 +218,21 @@ size_t InstBase::GetNumUsers() const
 
 void InstBase::AddUser(InstBase* inst)
 {
+    assert(!HasFlag<isa::flag::Type::NO_USE>());
     assert(inst->IsDynamic());
     users_.emplace_back(inst);
 }
 
 void InstBase::AddUser(InstBase* inst, size_t idx)
 {
+    assert(!HasFlag<isa::flag::Type::NO_USE>());
     assert(!inst->IsDynamic());
     users_.emplace_back(inst, idx);
 }
 
 void InstBase::AddUser(const User& user)
 {
+    assert(!HasFlag<isa::flag::Type::NO_USE>());
     users_.push_back(user);
 }
 
@@ -179,6 +249,7 @@ void InstBase::RemoveUser(InstBase* user)
 
 void InstBase::ReplaceUser(const User& user_old, const User& user_new)
 {
+    assert(!HasFlag<isa::flag::Type::NO_USE>());
     std::replace_if(
         users_.begin(), users_.end(),
         [user_old](const User& u) { return user_old.GetInst()->GetId() == u.GetInst()->GetId(); },

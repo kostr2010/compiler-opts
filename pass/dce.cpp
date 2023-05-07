@@ -1,11 +1,10 @@
 #include "dce.h"
 #include "ir/bb.h"
 #include "ir/graph.h"
-#include "utils/marker/marker_factory.h"
 
 bool DCE::Run()
 {
-    Markers markers = { marker::MarkerFactory::AcquireMarker() };
+    Markers markers{};
 
     Mark(markers);
     Sweep(markers);
@@ -38,33 +37,28 @@ void DCE::MarkRecursively(InstBase* inst, const Markers markers)
 void DCE::Sweep(const Markers markers)
 {
     for (const auto& bb : graph_->GetPassManager()->GetValidPass<PO>()->GetBlocks()) {
-        auto inst = bb->GetLastInst();
-        while (inst != nullptr) {
-            auto prev = inst->GetPrev();
+        std::set<InstBase*> to_remove{};
+        for (auto inst = bb->GetLastInst(); inst != nullptr; inst = inst->GetPrev()) {
             if (!inst->ProbeMark(&markers[Marks::VISITED])) {
-                RemoveInst(inst);
+                for (const auto& i : inst->GetInputs()) {
+                    i.GetInst()->RemoveUser(inst);
+                }
+                to_remove.insert(inst);
             }
-            inst = prev;
         }
 
-        auto phi = bb->GetLastPhi();
-        while (phi != nullptr) {
-            auto prev = phi->GetPrev();
+        for (auto phi = bb->GetLastPhi(); phi != nullptr; phi = phi->GetPrev()) {
             if (!phi->ProbeMark(&markers[Marks::VISITED])) {
-                RemoveInst(phi);
+                for (const auto& i : phi->GetInputs()) {
+                    i.GetInst()->RemoveUser(phi);
+                }
+                to_remove.insert(phi);
             }
-            phi = prev;
+        }
+
+        for (auto inst : to_remove) {
+            assert(inst != nullptr);
+            bb->UnlinkInst(inst);
         }
     }
-}
-
-void DCE::RemoveInst(InstBase* inst)
-{
-    assert(inst != nullptr);
-
-    for (const auto& i : inst->GetInputs()) {
-        i.GetInst()->RemoveUser(inst);
-    }
-
-    inst->GetBasicBlock()->UnlinkInst(inst);
 }

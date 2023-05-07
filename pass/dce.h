@@ -27,8 +27,6 @@ class DCE : public Pass
     void Mark(const Markers markers);
     void MarkRecursively(InstBase* inst, const Markers markers);
     void Sweep(const Markers markers);
-    void RemoveInst(InstBase* inst);
-    void ClearMarks();
 };
 
 template <>

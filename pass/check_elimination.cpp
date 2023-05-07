@@ -4,7 +4,7 @@
 #include "ir/graph.h"
 #include "loop_analysis.h"
 
-GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(CheckElimination, RPO);
+GEN_DEFAULT_VISIT_FUNCTIONS(CheckElimination, RPO);
 
 static void DeleteCheck(InstBase* check)
 {

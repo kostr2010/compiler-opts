@@ -29,6 +29,7 @@ class Inlining : public Pass, public GraphVisitor
     InstBase* cur_call_{ nullptr };
     BasicBlock* callee_start_bb_{ nullptr };
     std::vector<BasicBlock*> ret_bbs_{};
+    std::vector<InstBase*> to_delete_{};
     std::unique_ptr<InstBase> ret_phi_{ nullptr };
 
   private:

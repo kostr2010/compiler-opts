@@ -1,11 +1,10 @@
 #include "dfs.h"
 #include "ir/bb.h"
 #include "ir/graph.h"
-#include "utils/marker/marker_factory.h"
 
 bool DFS::Run()
 {
-    Markers markers = { marker::MarkerFactory::AcquireMarker() };
+    Markers markers{};
 
     ResetState();
     Run_(graph_->GetStartBasicBlock(), markers);

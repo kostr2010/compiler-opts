@@ -6,19 +6,24 @@
         return graph_->GetPassManager()->GetValidPass<PASS>()->GetBlocks();                       \
     }
 
-#define GEN_VISIT_FUNCTIONS(CLASS)                                                                \
+#define GEN_DEFAULT_VISIT_INSTRUCTION_FUNCTION(CLASS)                                             \
     void CLASS ::VisitInstruction(InstBase* inst)                                                 \
     {                                                                                             \
         DISPATCH_TABLE_NAME[static_cast<unsigned>(inst->GetOpcode())](this, inst);                \
-    }                                                                                             \
-                                                                                                  \
+    }
+
+#define GEN_DEFAULT_VISIT_BASIC_BLOCK_FUNCTION(CLASS)                                             \
     void CLASS ::VisitBasicBlock(BasicBlock* bb)                                                  \
     {                                                                                             \
         for (auto i = bb->GetFirstInst(); i != nullptr; i = i->GetNext()) {                       \
             VisitInstruction(i);                                                                  \
         }                                                                                         \
-    }                                                                                             \
-                                                                                                  \
+        for (auto i = bb->GetFirstPhi(); i != nullptr; i = i->GetNext()) {                        \
+            VisitInstruction(i);                                                                  \
+        }                                                                                         \
+    }
+
+#define GEN_DEFAULT_VISIT_GRAPH_FUNCTION(CLASS)                                                   \
     void CLASS ::VisitGraph()                                                                     \
     {                                                                                             \
         for (const auto& bb : BlockOrder()) {                                                     \
@@ -26,30 +31,11 @@
         }                                                                                         \
     }
 
-#define GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(CLASS, PASS)                                         \
-    void CLASS ::VisitInstruction(InstBase* inst)                                                 \
-    {                                                                                             \
-        DISPATCH_TABLE_NAME[static_cast<unsigned>(inst->GetOpcode())](this, inst);                \
-    }                                                                                             \
-                                                                                                  \
-    void CLASS ::VisitBasicBlock(BasicBlock* bb)                                                  \
-    {                                                                                             \
-        for (auto i = bb->GetFirstInst(); i != nullptr; i = i->GetNext()) {                       \
-            VisitInstruction(i);                                                                  \
-        }                                                                                         \
-    }                                                                                             \
-                                                                                                  \
-    void CLASS ::VisitGraph()                                                                     \
-    {                                                                                             \
-        for (const auto& bb : BlockOrder()) {                                                     \
-            VisitBasicBlock(bb);                                                                  \
-        }                                                                                         \
-    }                                                                                             \
-                                                                                                  \
-    std::vector<BasicBlock*> CLASS ::BlockOrder() const                                           \
-    {                                                                                             \
-        return graph_->GetPassManager()->GetValidPass<PASS>()->GetBlocks();                       \
-    }
+#define GEN_DEFAULT_VISIT_FUNCTIONS(CLASS, PASS)                                                  \
+    GEN_DEFAULT_VISIT_INSTRUCTION_FUNCTION(CLASS);                                                \
+    GEN_DEFAULT_VISIT_BASIC_BLOCK_FUNCTION(CLASS);                                                \
+    GEN_DEFAULT_VISIT_GRAPH_FUNCTION(CLASS);                                                      \
+    GEN_BLOCK_ORDER_FUNCTION(CLASS, PASS);
 
 public:
 void VisitInstruction(InstBase* inst) override;

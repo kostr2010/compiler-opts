@@ -2,20 +2,109 @@
 #include "ir/bb.h"
 #include "ir/graph.h"
 
+#include <list>
+
 bool LivenessAnalysis::Run()
 {
     ResetState();
+
+    LinearizeBlocks();
+    CheckLinearOrder();
+
     Init();
-
-    auto lin_order = graph_->GetPassManager()->GetValidPass<LinearOrder>()->GetBlocks();
-
-    for (auto bb_it = lin_order.rbegin(); bb_it != lin_order.rend(); bb_it++) {
-        CalculateLiveRanges(*bb_it);
-    }
+    CalculateLiveness();
 
     SetValid(true);
 
     return true;
+}
+
+bool LivenessAnalysis::AllForwardEdgesVisited(BasicBlock* bb, Markers markers)
+{
+    if (!bb->IsLoopHeader()) {
+        for (auto pred : bb->GetPredecessors()) {
+            if (!pred->ProbeMark(&markers[Marks::VISITED])) {
+                return false;
+            }
+        }
+    } else {
+        // irreducible loops are to be eliminated during loop analysis
+        assert(bb->GetLoop()->IsReducible());
+
+        for (auto pred : bb->GetPredecessors()) {
+            if (!bb->Dominates(pred) && !pred->ProbeMark(&markers[Marks::VISITED])) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// while being correct, linear_order.cpp does not meet cte requirements for this liveness
+// algorithm, so i need to come up with the new one here
+// it should be possible to use different linear order in codegen, as linear reordering does not
+// influence value liveness. so here i will use linear order that does not mmet the criteria of
+// linear order presented in LinearOrder::Check(), but satisfies criteria of liveness analysis. and
+// during codegen i will use already implemented and tested LinearOrder pass
+void LivenessAnalysis::LinearizeBlocks()
+{
+    graph_->GetPassManager()->GetValidPass<DomTree>();
+    graph_->GetPassManager()->GetValidPass<LoopAnalysis>();
+
+    Markers markers{};
+
+    std::list<BasicBlock*> queue{ graph_->GetStartBasicBlock() };
+
+    while (!queue.empty()) {
+        auto bb = queue.front();
+        assert(queue.front() != nullptr);
+        queue.pop_front();
+
+        linear_blocks_.push_back(bb);
+        assert(!bb->ProbeMark(&markers[Marks::VISITED]));
+        bb->SetMark(&markers[Marks::VISITED]);
+
+        auto succs = bb->GetSuccessors();
+        for (auto it = succs.rbegin(); it != succs.rend(); ++it) {
+            auto succ = *it;
+
+            assert(succ != nullptr);
+
+            if (succ->ProbeMark(&markers[Marks::VISITED]) ||
+                !AllForwardEdgesVisited(succ, markers)) {
+                continue;
+            }
+
+            auto it_before_inner_loop =
+                std::find_if(queue.begin(), queue.end(), [succ](BasicBlock* b) {
+                    return !b->GetLoop()->Inside(succ->GetLoop());
+                });
+
+            queue.insert(it_before_inner_loop, succ);
+        }
+    }
+}
+
+void LivenessAnalysis::CheckLinearOrder()
+{
+    auto rpo = graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks();
+
+    assert(rpo.size() == linear_blocks_.size());
+
+    std::vector<size_t> bb_to_lin_number{};
+    bb_to_lin_number.resize(linear_blocks_.size());
+
+    for (size_t i = 0; i < linear_blocks_.size(); ++i) {
+        bb_to_lin_number[linear_blocks_[i]->GetId()] = i;
+    }
+
+    for (const auto& bb : linear_blocks_) {
+        if (bb->GetImmDominator() != nullptr) {
+            assert(bb_to_lin_number[bb->GetImmDominator()->GetId()] <=
+                   bb_to_lin_number[bb->GetId()]);
+        }
+    }
 }
 
 void LivenessAnalysis::Init()
@@ -23,7 +112,7 @@ void LivenessAnalysis::Init()
     size_t cur_live_number = 0;
     size_t cur_linear_number = 0;
 
-    for (const auto& bb : graph_->GetPassManager()->GetValidPass<LinearOrder>()->GetBlocks()) {
+    for (const auto& bb : linear_blocks_) {
         size_t bb_start = cur_live_number;
 
         for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetNext()) {
@@ -45,6 +134,13 @@ void LivenessAnalysis::Init()
 
         size_t bb_end = cur_live_number;
         bb_live_ranges_.emplace(bb, Range(bb_start, bb_end));
+    }
+}
+
+void LivenessAnalysis::CalculateLiveness()
+{
+    for (auto bb_it = linear_blocks_.rbegin(); bb_it != linear_blocks_.rend(); bb_it++) {
+        CalculateLiveRanges(*bb_it);
     }
 }
 
@@ -125,6 +221,7 @@ void LivenessAnalysis::ResetState()
     inst_live_ranges_.clear();
     bb_live_ranges_.clear();
     bb_live_sets_.clear();
+    linear_blocks_.clear();
 }
 
 LivenessAnalysis::LiveSet LivenessAnalysis::Union(const LiveSet& a, const LiveSet& b)

@@ -71,7 +71,7 @@ static bool FoldBinOpToBinImmOp(InstBase* i)
     return true;
 }
 
-GEN_VISIT_FUNCTIONS_WITH_BLOCK_ORDER(Peepholes, RPO);
+GEN_DEFAULT_VISIT_FUNCTIONS(Peepholes, RPO);
 
 bool Peepholes::Run()
 {

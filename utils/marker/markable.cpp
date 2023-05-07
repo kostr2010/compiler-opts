@@ -4,7 +4,7 @@ namespace marker {
 
 Markable::Markable()
 {
-    markers_.fill(Marker::GenUnset());
+    markers_.fill(Marker::GEN_UNSET);
 }
 
 bool Markable::ProbeMark(const Marker* marker)
@@ -24,7 +24,7 @@ bool Markable::SetMark(const Marker* marker)
 bool Markable::ClearMark(const Marker* marker)
 {
     bool was_set = ProbeMark(marker);
-    markers_[marker->GetSlot()] = Marker::GenUnset();
+    markers_[marker->GetSlot()] = Marker::GEN_UNSET;
     return was_set;
 }
 
