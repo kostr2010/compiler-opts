@@ -82,15 +82,9 @@ TEST(TestInlining, Example0)
         ASSERT_TRUE(b.RunChecks());
     }
 
-    // DUMP(caller);
-    // DUMP(callee);
-
     caller.GetPassManager()->GetValidPass<Inlining>();
     caller.GetPassManager()->GetValidPass<DCE>();
     caller.GetPassManager()->GetValidPass<DBE>();
-
-    // DUMP(caller);
-    // DUMP(callee);
 
     ASSERT_EQ(callee.GetStartBasicBlock(), nullptr);
 
@@ -203,15 +197,9 @@ TEST(TestInlining, Example1)
         ASSERT_TRUE(b.RunChecks());
     }
 
-    // DUMP(caller);
-    // DUMP(callee);
-
     caller.GetPassManager()->GetValidPass<Inlining>();
     caller.GetPassManager()->GetValidPass<DCE>();
     caller.GetPassManager()->GetValidPass<DBE>();
-
-    // DUMP(caller);
-    // DUMP(callee);
 
     ASSERT_EQ(callee.GetStartBasicBlock(), nullptr);
 
@@ -411,15 +399,9 @@ TEST(TestInlining, Example2)
         ASSERT_TRUE(b.RunChecks());
     }
 
-    // DUMP(caller);
-    // DUMP(callee);
-
     caller.GetPassManager()->GetValidPass<Inlining>();
     caller.GetPassManager()->GetValidPass<DCE>();
     caller.GetPassManager()->GetValidPass<DBE>();
-
-    // DUMP(caller);
-    // DUMP(callee);
 
     ASSERT_EQ(callee.GetStartBasicBlock(), nullptr);
 
@@ -610,15 +592,9 @@ TEST(TestInlining, Example3)
         ASSERT_TRUE(b.RunChecks());
     }
 
-    // DUMP(caller);
-    // DUMP(callee);
-
     caller.GetPassManager()->GetValidPass<Inlining>();
     caller.GetPassManager()->GetValidPass<DCE>();
     caller.GetPassManager()->GetValidPass<DBE>();
-
-    // DUMP(caller);
-    // DUMP(callee);
 
     // CFG
     auto start = caller.GetStartBasicBlock();

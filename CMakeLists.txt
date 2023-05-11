@@ -26,12 +26,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
                     -Wimplicit-fallthrough \
                     -Wunused \
                     -Wuninitialized \
-                    -Wno-invalid-memory-model \
+                    -Winvalid-memory-model \
                     -Wmaybe-uninitialized \
+                    -Warray-bounds=2 \
+                    -Warray-parameter=2 \
                     -Wswitch \
                     -Werror \
-                    -g"
+                    -ggdb3"
     CACHE STRING "Default CXX options" FORCE)
+
+set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 20)
 
 project(compiler_course CXX)

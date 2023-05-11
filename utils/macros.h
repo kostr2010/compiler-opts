@@ -76,7 +76,6 @@
     DEFAULT_MOVE_CTOR(class_name);                                                                \
     DEFAULT_MOVE_OPERATOR(class_name)
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define DEFAULT_COPY_CTOR(class_name) class_name(const class_name&) = default
 
 #define DEFAULT_COPY_OPERATOR(class_name) class_name& operator=(const class_name&) = default
@@ -88,8 +87,6 @@
 #define LOG_ERROR(msg) std::cerr << "ERROR/[" << __FUNCTION__ << "] " << msg << "\n";
 
 #define LOG(msg) std::cerr << "LOG/[" << __FUNCTION__ << "] " << msg << "\n";
-
-#define DUMP(graph) graph.Dump(#graph)
 
 #define GETTER(func_name, field_name)                                                             \
     auto Get##func_name() const                                                                   \

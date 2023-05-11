@@ -1,10 +1,11 @@
-set(TESTS 
+set(TESTS
+
     # passes
     rpo_test.cpp
     dom_tree_test.cpp
     loop_analysis_test.cpp
     basic_test.cpp
-    main.cpp
+
     dce_test.cpp
     peepholes_test.cpp
     inlining_test.cpp
@@ -12,9 +13,10 @@ set(TESTS
     linear_order_test.cpp
     liveness_analysis_test.cpp
     regalloc_test.cpp
+
     # utils
     range_test.cpp
-    )
+)
 
 add_executable(gtests ${TESTS})
 target_link_libraries(gtests ir gtest gtest_main pthread)
