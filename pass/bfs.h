@@ -11,6 +11,8 @@ class BasicBlock;
 class BFS : public Pass
 {
   public:
+    using is_cfg_sensitive = std::true_type;
+
     enum Marks
     {
         VISITED = 0,
@@ -30,12 +32,6 @@ class BFS : public Pass
     void ResetState();
 
     std::vector<BasicBlock*> bfs_bb_{};
-};
-
-template <>
-struct Pass::PassTraits<BFS>
-{
-    using is_cfg_sensitive = std::integral_constant<bool, true>;
 };
 
 #endif

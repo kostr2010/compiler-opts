@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 
+#include "ir/graph.h"
 #include "utils/macros.h"
 #include "utils/marker/marker.h"
 
@@ -37,6 +38,8 @@ void foo()
 int main()
 {
     foo();
+
+    std::cout << Pass::PassTraits<LivenessAnalysis>::is_cfg_sensitive::value << "\n";
 
     return 0;
 }

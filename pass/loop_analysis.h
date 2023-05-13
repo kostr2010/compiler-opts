@@ -15,6 +15,8 @@ class BasicBlock;
 class LoopAnalysis : public Pass
 {
   public:
+    using is_cfg_sensitive = std::true_type;
+
     enum MarksBckEdges
     {
         GREY = 0,
@@ -63,12 +65,6 @@ class LoopAnalysis : public Pass
 
     static constexpr size_t ROOT_LOOP_ID = 0;
     std::vector<std::unique_ptr<Loop> > loops_{};
-};
-
-template <>
-struct Pass::PassTraits<LoopAnalysis>
-{
-    using is_cfg_sensitive = std::integral_constant<bool, true>;
 };
 
 #endif

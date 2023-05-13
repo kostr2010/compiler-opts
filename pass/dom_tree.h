@@ -11,6 +11,8 @@ class BasicBlock;
 class DomTree : public Pass
 {
   public:
+    using is_cfg_sensitive = std::true_type;
+
     DomTree(Graph* graph) : Pass(graph)
     {
     }
@@ -49,12 +51,6 @@ class DomTree : public Pass
 
     std::unordered_map<IdType, size_t> id_to_dfs_idx_{};
     std::vector<Node> tree_{};
-};
-
-template <>
-struct Pass::PassTraits<DomTree>
-{
-    using is_cfg_sensitive = std::integral_constant<bool, true>;
 };
 
 #endif

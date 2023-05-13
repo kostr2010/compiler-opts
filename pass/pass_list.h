@@ -9,7 +9,7 @@
 template <typename... Types>
 class PassList
 {
-    static_assert((Pass::IsPass<Types>() && ...));
+    static_assert((Pass::is_pass<Types>() && ...));
 
   private:
     template <typename Type, typename... Pack>

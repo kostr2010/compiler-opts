@@ -10,6 +10,8 @@ class InstBase;
 class DCE : public Pass
 {
   public:
+    using is_cfg_sensitive = std::true_type;
+
     enum Marks
     {
         VISITED = 0,
@@ -27,12 +29,6 @@ class DCE : public Pass
     void Mark(const Markers markers);
     void MarkRecursively(InstBase* inst, const Markers markers);
     void Sweep(const Markers markers);
-};
-
-template <>
-struct Pass::PassTraits<DCE>
-{
-    using is_cfg_sensitive = std::integral_constant<bool, true>;
 };
 
 #endif

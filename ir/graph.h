@@ -8,10 +8,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "bb.h"
 #include "pass/pass_manager.h"
 #include "typedefs.h"
 
-class BasicBlock;
 class InstBase;
 
 class Graph

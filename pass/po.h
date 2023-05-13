@@ -11,6 +11,8 @@ class BasicBlock;
 class PO : public Pass
 {
   public:
+    using is_cfg_sensitive = std::true_type;
+
     enum Marks
     {
         VISITED = 0,
@@ -31,12 +33,6 @@ class PO : public Pass
     void ResetState();
 
     std::vector<BasicBlock*> po_bb_{};
-};
-
-template <>
-struct Pass::PassTraits<PO>
-{
-    using is_cfg_sensitive = std::integral_constant<bool, true>;
 };
 
 #endif

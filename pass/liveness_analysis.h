@@ -16,6 +16,8 @@ class InstBase;
 class LivenessAnalysis : public Pass
 {
   public:
+    using is_cfg_sensitive = std::true_type;
+
     enum Marks
     {
         VISITED = 0,
@@ -68,12 +70,6 @@ class LivenessAnalysis : public Pass
     std::unordered_map<InstBase*, Range> inst_live_ranges_{};
     std::unordered_map<BasicBlock*, Range> bb_live_ranges_{};
     std::unordered_map<BasicBlock*, LiveSet> bb_live_sets_{};
-};
-
-template <>
-struct Pass::PassTraits<LivenessAnalysis>
-{
-    using is_cfg_sensitive = std::integral_constant<bool, true>;
 };
 
 #endif
