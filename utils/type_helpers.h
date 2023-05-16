@@ -29,6 +29,6 @@ using valid_or = validator<Default, void, Op, Args...>;
 template <typename Default, template <typename...> typename Op, typename... Args>
 using valid_or_t = typename valid_or<Default, Op, Args...>::type;
 
-};
+}; // namespace type_helpers
 
 #endif

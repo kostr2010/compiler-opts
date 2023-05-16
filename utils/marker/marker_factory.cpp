@@ -41,4 +41,4 @@ Marker::MarkerGenT MarkerFactory::NewGen()
     return current_gen;
 }
 
-};
+}; // namespace marker

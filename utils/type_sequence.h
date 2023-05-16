@@ -9,7 +9,8 @@
 namespace type_sequence {
 template <typename... Ts>
 struct TypeSequence
-{};
+{
+};
 
 using EmptySequence = TypeSequence<>;
 
@@ -80,19 +81,22 @@ struct len;
 
 template <>
 struct len<EmptySequence> : std::integral_constant<size_t, 0>
-{};
+{
+};
 
 template <typename... Ts>
 struct len<TypeSequence<Ts...> >
     : std::integral_constant<size_t, len<tail_t<TypeSequence<Ts...> > >::value + 1>
-{};
+{
+};
 
 template <typename Seq, typename T>
 struct find;
 
 template <typename T, typename... Ts>
 struct find<TypeSequence<Ts...>, T> : find<tail_t<TypeSequence<Ts...> >, T>
-{};
+{
+};
 
 template <typename T, typename... Ts>
 struct find<TypeSequence<T, Ts...>, T>
@@ -128,8 +132,9 @@ template <typename T, typename... Ts, template <typename> typename Predicate>
 struct _find_if<false, T, TypeSequence<Ts...>, Predicate>
     : _find_if<Predicate<head_t<TypeSequence<Ts...> > >::value, head_t<TypeSequence<Ts...> >,
                tail_t<TypeSequence<Ts...> >, Predicate>
-{};
+{
 };
+}; // namespace
 
 template <typename Seq, template <typename> typename Predicate>
 using find_if = _find_if<false, void, Seq, Predicate>;
@@ -146,7 +151,8 @@ template <typename... TsSeq, typename... TsAcc, typename From, typename To>
 struct _replace<TypeSequence<TsSeq...>, TypeSequence<TsAcc...>, From, To>
     : _replace<tail_t<TypeSequence<TsSeq...> >,
                append_t<TypeSequence<TsAcc...>, head_t<TypeSequence<TsSeq...> > >, From, To>
-{};
+{
+};
 
 template <typename... TsSeq, typename... TsAcc, typename From, typename To>
 struct _replace<TypeSequence<From, TsSeq...>, TypeSequence<TsAcc...>, From, To>
@@ -154,7 +160,7 @@ struct _replace<TypeSequence<From, TsSeq...>, TypeSequence<TsAcc...>, From, To>
     using type = TypeSequence<TsAcc..., To, TsSeq...>;
 };
 
-};
+}; // namespace
 
 template <typename Seq, typename From, typename To>
 using replace = _replace<Seq, EmptySequence, From, To>;
@@ -186,14 +192,16 @@ struct accumulate;
 
 template <template <typename...> typename Accumulator, typename Res>
 struct accumulate<EmptySequence, Accumulator, Res> : Res
-{};
+{
+};
 
 template <typename... Ts, template <typename...> typename Accumulator, typename Res>
 struct accumulate<TypeSequence<Ts...>, Accumulator, Res>
     : accumulate<tail_t<TypeSequence<Ts...> >, Accumulator,
                  Accumulator<head_t<TypeSequence<Ts...> >, Res> >
-{};
-
+{
 };
+
+}; // namespace type_sequence
 
 #endif

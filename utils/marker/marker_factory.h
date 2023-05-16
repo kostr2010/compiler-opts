@@ -29,6 +29,6 @@ class MarkerFactory
     MarkerSlotsTracker slot_tracker_;
 };
 
-};
+}; // namespace marker
 
 #endif

@@ -28,4 +28,4 @@ bool Markable::ClearMark(const Marker* marker)
     return was_set;
 }
 
-};
+}; // namespace marker

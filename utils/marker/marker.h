@@ -36,6 +36,6 @@ class Marker
 template <size_t N>
 using Markers = Marker[N];
 
-};
+}; // namespace marker
 
 #endif

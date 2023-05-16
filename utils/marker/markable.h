@@ -24,6 +24,6 @@ class Markable
     using Markers = std::array<Marker::MarkerGenT, NumConcurrentMarkers::value>;
     Markers markers_;
 };
-};
+}; // namespace marker
 
 #endif

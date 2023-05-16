@@ -18,4 +18,4 @@ bool Marker::IsUnset() const
     return gen_ == GEN_UNSET;
 }
 
-};
+}; // namespace marker
