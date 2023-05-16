@@ -8,7 +8,7 @@ GraphBuilder::GraphBuilder(Graph* g)
 
 void GraphBuilder::SetGraph(Graph* g)
 {
-    assert(g != nullptr);
+    ASSERT(g != nullptr);
     graph_ = g;
 
     bb_map_[g->BB_START_ID] = g->GetStartBasicBlock();
@@ -22,17 +22,17 @@ void GraphBuilder::SetGraph(Graph* g)
 
 IdType GraphBuilder::NewParameter()
 {
-    assert(graph_ != nullptr);
-    assert(graph_->GetStartBasicBlock() != nullptr);
+    ASSERT(graph_ != nullptr);
+    ASSERT(graph_->GetStartBasicBlock() != nullptr);
     auto last_inst = graph_->GetStartBasicBlock()->GetLastInst();
     if (last_inst != nullptr) {
-        // assert that parameters are passed one after another
-        assert(last_inst->IsParam());
+        // make sure that parameters are passed one after another
+        ASSERT(last_inst->IsParam());
     }
 
     auto inst = InstBase::NewInst<isa::inst::Opcode::PARAM>();
 
-    assert(inst != nullptr);
+    ASSERT(inst != nullptr);
     auto id = inst->GetId();
 
     cur_inst_ = inst.get();
@@ -45,7 +45,7 @@ IdType GraphBuilder::NewParameter()
 
 IdType GraphBuilder::NewBlock()
 {
-    assert(graph_ != nullptr);
+    ASSERT(graph_ != nullptr);
 
     auto bb = graph_->NewBasicBlock();
     auto id = bb->GetId();
@@ -65,8 +65,8 @@ void GraphBuilder::SetSuccessors(IdType bb_id, std::vector<IdType>&& succs)
 
 void GraphBuilder::SetInputs(IdType id, std::vector<std::pair<IdType, IdType> >&& inputs)
 {
-    assert(inst_map_.find(id) != inst_map_.end());
-    assert(inst_map_.at(id)->IsPhi());
+    ASSERT(inst_map_.find(id) != inst_map_.end());
+    ASSERT(inst_map_.at(id)->IsPhi());
 
     phi_inputs_map_[id].reserve(inputs.size());
     phi_inputs_map_.at(id) = std::move(inputs);
@@ -75,7 +75,7 @@ void GraphBuilder::SetInputs(IdType id, std::vector<std::pair<IdType, IdType> >&
 void GraphBuilder::SetType(IdType id, InstBase::DataType t)
 {
     auto inst = inst_map_[id];
-    assert(inst != nullptr);
+    ASSERT(inst != nullptr);
     inst->SetDataType(t);
 }
 
@@ -83,8 +83,8 @@ template <typename ImmT>
 static void SetImmediateT(InstBase* i, size_t pos, ImmType imm)
 {
     using NumImm = isa::InputValue<ImmT, isa::input::Type::IMM>;
-    static_assert(NumImm::value > 0);
-    static_assert(std::is_base_of_v<WithImm<NumImm::value>, ImmT>);
+    STATIC_ASSERT(NumImm::value > 0);
+    STATIC_ASSERT(std::is_base_of_v<WithImm<NumImm::value>, ImmT>);
 
     static_cast<ImmT*>(i)->SetImmediate(pos, imm);
 }
@@ -92,9 +92,9 @@ static void SetImmediateT(InstBase* i, size_t pos, ImmType imm)
 void GraphBuilder::SetImmediate(IdType id, size_t pos, ImmType imm)
 {
     auto inst = inst_map_[id];
-    assert(inst != nullptr);
-    assert(inst->GetNumImms() > 0);
-    assert(pos < inst->GetNumImms());
+    ASSERT(inst != nullptr);
+    ASSERT(inst->GetNumImms() > 0);
+    ASSERT(pos < inst->GetNumImms());
     auto opcode = inst->GetOpcode();
 
 #define GENERATOR(OPCODE, TYPE, ...)                                                              \
@@ -113,8 +113,8 @@ void GraphBuilder::SetImmediate(IdType id, size_t pos, ImmType imm)
 template <typename CondT>
 static void SetConditionT(InstBase* i, Conditional::Type c)
 {
-    static_assert(isa::InputValue<CondT, isa::input::Type::COND>::value == true);
-    static_assert(std::is_base_of_v<Conditional, CondT>);
+    STATIC_ASSERT(isa::InputValue<CondT, isa::input::Type::COND>::value == true);
+    STATIC_ASSERT(std::is_base_of_v<Conditional, CondT>);
 
     static_cast<CondT*>(i)->SetCondition(c);
 }
@@ -122,8 +122,8 @@ static void SetConditionT(InstBase* i, Conditional::Type c)
 void GraphBuilder::SetCondition(IdType id, Conditional::Type c)
 {
     auto inst = inst_map_[id];
-    assert(inst != nullptr);
-    assert(inst->IsConditional());
+    ASSERT(inst != nullptr);
+    ASSERT(inst->IsConditional());
     auto opcode = inst->GetOpcode();
 
 #define GENERATOR(OPCODE, TYPE, ...)                                                              \
@@ -154,12 +154,12 @@ struct BranchNumAccumulator
         std::conditional_t < ACC::value<BranchNum::value, BranchNum, ACC>::value;
 };
 
-using MaxBranchNum = type_sequence::Accumulate<isa::ISA, BranchNumAccumulator, NumBranchesDefault>;
+using MaxBranchNum = type_sequence::accumulate<isa::ISA, BranchNumAccumulator, NumBranchesDefault>;
 
 void GraphBuilder::ConstructCFG()
 {
     for (auto& [bb_id, succs] : bb_succ_map_) {
-        assert(succs.size() <= MaxBranchNum::value);
+        ASSERT(succs.size() <= MaxBranchNum::value);
         auto bb = bb_map_.at(bb_id);
         for (size_t i = 0; i < succs.size(); ++i) {
             auto succ = bb_map_.at(succs[i]);
@@ -173,9 +173,9 @@ void GraphBuilder::ConstructCFG()
 void GraphBuilder::ConstructDFG()
 {
     for (auto& [inst_id, inputs] : inst_inputs_map_) {
-        assert(inst_map_.find(inst_id) != inst_map_.end());
+        ASSERT(inst_map_.find(inst_id) != inst_map_.end());
         auto inst = inst_map_.at(inst_id);
-        assert(!inst->IsPhi());
+        ASSERT(!inst->IsPhi());
 
         size_t input_idx = 0;
         for (auto input_id : inputs) {
@@ -183,7 +183,7 @@ void GraphBuilder::ConstructDFG()
                 inst->CheckInputType();
             }
 
-            assert(inst_map_.find(input_id) != inst_map_.end());
+            ASSERT(inst_map_.find(input_id) != inst_map_.end());
             auto input_inst = inst_map_.at(input_id);
             if (inst->IsDynamic()) {
                 inst->AddInput(input_inst, input_inst->GetBasicBlock());
@@ -195,15 +195,15 @@ void GraphBuilder::ConstructDFG()
     }
 
     for (auto& [inst_id, inputs] : phi_inputs_map_) {
-        assert(inst_map_.find(inst_id) != inst_map_.end());
+        ASSERT(inst_map_.find(inst_id) != inst_map_.end());
         auto inst = inst_map_.at(inst_id);
-        assert(inst->IsPhi());
+        ASSERT(inst->IsPhi());
 
         for (auto& input : inputs) {
             auto input_inst_id = input.first;
             auto input_inst_bb = input.second;
 
-            assert(inst_map_.find(input_inst_id) != inst_map_.end());
+            ASSERT(inst_map_.find(input_inst_id) != inst_map_.end());
             auto input_inst = inst_map_.at(input_inst_id);
             auto input_bb = bb_map_.at(input_inst_bb);
 

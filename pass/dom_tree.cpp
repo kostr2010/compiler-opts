@@ -67,7 +67,7 @@ DomTree::Node* DomTree::Eval(Node* v)
 
 void DomTree::Compress(Node* v)
 {
-    assert(v->ancestor != nullptr);
+    ASSERT(v->ancestor != nullptr);
 
     if (v->ancestor->ancestor == nullptr) {
         return;

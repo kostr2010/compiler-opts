@@ -57,16 +57,16 @@ std::ostream& operator<<(std::ostream& os, const Location& l)
 
 Input InstBase::GetInput(size_t idx) const
 {
-    assert(idx < GetNumInputs());
+    ASSERT(idx < GetNumInputs());
 
     return inputs_[idx];
 }
 
 void InstBase::SetInput(size_t idx, InstBase* inst)
 {
-    assert(!IsDynamic());
-    assert(inst != nullptr);
-    assert(idx < GetNumInputs());
+    ASSERT(!IsDynamic());
+    ASSERT(inst != nullptr);
+    ASSERT(idx < GetNumInputs());
 
     inst->users_.push_back(User(this, idx));
     inputs_[idx] = Input(inst, inst->GetBasicBlock());
@@ -74,9 +74,9 @@ void InstBase::SetInput(size_t idx, InstBase* inst)
 
 void InstBase::SetInput(size_t idx, InstBase* inst, BasicBlock* bb)
 {
-    assert(IsDynamic());
-    assert(inst != nullptr);
-    assert(idx < GetNumInputs());
+    ASSERT(IsDynamic());
+    ASSERT(inst != nullptr);
+    ASSERT(idx < GetNumInputs());
 
     inst->users_.push_back(User(this, idx));
     inputs_[idx] = Input(inst, bb);
@@ -134,9 +134,9 @@ void InstBase::Dump() const
 
 void InstBase::AddInput(InstBase* inst, BasicBlock* bb)
 {
-    assert(inst != nullptr);
-    assert(bb != nullptr);
-    assert(IsDynamic());
+    ASSERT(inst != nullptr);
+    ASSERT(bb != nullptr);
+    ASSERT(IsDynamic());
 
     inst->AddUser(this);
     inputs_.emplace_back(Input(inst, bb));
@@ -144,9 +144,9 @@ void InstBase::AddInput(InstBase* inst, BasicBlock* bb)
 
 void InstBase::AddInput(const Input& input)
 {
-    assert(input.GetInst() != nullptr);
-    assert(input.GetSourceBB() != nullptr);
-    assert(IsDynamic());
+    ASSERT(input.GetInst() != nullptr);
+    ASSERT(input.GetSourceBB() != nullptr);
+    ASSERT(IsDynamic());
 
     input.GetInst()->AddUser(this);
     inputs_.push_back(input);
@@ -154,14 +154,14 @@ void InstBase::AddInput(const Input& input)
 
 void InstBase::ClearInputs()
 {
-    assert(IsDynamic());
+    ASSERT(IsDynamic());
 
     inputs_.clear();
 }
 
 void InstBase::RemoveInput(const Input& input)
 {
-    assert(IsDynamic());
+    ASSERT(IsDynamic());
 
     std::erase_if(inputs_, [input](const Input& i) {
         return (i.GetSourceBB()->GetId() == input.GetSourceBB()->GetId() &&
@@ -171,11 +171,11 @@ void InstBase::RemoveInput(const Input& input)
 
 void InstBase::ReplaceInput(InstBase* old_inst, InstBase* new_inst)
 {
-    assert(old_inst != nullptr);
-    assert(new_inst != nullptr);
+    ASSERT(old_inst != nullptr);
+    ASSERT(new_inst != nullptr);
 
     for (auto& input : inputs_) {
-        assert(input.GetInst() != nullptr);
+        ASSERT(input.GetInst() != nullptr);
         if (old_inst->GetId() == input.GetInst()->GetId()) {
             if (!IsPhi()) {
                 input.SetSourceBB(new_inst->GetBasicBlock());
@@ -187,7 +187,7 @@ void InstBase::ReplaceInput(InstBase* old_inst, InstBase* new_inst)
 
 void InstBase::SetLocation(Location::Where loc, size_t slot)
 {
-    assert(!HasFlag<isa::flag::Type::NO_USE>());
+    ASSERT(!HasFlag<isa::flag::Type::NO_USE>());
 
     loc_.loc = loc;
     loc_.slot = slot;
@@ -218,21 +218,21 @@ size_t InstBase::GetNumUsers() const
 
 void InstBase::AddUser(InstBase* inst)
 {
-    assert(!HasFlag<isa::flag::Type::NO_USE>());
-    assert(inst->IsDynamic());
+    ASSERT(!HasFlag<isa::flag::Type::NO_USE>());
+    ASSERT(inst->IsDynamic());
     users_.emplace_back(inst);
 }
 
 void InstBase::AddUser(InstBase* inst, size_t idx)
 {
-    assert(!HasFlag<isa::flag::Type::NO_USE>());
-    assert(!inst->IsDynamic());
+    ASSERT(!HasFlag<isa::flag::Type::NO_USE>());
+    ASSERT(!inst->IsDynamic());
     users_.emplace_back(inst, idx);
 }
 
 void InstBase::AddUser(const User& user)
 {
-    assert(!HasFlag<isa::flag::Type::NO_USE>());
+    ASSERT(!HasFlag<isa::flag::Type::NO_USE>());
     users_.push_back(user);
 }
 
@@ -249,7 +249,7 @@ void InstBase::RemoveUser(InstBase* user)
 
 void InstBase::ReplaceUser(const User& user_old, const User& user_new)
 {
-    assert(!HasFlag<isa::flag::Type::NO_USE>());
+    ASSERT(!HasFlag<isa::flag::Type::NO_USE>());
     std::replace_if(
         users_.begin(), users_.end(),
         [user_old](const User& u) { return user_old.GetInst()->GetId() == u.GetInst()->GetId(); },
@@ -338,8 +338,8 @@ bool InstBase::IsConditional() const
 
 bool InstBase::Precedes(const InstBase* inst) const
 {
-    assert(inst != nullptr);
-    assert(GetBasicBlock()->GetId() == inst->GetBasicBlock()->GetId());
+    ASSERT(inst != nullptr);
+    ASSERT(GetBasicBlock()->GetId() == inst->GetBasicBlock()->GetId());
 
     if (this->GetId() == inst->GetId()) {
         return true;
@@ -358,7 +358,7 @@ bool InstBase::Precedes(const InstBase* inst) const
 
 bool InstBase::Dominates(const InstBase* inst) const
 {
-    assert(inst != nullptr);
+    ASSERT(inst != nullptr);
 
     if (this->GetId() == inst->GetId()) {
         return true;
@@ -520,8 +520,8 @@ void Conditional::Dump() const
 
 bool isa::inst_type::CONST::Compare(const InstBase* i1, const InstBase* i2)
 {
-    assert(i1->IsConst());
-    assert(i2->IsConst());
+    ASSERT(i1->IsConst());
+    ASSERT(i2->IsConst());
     using T = isa::inst::Inst<isa::inst::Opcode::CONST>::Type;
 
     return (static_cast<const T*>(i1)->GetDataType() ==
@@ -546,19 +546,19 @@ uint64_t isa::inst_type::CONST::GetValRaw() const
 
 int64_t isa::inst_type::CONST::GetValInt() const
 {
-    assert(GetDataType() == InstBase::DataType::INT);
+    ASSERT(GetDataType() == InstBase::DataType::INT);
     return static_cast<int64_t>(val_);
 }
 
 double isa::inst_type::CONST::GetValDouble() const
 {
-    assert(GetDataType() == InstBase::DataType::DOUBLE);
+    ASSERT(GetDataType() == InstBase::DataType::DOUBLE);
     return std::bit_cast<float, uint32_t>(static_cast<uint32_t>(val_));
 }
 
 float isa::inst_type::CONST::GetValFloat() const
 {
-    assert(GetDataType() == InstBase::DataType::FLOAT);
+    ASSERT(GetDataType() == InstBase::DataType::FLOAT);
     return std::bit_cast<double, uint64_t>(val_);
 }
 

@@ -29,7 +29,7 @@ bool LivenessAnalysis::AllForwardEdgesVisited(BasicBlock* bb, Markers markers)
         }
     } else {
         // irreducible loops are to be eliminated during loop analysis
-        assert(bb->GetLoop()->IsReducible());
+        ASSERT(bb->GetLoop()->IsReducible());
 
         for (auto pred : bb->GetPredecessors()) {
             if (!bb->Dominates(pred) && !pred->ProbeMark(&markers[Marks::VISITED])) {
@@ -58,18 +58,18 @@ void LivenessAnalysis::LinearizeBlocks()
 
     while (!queue.empty()) {
         auto bb = queue.front();
-        assert(queue.front() != nullptr);
+        ASSERT(queue.front() != nullptr);
         queue.pop_front();
 
         linear_blocks_.push_back(bb);
-        assert(!bb->ProbeMark(&markers[Marks::VISITED]));
+        ASSERT(!bb->ProbeMark(&markers[Marks::VISITED]));
         bb->SetMark(&markers[Marks::VISITED]);
 
         auto succs = bb->GetSuccessors();
         for (auto it = succs.rbegin(); it != succs.rend(); ++it) {
             auto succ = *it;
 
-            assert(succ != nullptr);
+            ASSERT(succ != nullptr);
 
             if (succ->ProbeMark(&markers[Marks::VISITED]) ||
                 !AllForwardEdgesVisited(succ, markers)) {
@@ -90,7 +90,7 @@ void LivenessAnalysis::CheckLinearOrder()
 {
     auto rpo = graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks();
 
-    assert(rpo.size() == linear_blocks_.size());
+    ASSERT(rpo.size() == linear_blocks_.size());
 
     std::vector<size_t> bb_to_lin_number{};
     bb_to_lin_number.resize(linear_blocks_.size());
@@ -101,7 +101,7 @@ void LivenessAnalysis::CheckLinearOrder()
 
     for (const auto& bb : linear_blocks_) {
         if (bb->GetImmDominator() != nullptr) {
-            assert(bb_to_lin_number[bb->GetImmDominator()->GetId()] <=
+            ASSERT(bb_to_lin_number[bb->GetImmDominator()->GetId()] <=
                    bb_to_lin_number[bb->GetId()]);
         }
     }
@@ -175,8 +175,8 @@ void LivenessAnalysis::CalculateLiveRanges(BasicBlock* bb)
     }
 
     if (bb->IsLoopHeader()) {
-        assert(bb->GetLoop() != nullptr);
-        assert(bb->GetLoop()->GetBackEdges().size() == 1);
+        ASSERT(bb->GetLoop() != nullptr);
+        ASSERT(bb->GetLoop()->GetBackEdges().size() == 1);
 
         auto bck = bb->GetLoop()->GetBackEdges().front();
 

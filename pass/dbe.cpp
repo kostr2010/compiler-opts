@@ -23,16 +23,16 @@ bool DBE::Run()
 
 bool DBE::RemoveEmpty(BasicBlock* bb)
 {
-    assert(!bb->IsStartBlock());
+    ASSERT(!bb->IsStartBlock());
 
     if (!bb->IsEmpty()) {
         return false;
     }
 
     // empty bb can only have 1 successor
-    assert(bb->GetNumSuccessors() ==
+    ASSERT(bb->GetNumSuccessors() ==
            isa::flag::Flag<isa::flag::Type::BRANCH>::Value::ONE_SUCCESSOR);
-    assert(bb->GetSuccessor(0) != nullptr);
+    ASSERT(bb->GetSuccessor(0) != nullptr);
     auto succ = bb->GetSuccessor(0);
 
     auto preds = bb->GetPredecessors();
@@ -41,8 +41,8 @@ bool DBE::RemoveEmpty(BasicBlock* bb)
         graph_->ReplaceSuccessor(bb, succ, nullptr);
     }
 
-    assert(bb->HasNoSuccessors());
-    assert(bb->HasNoPredecessors());
+    ASSERT(bb->HasNoSuccessors());
+    ASSERT(bb->HasNoPredecessors());
 
     graph_->DestroyBasicBlock(bb);
 
@@ -51,7 +51,7 @@ bool DBE::RemoveEmpty(BasicBlock* bb)
 
 bool DBE::RemoveUnlinked(BasicBlock* bb)
 {
-    assert(!bb->IsStartBlock());
+    ASSERT(!bb->IsStartBlock());
 
     bool is_unlinked = bb->HasNoSuccessors() && bb->HasNoPredecessors();
     if (!is_unlinked) {

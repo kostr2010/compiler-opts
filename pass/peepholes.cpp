@@ -5,8 +5,8 @@
 
 static void TransferUsers(InstBase* from, InstBase* to)
 {
-    assert(from != nullptr);
-    assert(to != nullptr);
+    ASSERT(from != nullptr);
+    ASSERT(to != nullptr);
 
     for (const auto& user : from->GetUsers()) {
         to->AddUser(user);
@@ -21,21 +21,21 @@ static void TransferUsers(InstBase* from, InstBase* to)
 template <isa::inst::Opcode OPCODE_FROM, isa::inst::Opcode OPCODE_TO>
 static bool FoldBinOpToBinImmOp(InstBase* i)
 {
-    static_assert(
+    STATIC_ASSERT(
         std::is_same<typename isa::inst::Inst<OPCODE_TO>::Type, isa::inst_type::BIN_IMM>::value);
-    static_assert(
+    STATIC_ASSERT(
         std::is_same<typename isa::inst::Inst<OPCODE_FROM>::Type, isa::inst_type::BINARY>::value);
 
     using BinaryNumInputs = isa::InputValue<isa::inst_type::BINARY, isa::input::VREG>;
 
-    assert(i != nullptr);
-    assert(i->GetOpcode() == OPCODE_FROM);
-    assert(i->GetNumInputs() == BinaryNumInputs::value);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == OPCODE_FROM);
+    ASSERT(i->GetNumInputs() == BinaryNumInputs::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
-    assert(inputs[0] != nullptr);
-    assert(inputs[1] != nullptr);
+    ASSERT(inputs[0] != nullptr);
+    ASSERT(inputs[1] != nullptr);
 
     InstBase* input_const = nullptr;
     InstBase* input_param = nullptr;
@@ -58,9 +58,9 @@ static bool FoldBinOpToBinImmOp(InstBase* i)
         input_param = inputs[0];
     }
 
-    assert(input_const->IsConst());
+    ASSERT(input_const->IsConst());
     auto const_op = static_cast<isa::inst_type::CONST*>(input_const);
-    assert(const_op->GetDataType() == InstBase::DataType::INT);
+    ASSERT(const_op->GetDataType() == InstBase::DataType::INT);
 
     i->GetBasicBlock()->InsertInstAfter(InstBase::NewInst<OPCODE_TO>(), i);
     auto new_inst = i->GetNext();
@@ -90,9 +90,9 @@ void Peepholes::ReplaceWithIntegralConst(InstBase* inst, int64_t val)
 
 void Peepholes::VisitADD(GraphVisitor* v, InstBase* inst)
 {
-    assert(inst != nullptr);
-    assert(inst->GetOpcode() == isa::inst::Opcode::ADD);
-    assert(v != nullptr);
+    ASSERT(inst != nullptr);
+    ASSERT(inst->GetOpcode() == isa::inst::Opcode::ADD);
+    ASSERT(v != nullptr);
 
     auto _this = static_cast<Peepholes*>(v);
 
@@ -119,12 +119,12 @@ void Peepholes::VisitADD(GraphVisitor* v, InstBase* inst)
 
 bool Peepholes::FoldADD(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::ADD);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::ADD);
 
     using NumInputs = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::ADD>::Type,
                                       isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputs::value);
+    ASSERT(i->GetNumInputs() == NumInputs::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
@@ -148,12 +148,12 @@ bool Peepholes::FoldADD(InstBase* i)
 // v0
 bool Peepholes::MatchADD_zero(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::ADD);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::ADD);
 
     using NumInputs = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::ADD>::Type,
                                       isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputs::value);
+    ASSERT(i->GetNumInputs() == NumInputs::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
@@ -171,19 +171,19 @@ bool Peepholes::MatchADD_zero(InstBase* i)
 
 static bool TryMatchADD_after_sub(InstBase* add, InstBase* sub)
 {
-    assert(add != nullptr);
-    assert(sub != nullptr);
-    assert(sub->GetOpcode() == isa::inst::Opcode::SUB);
+    ASSERT(add != nullptr);
+    ASSERT(sub != nullptr);
+    ASSERT(sub->GetOpcode() == isa::inst::Opcode::SUB);
 
     using NumInputsAdd = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::ADD>::Type,
                                          isa::input::Type::VREG>;
-    assert(add->GetNumInputs() == NumInputsAdd::value);
+    ASSERT(add->GetNumInputs() == NumInputsAdd::value);
 
     std::array inputs_add = { add->GetInput(0).GetInst(), add->GetInput(1).GetInst() };
 
     using NumInputsSub = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::SUB>::Type,
                                          isa::input::Type::VREG>;
-    assert(sub->GetNumInputs() == NumInputsSub::value);
+    ASSERT(sub->GetNumInputs() == NumInputsSub::value);
 
     std::array inputs_sub = { sub->GetInput(0).GetInst(), sub->GetInput(1).GetInst() };
 
@@ -207,12 +207,12 @@ static bool TryMatchADD_after_sub(InstBase* add, InstBase* sub)
 // 2. v0
 bool Peepholes::MatchADD_after_sub(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::ADD);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::ADD);
 
     using NumInputs = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::ADD>::Type,
                                       isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputs::value);
+    ASSERT(i->GetNumInputs() == NumInputs::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
@@ -232,12 +232,12 @@ bool Peepholes::MatchADD_after_sub(InstBase* i)
 // 1. SHLI v0, 2
 bool Peepholes::MatchADD_same_value(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::ADD);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::ADD);
 
     using NumInputs = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::ADD>::Type,
                                       isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputs::value);
+    ASSERT(i->GetNumInputs() == NumInputs::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
@@ -256,9 +256,9 @@ bool Peepholes::MatchADD_same_value(InstBase* i)
 
 void Peepholes::VisitASHR(GraphVisitor* v, InstBase* inst)
 {
-    assert(inst != nullptr);
-    assert(inst->GetOpcode() == isa::inst::Opcode::ASHR);
-    assert(v != nullptr);
+    ASSERT(inst != nullptr);
+    ASSERT(inst->GetOpcode() == isa::inst::Opcode::ASHR);
+    ASSERT(v != nullptr);
 
     auto _this = static_cast<Peepholes*>(v);
 
@@ -281,12 +281,12 @@ void Peepholes::VisitASHR(GraphVisitor* v, InstBase* inst)
 
 bool Peepholes::FoldASHR(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::ASHR);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::ASHR);
 
     using NumInputs = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::ASHR>::Type,
                                       isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputs::value);
+    ASSERT(i->GetNumInputs() == NumInputs::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
@@ -310,12 +310,12 @@ bool Peepholes::FoldASHR(InstBase* i)
 // 1. v0
 bool Peepholes::MatchASHR_zero_0(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::ASHR);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::ASHR);
 
     using NumInputs = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::ASHR>::Type,
                                       isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputs::value);
+    ASSERT(i->GetNumInputs() == NumInputs::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
@@ -332,12 +332,12 @@ bool Peepholes::MatchASHR_zero_0(InstBase* i)
 // 1. CONST 0
 bool Peepholes::MatchASHR_zero_1(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::ASHR);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::ASHR);
 
     using NumInputs = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::ASHR>::Type,
                                       isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputs::value);
+    ASSERT(i->GetNumInputs() == NumInputs::value);
 
     auto first_input = i->GetInput(0).GetInst();
     if (first_input->IsConst() && (static_cast<isa::inst_type::CONST*>(first_input)->IsZero())) {
@@ -350,9 +350,9 @@ bool Peepholes::MatchASHR_zero_1(InstBase* i)
 
 void Peepholes::VisitXOR(GraphVisitor* v, InstBase* inst)
 {
-    assert(inst != nullptr);
-    assert(inst->GetOpcode() == isa::inst::Opcode::XOR);
-    assert(v != nullptr);
+    ASSERT(inst != nullptr);
+    ASSERT(inst->GetOpcode() == isa::inst::Opcode::XOR);
+    ASSERT(v != nullptr);
 
     auto _this = static_cast<Peepholes*>(v);
     if (_this->FoldXOR(inst)) {
@@ -374,12 +374,12 @@ void Peepholes::VisitXOR(GraphVisitor* v, InstBase* inst)
 
 bool Peepholes::FoldXOR(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::XOR);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::XOR);
 
     using NumInputsXor = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::XOR>::Type,
                                          isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputsXor::value);
+    ASSERT(i->GetNumInputs() == NumInputsXor::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
@@ -403,12 +403,12 @@ bool Peepholes::FoldXOR(InstBase* i)
 // 1. CONST 0
 bool Peepholes::MatchXOR_same_value(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::XOR);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::XOR);
 
     using NumInputsXor = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::XOR>::Type,
                                          isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputsXor::value);
+    ASSERT(i->GetNumInputs() == NumInputsXor::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 
@@ -425,12 +425,12 @@ bool Peepholes::MatchXOR_same_value(InstBase* i)
 // 1. v0
 bool Peepholes::MatchXOR_zero(InstBase* i)
 {
-    assert(i != nullptr);
-    assert(i->GetOpcode() == isa::inst::Opcode::XOR);
+    ASSERT(i != nullptr);
+    ASSERT(i->GetOpcode() == isa::inst::Opcode::XOR);
 
     using NumInputsXor = isa::InputValue<typename isa::inst::Inst<isa::inst::Opcode::XOR>::Type,
                                          isa::input::Type::VREG>;
-    assert(i->GetNumInputs() == NumInputsXor::value);
+    ASSERT(i->GetNumInputs() == NumInputsXor::value);
 
     std::array inputs = { i->GetInput(0).GetInst(), i->GetInput(1).GetInst() };
 

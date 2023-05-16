@@ -10,14 +10,14 @@ BasicBlock* Graph::GetStartBasicBlock() const
 
 BasicBlock* Graph::GetBasicBlock(IdType bb_id) const
 {
-    assert(bb_id < bb_vector_.size());
+    ASSERT(bb_id < bb_vector_.size());
     return bb_vector_.at(bb_id).get();
 }
 
 void Graph::InitStartBlock()
 {
-    assert(bb_vector_.empty());
-    assert(BB_START_ID == bb_id_counter_);
+    ASSERT(bb_vector_.empty());
+    ASSERT(BB_START_ID == bb_id_counter_);
 
     bb_vector_.emplace_back(new BasicBlock(bb_id_counter_++));
 }
@@ -69,8 +69,8 @@ void Graph::ClearLoops()
 
 void Graph::AddEdge(BasicBlock* from, BasicBlock* to, size_t slot)
 {
-    assert(to != nullptr);
-    assert(from != nullptr);
+    ASSERT(to != nullptr);
+    ASSERT(from != nullptr);
 
     from->SetSuccsessor(slot, to);
     to->AddPredecessor(from);
@@ -80,7 +80,7 @@ void Graph::AddEdge(BasicBlock* from, BasicBlock* to, size_t slot)
 
 void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
 {
-    assert(bb->GetNumSuccessors() == BranchFlag::Value::ONE_SUCCESSOR);
+    ASSERT(bb->GetNumSuccessors() == BranchFlag::Value::ONE_SUCCESSOR);
     from->ReplaceSuccessor(to, bb);
     bb->AddPredecessor(from);
     to->ReplacePredecessor(from, bb);
@@ -91,7 +91,7 @@ void Graph::InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to)
 
 void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
 {
-    assert(!before->HasNoPredecessors());
+    ASSERT(!before->HasNoPredecessors());
 
     for (const auto& pred : before->GetPredecessors()) {
         pred->ReplaceSuccessor(before, bb);
@@ -105,8 +105,8 @@ void Graph::InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before)
 
 void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* new_succ)
 {
-    assert(bb != nullptr);
-    assert(prev_succ != nullptr);
+    ASSERT(bb != nullptr);
+    ASSERT(prev_succ != nullptr);
 
     bb->ReplaceSuccessor(prev_succ, new_succ);
     prev_succ->RemovePredecessor(bb);
@@ -121,8 +121,8 @@ void Graph::ReplaceSuccessor(BasicBlock* bb, BasicBlock* prev_succ, BasicBlock* 
 void Graph::SwapTwoSuccessors(BasicBlock* bb)
 {
     using FlagBranch = isa::flag::Flag<isa::flag::Type::BRANCH>;
-    assert(bb != nullptr);
-    assert(bb->GetNumSuccessors() == FlagBranch::Value::TWO_SUCCESSORS);
+    ASSERT(bb != nullptr);
+    ASSERT(bb->GetNumSuccessors() == FlagBranch::Value::TWO_SUCCESSORS);
 
     auto fallthrough = bb->GetSuccessor(Conditional::Branch::FALLTHROUGH);
     auto branch = bb->GetSuccessor(Conditional::Branch::BRANCH_TRUE);
@@ -136,13 +136,13 @@ void Graph::SwapTwoSuccessors(BasicBlock* bb)
 template <isa::inst::Opcode OPCODE>
 static void InvertConditionT(Graph* g, InstBase* inst)
 {
-    assert(inst != nullptr);
-    assert(inst->GetBasicBlock() != nullptr);
+    ASSERT(inst != nullptr);
+    ASSERT(inst->GetBasicBlock() != nullptr);
 
     using T = isa::inst::Inst<OPCODE>::Type;
-    static_assert(isa::InputValue<T, isa::input::Type::COND>::value == true);
-    static_assert(isa::HasFlag<OPCODE, isa::flag::BRANCH>::value == true);
-    static_assert(std::is_base_of_v<Conditional, T>);
+    STATIC_ASSERT(isa::InputValue<T, isa::input::Type::COND>::value == true);
+    STATIC_ASSERT(isa::HasFlag<OPCODE, isa::flag::BRANCH>::value == true);
+    STATIC_ASSERT(std::is_base_of_v<Conditional, T>);
 
     static_cast<T*>(inst)->Invert();
 
@@ -161,9 +161,9 @@ static void InvertConditionT(Graph* g, InstBase* inst)
 
 void Graph::InvertCondition(BasicBlock* bb)
 {
-    assert(bb->GetNumSuccessors() > isa::flag::Flag<isa::flag::BRANCH>::Value::ONE_SUCCESSOR);
-    assert(bb->GetLastInst() != nullptr);
-    assert(bb->GetLastInst()->IsConditional());
+    ASSERT(bb->GetNumSuccessors() > isa::flag::Flag<isa::flag::BRANCH>::Value::ONE_SUCCESSOR);
+    ASSERT(bb->GetLastInst() != nullptr);
+    ASSERT(bb->GetLastInst()->IsConditional());
 
     auto inst = bb->GetLastInst();
     auto opcode = inst->GetOpcode();
@@ -184,13 +184,13 @@ void Graph::InvertCondition(BasicBlock* bb)
 
 BasicBlock* Graph::SplitBasicBlock(InstBase* inst_after)
 {
-    assert(inst_after != nullptr);
+    ASSERT(inst_after != nullptr);
 
     auto bb = inst_after->GetBasicBlock();
     auto prev_last = bb->GetLastInst();
 
     auto second_half = std::unique_ptr<InstBase>{ inst_after->ReleaseNext() };
-    assert(inst_after->GetNext() == nullptr);
+    ASSERT(inst_after->GetNext() == nullptr);
     auto first_half = std::unique_ptr<InstBase>{ bb->TransferInst() };
 
     auto bb_new = NewBasicBlock();
@@ -216,9 +216,9 @@ BasicBlock* Graph::SplitBasicBlock(InstBase* inst_after)
 
 void Graph::DestroyBasicBlock(BasicBlock* bb)
 {
-    assert(bb != nullptr);
-    assert(bb->HasNoPredecessors());
-    assert(bb->HasNoSuccessors());
+    ASSERT(bb != nullptr);
+    ASSERT(bb->HasNoPredecessors());
+    ASSERT(bb->HasNoSuccessors());
 
     bb_vector_.at(bb->GetId()).reset(nullptr);
 

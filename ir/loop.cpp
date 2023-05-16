@@ -41,7 +41,7 @@ void Loop::AddBlock(BasicBlock* bb)
 
 void Loop::AddBackEdge(BasicBlock* bb)
 {
-    assert(bb != nullptr);
+    ASSERT(bb != nullptr);
 
     back_edges_.push_back(bb);
     if (!header_->Dominates(bb)) {
@@ -56,7 +56,7 @@ void Loop::ClearBackEdges()
 
 bool Loop::Inside(const Loop* other) const
 {
-    assert(other != nullptr);
+    ASSERT(other != nullptr);
     auto* loop = GetOuterLoop();
     while (loop != nullptr) {
         if (loop == other) {

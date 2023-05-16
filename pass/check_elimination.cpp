@@ -8,13 +8,13 @@ GEN_DEFAULT_VISIT_FUNCTIONS(CheckElimination, RPO);
 
 static void DeleteCheck(InstBase* check)
 {
-    assert(check != nullptr);
-    assert(check->IsCheck());
-    assert(check->GetNumUsers() == 0);
-    assert(check->GetBasicBlock() != nullptr);
+    ASSERT(check != nullptr);
+    ASSERT(check->IsCheck());
+    ASSERT(check->GetNumUsers() == 0);
+    ASSERT(check->GetBasicBlock() != nullptr);
 
     for (auto i : check->GetInputs()) {
-        assert(i.GetInst() != nullptr);
+        ASSERT(i.GetInst() != nullptr);
         i.GetInst()->RemoveUser(check);
     }
     check->GetBasicBlock()->UnlinkInst(check);
@@ -26,16 +26,16 @@ using EquivalenceCriterion = bool (*)(const InstBase*, const InstBase*);
 template <isa::inst::Opcode OPCODE, typename EquivalenceCriterion>
 static void DeleteDominatedChecks(InstBase* inst, EquivalenceCriterion eq_criterion)
 {
-    assert(inst != nullptr);
-    assert(inst->IsCheck());
-    assert(inst->GetNumUsers() == 0);
-    assert(inst->GetNumInputs() != 0);
-    assert(inst->GetInput(0).GetInst() != nullptr);
+    ASSERT(inst != nullptr);
+    ASSERT(inst->IsCheck());
+    ASSERT(inst->GetNumUsers() == 0);
+    ASSERT(inst->GetNumInputs() != 0);
+    ASSERT(inst->GetInput(0).GetInst() != nullptr);
 
     auto check_input = inst->GetInput(0).GetInst();
 
     for (const auto user : check_input->GetUsers()) {
-        assert(user.GetInst() != nullptr);
+        ASSERT(user.GetInst() != nullptr);
         auto user_inst = user.GetInst();
 
         if (user_inst->GetOpcode() != OPCODE) {
@@ -46,8 +46,8 @@ static void DeleteDominatedChecks(InstBase* inst, EquivalenceCriterion eq_criter
             continue;
         }
 
-        assert(inst->GetBasicBlock() != nullptr);
-        assert(user_inst->GetBasicBlock() != nullptr);
+        ASSERT(inst->GetBasicBlock() != nullptr);
+        ASSERT(user_inst->GetBasicBlock() != nullptr);
         // since we are processing instructions in descending order in basic block, we can omit
         // checking dominance for two instructions in the same block
         bool in_same_block = inst->GetBasicBlock()->GetId() == user_inst->GetBasicBlock()->GetId();
@@ -105,18 +105,18 @@ static bool DefaultEquivalenceCheck(const InstBase* i1, const InstBase* i2)
     using T = typename isa::inst::Inst<OPCODE>::Type;
     using NumInputs = isa::InputValue<T, isa::input::Type::VREG>;
 
-    static_assert(!isa::InputValue<T, isa::input::Type::DYN>::value);
-    static_assert(isa::HasFlag<OPCODE, isa::flag::Type::CHECK>::value);
-    assert(i1->GetOpcode() == OPCODE);
-    assert(i2->GetOpcode() == OPCODE);
-    assert(i1->IsCheck());
-    assert(i2->IsCheck());
-    static_assert(NumInputs::value != 0);
-    assert(i1->GetNumInputs() == NumInputs::value);
-    assert(i2->GetNumInputs() == NumInputs::value);
-    assert(i1->GetNumInputs() == i2->GetNumInputs());
-    assert(i1->GetId() != i2->GetId());
-    assert(i1->GetInput(0).GetInst()->GetId() == i2->GetInput(0).GetInst()->GetId());
+    STATIC_ASSERT(!isa::InputValue<T, isa::input::Type::DYN>::value);
+    STATIC_ASSERT(isa::HasFlag<OPCODE, isa::flag::Type::CHECK>::value);
+    ASSERT(i1->GetOpcode() == OPCODE);
+    ASSERT(i2->GetOpcode() == OPCODE);
+    ASSERT(i1->IsCheck());
+    ASSERT(i2->IsCheck());
+    STATIC_ASSERT(NumInputs::value != 0);
+    ASSERT(i1->GetNumInputs() == NumInputs::value);
+    ASSERT(i2->GetNumInputs() == NumInputs::value);
+    ASSERT(i1->GetNumInputs() == i2->GetNumInputs());
+    ASSERT(i1->GetId() != i2->GetId());
+    ASSERT(i1->GetInput(0).GetInst()->GetId() == i2->GetInput(0).GetInst()->GetId());
 
     // if check only accepts object to check
     if constexpr (NumInputs::value == 1) {
@@ -138,13 +138,13 @@ template <>
 bool CheckRedundancy<isa::inst::Opcode::CHECK_ZERO>(InstBase* check)
 {
     using T = typename isa::inst::Inst<isa::inst::Opcode::CHECK_ZERO>::Type;
-    static_assert(!isa::InputValue<T, isa::input::Type::DYN>::value);
-    static_assert(isa::HasFlag<isa::inst::Opcode::CHECK_ZERO, isa::flag::Type::CHECK>::value);
-    static_assert(isa::InputValue<T, isa::input::Type::VREG>::value != 0);
-    assert(check->GetOpcode() == isa::inst::Opcode::CHECK_ZERO);
+    STATIC_ASSERT(!isa::InputValue<T, isa::input::Type::DYN>::value);
+    STATIC_ASSERT(isa::HasFlag<isa::inst::Opcode::CHECK_ZERO, isa::flag::Type::CHECK>::value);
+    STATIC_ASSERT(isa::InputValue<T, isa::input::Type::VREG>::value != 0);
+    ASSERT(check->GetOpcode() == isa::inst::Opcode::CHECK_ZERO);
 
     auto input = check->GetInput(0).GetInst();
-    assert(input != nullptr);
+    ASSERT(input != nullptr);
 
     using ConstT = typename isa::inst::Inst<isa::inst::Opcode::CONST>::Type;
     if (input->IsConst() && !static_cast<ConstT*>(input)->IsZero()) {
@@ -168,13 +168,13 @@ template <>
 bool CheckRedundancy<isa::inst::Opcode::CHECK_NULL>(InstBase* check)
 {
     using T = typename isa::inst::Inst<isa::inst::Opcode::CHECK_NULL>::Type;
-    static_assert(!isa::InputValue<T, isa::input::Type::DYN>::value);
-    static_assert(isa::InputValue<T, isa::input::Type::VREG>::value != 0);
-    static_assert(isa::HasFlag<isa::inst::Opcode::CHECK_NULL, isa::flag::Type::CHECK>::value);
-    assert(check->GetOpcode() == isa::inst::Opcode::CHECK_NULL);
+    STATIC_ASSERT(!isa::InputValue<T, isa::input::Type::DYN>::value);
+    STATIC_ASSERT(isa::InputValue<T, isa::input::Type::VREG>::value != 0);
+    STATIC_ASSERT(isa::HasFlag<isa::inst::Opcode::CHECK_NULL, isa::flag::Type::CHECK>::value);
+    ASSERT(check->GetOpcode() == isa::inst::Opcode::CHECK_NULL);
 
     auto input = check->GetInput(0).GetInst();
-    assert(input != nullptr);
+    ASSERT(input != nullptr);
 
     using ConstT = typename isa::inst::Inst<isa::inst::Opcode::CONST>::Type;
     if (input->IsConst() && !static_cast<ConstT*>(input)->IsNull()) {
@@ -196,7 +196,7 @@ void CheckElimination::VisitCHECK_NULL(GraphVisitor* v, InstBase* inst)
 
 void CheckElimination::VisitCHECK_SIZE([[maybe_unused]] GraphVisitor* v, InstBase* inst)
 {
-    assert(inst->GetOpcode() == isa::inst::Opcode::CHECK_SIZE);
+    ASSERT(inst->GetOpcode() == isa::inst::Opcode::CHECK_SIZE);
 
     DeleteDominatedChecks<isa::inst::Opcode::CHECK_SIZE>(
         inst, DefaultEquivalenceCheck<isa::inst::Opcode::CHECK_SIZE>);

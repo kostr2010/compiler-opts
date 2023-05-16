@@ -4,7 +4,7 @@ namespace marker {
 
 void MarkerFactory::InitMarker(Marker* m)
 {
-    assert(m->GetGen() == Marker::GEN_UNSET);
+    ASSERT(m->GetGen() == Marker::GEN_UNSET);
 
     auto slots = Get()->slot_tracker_;
     for (size_t i = 0; i < slots.size(); ++i) {

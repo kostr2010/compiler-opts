@@ -8,7 +8,7 @@
 
 LinearScan::LinearScan(Graph* g) : Pass(g)
 {
-    assert(g != nullptr);
+    ASSERT(g != nullptr);
 }
 
 bool LinearScan::Run()
@@ -67,7 +67,7 @@ static BasicBlock* FixCriticalEdge(Graph* g, InstBase* phi, size_t input_idx)
     auto bb_phi = phi->GetBasicBlock();
     auto bb_input = input.GetSourceBB();
 
-    assert(IsCriticalEdge(bb_input, bb_phi));
+    ASSERT(IsCriticalEdge(bb_input, bb_phi));
 
     auto bb_fix = g->NewBasicBlock();
     g->InsertBasicBlock(bb_fix, bb_input, bb_phi);
@@ -110,7 +110,7 @@ void LinearScan::ExpireOldIntervals(LiveRange* range)
 {
     auto it_to = active_.begin();
     for (auto it = active_.begin(); it != active_.end(); it++) {
-        assert(*it != nullptr);
+        ASSERT(*it != nullptr);
         auto r = *it;
         it_to = it;
         if (range->range.GetStart() < r->range.GetEnd()) {
@@ -124,12 +124,12 @@ void LinearScan::ExpireOldIntervals(LiveRange* range)
 
 void LinearScan::SpillAtInterval(LiveRange* r)
 {
-    assert(r != nullptr);
+    ASSERT(r != nullptr);
 
     if (active_.back()->range.GetEnd() > r->range.GetEnd()) {
-        assert(active_.back()->inst->GetLocation().IsOnRegister());
+        ASSERT(active_.back()->inst->GetLocation().IsOnRegister());
         auto slot = AssignStackSlot(active_.back());
-        assert(active_.back()->inst->GetLocation().IsOnStack());
+        ASSERT(active_.back()->inst->GetLocation().IsOnStack());
         r->inst->SetLocation(Location::Where::REGISTER, slot);
         active_.pop_back();
         AddToActive(r);
@@ -140,7 +140,7 @@ void LinearScan::SpillAtInterval(LiveRange* r)
 
 size_t LinearScan::AssignStackSlot(LiveRange* r)
 {
-    assert(r != nullptr);
+    ASSERT(r != nullptr);
 
     auto prev_slot = r->inst->GetLocation().slot;
     r->inst->SetLocation(Location::Where::STACK, GetStackSlot());
@@ -149,8 +149,8 @@ size_t LinearScan::AssignStackSlot(LiveRange* r)
 
 void LinearScan::AssignRegister(LiveRange* r)
 {
-    assert(r != nullptr);
-    assert(!IsRegMapEmpty());
+    ASSERT(r != nullptr);
+    ASSERT(!IsRegMapEmpty());
 
     for (size_t i = 0; i < reg_map_.size(); ++i) {
         if (reg_map_[i] == false) {
@@ -163,14 +163,14 @@ void LinearScan::AssignRegister(LiveRange* r)
 
 void LinearScan::ReleaseRegister(LiveRange* r)
 {
-    assert(r != nullptr);
-    assert(r->inst->GetLocation().IsOnRegister());
+    ASSERT(r != nullptr);
+    ASSERT(r->inst->GetLocation().IsOnRegister());
     reg_map_[r->inst->GetLocation().slot] = false;
 }
 
 void LinearScan::AddToActive(LiveRange* r)
 {
-    assert(r != nullptr);
+    ASSERT(r != nullptr);
     auto it = std::find_if(active_.begin(), active_.end(),
                            [r](LiveRange* i) { return r->range.GetEnd() < i->range.GetEnd(); });
     active_.insert(it, r);
@@ -188,14 +188,15 @@ size_t LinearScan::GetStackSlot()
 
 void LinearScan::Check() const
 {
+#ifndef RELEASE_BUILD
     for (const auto& bb : graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks()) {
         for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetNext()) {
             for (const auto& i : phi->GetInputs()) {
                 auto input = i.GetInst();
                 auto bb_input = i.GetSourceBB();
 
-                assert(bb_input->Precedes(bb));
-                assert(bb->Succeeds(bb_input));
+                ASSERT(bb_input->Precedes(bb));
+                ASSERT(bb->Succeeds(bb_input));
 
                 std::vector<Move> moves{};
                 if (move_map_.count(bb_input) != 0) {
@@ -207,12 +208,13 @@ void LinearScan::Check() const
                 });
 
                 if (it != moves.end()) {
-                    assert(input->GetLocation() == it->first);
-                    assert(phi->GetLocation() == it->second);
+                    ASSERT(input->GetLocation() == it->first);
+                    ASSERT(phi->GetLocation() == it->second);
                 } else {
-                    assert(phi->GetLocation() == input->GetLocation());
+                    ASSERT(phi->GetLocation() == input->GetLocation());
                 }
             }
         }
     }
+#endif
 }

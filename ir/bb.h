@@ -121,7 +121,7 @@ class BasicBlock : public marker::Markable
     };
 
     using MaxBranchNum =
-        type_sequence::Accumulate<isa::ISA, BranchNumAccumulator, NumBranchesDefault>;
+        type_sequence::accumulate<isa::ISA, BranchNumAccumulator, NumBranchesDefault>;
     std::vector<BasicBlock*> preds_{};                     // predecessors
     std::array<BasicBlock*, MaxBranchNum::value> succs_{}; // successors
 

@@ -1,8 +1,32 @@
 #ifndef __MACROS_H_INCLUDED__
 #define __MACROS_H_INCLUDED__
 
+#define NOP void(0)
+
+#define GUARD(expr)                                                                               \
+    do {                                                                                          \
+        expr;                                                                                     \
+    } while (false)
+
+#ifndef NDEBUG
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
+
+#define STATIC_ASSERT(...) static_assert(__VA_ARGS__)
+#define ASSERT(...) assert(__VA_ARGS__)
+#define UNREACHABLE(msg) assert(msg && false)
+
+#define LOG_ERROR(msg) GUARD(std::cerr << "ERROR/[" << __FUNCTION__ << "] " << msg << "\n");
+#define LOG(msg) GUARD(std::cerr << "LOG/[" << __FUNCTION__ << "] " << msg << "\n");
+#else
+#define STATIC_ASSERT(...) NOP;
+#define ASSERT(...) NOP;
+#define UNREACHABLE(msg) std::exit(EXIT_FAILURE);
+
+#define LOG_ERROR(msg) NOP;
+#define LOG(msg) NOP;
+#endif
 
 #define COMMA() ,
 #define EMPTY()
@@ -44,10 +68,6 @@
 #define CHAIN_OPERATOR_1_END
 #define CHAIN_OPERATOR_2_END
 
-#define UNREACHABLE(msg) assert(msg && false)
-
-#define BITS_IN_BYTE 8
-
 #define DEFAULT_DTOR(class_name) ~class_name() = default
 #define DEFAULT_CTOR(class_name) class_name() = default
 
@@ -83,10 +103,6 @@
 #define DEFAULT_COPY_SEMANTIC(class_name)                                                         \
     DEFAULT_COPY_CTOR(class_name);                                                                \
     DEFAULT_COPY_OPERATOR(class_name)
-
-#define LOG_ERROR(msg) std::cerr << "ERROR/[" << __FUNCTION__ << "] " << msg << "\n";
-
-#define LOG(msg) std::cerr << "LOG/[" << __FUNCTION__ << "] " << msg << "\n";
 
 #define GETTER(func_name, field_name)                                                             \
     auto Get##func_name() const                                                                   \

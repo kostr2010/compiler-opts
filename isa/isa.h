@@ -2,6 +2,7 @@
 #define __ISA_H_INCLUDED__
 
 #include "utils/macros.h"
+#include "utils/type_helpers.h"
 #include "utils/type_sequence.h"
 
 #include "instruction.h"
@@ -24,27 +25,31 @@ struct InputValue
 {
     template <typename Value>
     using ValueHasSameInputKind = std::integral_constant<bool, Value::type == I>;
+
     using InstTypeInfo = inst_type::InstTypeInfo<InstType>;
     using Inputs = typename InstTypeInfo::Inputs;
     using Values = typename InstTypeInfo::InputsValues;
     using Input = input::Input<I>;
-    using HasInput = type_sequence::Find<Input, Inputs>;
-    using Res =
-        std::conditional_t<HasInput::value, type_sequence::GetIf<Values, ValueHasSameInputKind>,
-                           typename Input::DefaultValue>;
+
+    template <typename T>
+    using TestType = typename T::type;
+
+    using Res = type_helpers::valid_or_t<typename Input::DefaultValue, TestType,
+                                         type_sequence::find_if<Values, ValueHasSameInputKind> >;
 
     static constexpr decltype(Res::value) value = Res::value;
 };
 
 template <inst::Opcode OPCODE, flag::Type F>
-using HasFlag = type_sequence::Find<flag::Flag<F>, typename inst::Inst<OPCODE>::Flags>;
+using HasFlag = type_sequence::find<typename inst::Inst<OPCODE>::Flags, flag::Flag<F> >;
 
 template <inst::Opcode OP, flag::Type F>
 struct FlagValue
 {
+    STATIC_ASSERT(HasFlag<OP, F>::value);
     template <typename V>
     using IsSameFlag = std::integral_constant<bool, V::type == F>;
-    using Res = type_sequence::GetIf<typename inst::Inst<OP>::FlagValues, IsSameFlag>;
+    using Res = type_sequence::find_if_t<typename inst::Inst<OP>::FlagValues, IsSameFlag>;
 
     static constexpr flag::ValueT value = Res::value;
 };

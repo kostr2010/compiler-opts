@@ -7,25 +7,25 @@ using BranchFlag = isa::flag::Flag<isa::flag::Type::BRANCH>;
 
 void LinearOrder::AppendJump(BasicBlock* bb)
 {
-    assert(bb != nullptr);
+    ASSERT(bb != nullptr);
 
     auto inst = bb->GetLastInst();
 
     if (inst == nullptr || !inst->IsUnconditionalJump()) {
-        assert(inst == nullptr || !inst->HasFlag<isa::flag::Type::BRANCH>());
+        ASSERT(inst == nullptr || !inst->HasFlag<isa::flag::Type::BRANCH>());
         bb->PushBackInst(InstBase::NewInst<isa::inst::Opcode::JMP>());
     }
 }
 
 BasicBlock* LinearOrder::InsertJumpBasicBlock(BasicBlock* prev, BasicBlock* next)
 {
-    assert(prev != nullptr);
-    assert(next != nullptr);
-    assert(prev->GetLoop() != nullptr);
+    ASSERT(prev != nullptr);
+    ASSERT(next != nullptr);
+    ASSERT(prev->GetLoop() != nullptr);
 
     auto loop = prev->GetLoop();
     auto bb_new = graph_->NewBasicBlock();
-    assert(bb_new != nullptr);
+    ASSERT(bb_new != nullptr);
     AppendJump(bb_new);
 
     loop->AddBlock(bb_new);
@@ -107,9 +107,9 @@ void LinearOrder::ProcessLast(BasicBlock* bb)
 
 void LinearOrder::ProcessSingleSuccessor(BasicBlock* bb, BasicBlock* prev)
 {
-    assert(bb != nullptr);
-    assert(prev != nullptr);
-    assert(prev->GetNumSuccessors() == BranchFlag::Value::ONE_SUCCESSOR);
+    ASSERT(bb != nullptr);
+    ASSERT(prev != nullptr);
+    ASSERT(prev->GetNumSuccessors() == BranchFlag::Value::ONE_SUCCESSOR);
 
     bool is_bb_after_prev =
         bb->GetId() == prev->GetSuccessor(Conditional::Branch::FALLTHROUGH)->GetId();
@@ -123,11 +123,11 @@ void LinearOrder::ProcessSingleSuccessor(BasicBlock* bb, BasicBlock* prev)
 
 void LinearOrder::ProcessTwoSuccessors(BasicBlock* bb, BasicBlock* prev)
 {
-    assert(bb != nullptr);
-    assert(prev != nullptr);
-    assert(prev->GetNumSuccessors() == BranchFlag::Value::TWO_SUCCESSORS);
-    assert(prev->GetSuccessor(Conditional::Branch::FALLTHROUGH) != nullptr);
-    assert(prev->GetSuccessor(Conditional::Branch::BRANCH_TRUE) != nullptr);
+    ASSERT(bb != nullptr);
+    ASSERT(prev != nullptr);
+    ASSERT(prev->GetNumSuccessors() == BranchFlag::Value::TWO_SUCCESSORS);
+    ASSERT(prev->GetSuccessor(Conditional::Branch::FALLTHROUGH) != nullptr);
+    ASSERT(prev->GetSuccessor(Conditional::Branch::BRANCH_TRUE) != nullptr);
 
     auto bb_f = prev->GetSuccessor(Conditional::Branch::FALLTHROUGH);
     auto bb_t = prev->GetSuccessor(Conditional::Branch::BRANCH_TRUE);
@@ -142,8 +142,6 @@ void LinearOrder::ProcessTwoSuccessors(BasicBlock* bb, BasicBlock* prev)
 
 void LinearOrder::ProcessMultipleSuccessors(BasicBlock* bb, BasicBlock* prev)
 {
-    LOG("warning! untested! for isa's with 3-way jumps and more");
-
     // conservatively insert jmp basic block in every branch
     auto bb_jmp = InsertJumpBasicBlock(prev, bb);
     linear_bb_.push_back(bb_jmp);
@@ -156,29 +154,31 @@ std::vector<BasicBlock*> LinearOrder::GetBlocks()
 
 void LinearOrder::Check()
 {
+#ifndef RELEASE_BUILD
     auto sz = linear_bb_.size();
-    assert(sz == graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks().size());
+    ASSERT(sz == graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks().size());
 
     for (size_t i = 0; i < sz; ++i) {
         auto bb = linear_bb_[i];
         if (bb->GetNumSuccessors() > BranchFlag::Value::ONE_SUCCESSOR) {
             for (size_t s = 0; s < bb->GetNumSuccessors(); ++s) {
                 if (s == Conditional::Branch::FALLTHROUGH) {
-                    assert(i + 1 < sz);
-                    assert(bb->GetSuccessor(s)->GetId() == linear_bb_[i + 1]->GetId());
+                    ASSERT(i + 1 < sz);
+                    ASSERT(bb->GetSuccessor(s)->GetId() == linear_bb_[i + 1]->GetId());
                 } else {
-                    assert(i + 1 < sz);
-                    assert(bb->GetSuccessor(s)->GetId() != linear_bb_[i + 1]->GetId());
+                    ASSERT(i + 1 < sz);
+                    ASSERT(bb->GetSuccessor(s)->GetId() != linear_bb_[i + 1]->GetId());
                 }
             }
         } else if (bb->GetNumSuccessors() == BranchFlag::Value::ONE_SUCCESSOR) {
             auto last_inst = bb->GetLastInst();
             if (last_inst == nullptr || !last_inst->IsUnconditionalJump()) {
                 auto succ = bb->GetSuccessor(Conditional::Branch::FALLTHROUGH);
-                assert(succ->GetId() == linear_bb_[i + 1]->GetId());
+                ASSERT(succ->GetId() == linear_bb_[i + 1]->GetId());
             }
         }
     }
+#endif
 }
 
 void LinearOrder::ResetState()

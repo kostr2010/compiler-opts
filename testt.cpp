@@ -44,7 +44,7 @@ void PrintConditional(isa::inst::Opcode opcode)
     ISA_INSTRUCTION_LIST(GEN_CONDITIONAL_DISPATCH)
 #undef GEN_CONDITIONAL_DISPATCH
 
-    assert(false);
+    ASSERT(false);
 }
 
 template <isa::inst::Opcode OPCODE>
@@ -57,7 +57,7 @@ using IsConditional =
 int main()
 {
     std::cout
-        << (int)type_sequence::Accumulate<isa::ISA, BranchNumAccumulator,
+        << (int)type_sequence::accumulate<isa::ISA, BranchNumAccumulator,
                                           std::integral_constant<isa::flag::ValueT, 0> >::value
         << "\n";
 

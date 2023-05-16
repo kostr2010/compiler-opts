@@ -19,16 +19,16 @@ class PassManager
     template <typename PassT>
     PassT* GetPass()
     {
-        static_assert(DefaultPasses::HasPass<PassT>());
+        STATIC_ASSERT(DefaultPasses::HasPass<PassT>());
         return static_cast<PassT*>(passes_[DefaultPasses::GetPassIdx<PassT>()].get());
     }
 
     template <typename PassT>
     PassT* GetValidPass()
     {
-        static_assert(DefaultPasses::HasPass<PassT>());
+        STATIC_ASSERT(DefaultPasses::HasPass<PassT>());
         if (!IsValid<PassT>()) {
-            assert(Run<PassT>());
+            ASSERT(Run<PassT>());
         }
         return static_cast<PassT*>(passes_[DefaultPasses::GetPassIdx<PassT>()].get());
     }
@@ -36,7 +36,7 @@ class PassManager
     template <typename PassT>
     bool Run()
     {
-        static_assert(DefaultPasses::HasPass<PassT>());
+        STATIC_ASSERT(DefaultPasses::HasPass<PassT>());
         return passes_[DefaultPasses::GetPassIdx<PassT>()]->Run();
     }
 

@@ -20,7 +20,7 @@ bool Range::IsEmpty()
 
 Range Range::Intersection(const Range& l, const Range& r)
 {
-    assert(IfIntersect(l, r));
+    ASSERT(IfIntersect(l, r));
 
     bool end_rel_pos = l.end_ < r.end_;
     size_t end = end_rel_pos * l.end_ + !end_rel_pos * r.end_;

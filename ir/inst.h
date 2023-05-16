@@ -252,13 +252,13 @@ class WithImm
 
     ImmType GetImm(size_t idx) const
     {
-        assert(idx < N);
+        ASSERT(idx < N);
         return imms_[idx];
     }
 
     void SetImmediate(size_t idx, ImmType imm)
     {
-        assert(idx < N);
+        ASSERT(idx < N);
         imms_[idx] = imm;
     }
 
@@ -287,10 +287,10 @@ class isa::inst_type::NO_INPUT : public InstBase
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
 
   private:
@@ -308,10 +308,10 @@ class isa::inst_type::UNARY : public InstBase
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
 
   private:
@@ -329,10 +329,10 @@ class isa::inst_type::BINARY : public InstBase
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
 
   private:
@@ -352,10 +352,10 @@ class isa::inst_type::BIN_IMM
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
 
     void Dump() const override
@@ -379,10 +379,10 @@ class isa::inst_type::PHI : public InstBase
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
 
   private:
@@ -400,10 +400,10 @@ class isa::inst_type::CALL : public InstBase
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
     GETTER_SETTER(Callee, Graph*, callee_);
 
@@ -423,10 +423,10 @@ class isa::inst_type::IF : public InstBase, public Conditional
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
 
     void Dump() const override
@@ -453,10 +453,10 @@ class isa::inst_type::IF_IMM
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
 
     void Dump() const override
@@ -482,10 +482,10 @@ class isa::inst_type::COMPARE : public InstBase, public Conditional
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
     }
 
     void Dump() const override
@@ -510,10 +510,10 @@ class isa::inst_type::CONST : public InstBase
         using ValueImm = isa::InputValue<Type, isa::input::Type::IMM>;
         using ValueCond = isa::InputValue<Type, isa::input::Type::COND>;
 
-        assert(ValueDyn::value == IsDynamic());
-        assert(ValueVreg::value == GetNumInputs());
-        assert(ValueImm::value == GetNumImms());
-        assert(ValueCond::value == IsConditional());
+        ASSERT(ValueDyn::value == IsDynamic());
+        ASSERT(ValueVreg::value == GetNumInputs());
+        ASSERT(ValueImm::value == GetNumImms());
+        ASSERT(ValueCond::value == IsConditional());
 
         if constexpr (std::numeric_limits<T>::is_integer) {
             SetDataType(InstBase::DataType::INT);
@@ -530,7 +530,7 @@ class isa::inst_type::CONST : public InstBase
             val_ = std::bit_cast<uint64_t, double>(val);
         } else {
             SetDataType(InstBase::DataType::VOID);
-            assert(false);
+            ASSERT(false);
         }
     }
 

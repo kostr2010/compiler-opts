@@ -57,7 +57,7 @@ void DCE::Sweep(const Markers markers)
         }
 
         for (auto inst : to_remove) {
-            assert(inst != nullptr);
+            ASSERT(inst != nullptr);
             bb->UnlinkInst(inst);
         }
     }

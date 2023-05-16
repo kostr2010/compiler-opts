@@ -22,15 +22,15 @@ class GraphBuilder
     template <isa::inst::Opcode OPCODE, typename... Args>
     IdType NewInst(Args&&... args)
     {
-        assert(graph_ != nullptr);
-        assert(cur_bb_ != nullptr);
+        ASSERT(graph_ != nullptr);
+        ASSERT(cur_bb_ != nullptr);
 
-        static_assert(OPCODE != isa::inst::Opcode::CONST);
-        static_assert(OPCODE != isa::inst::Opcode::PARAM);
+        STATIC_ASSERT(OPCODE != isa::inst::Opcode::CONST);
+        STATIC_ASSERT(OPCODE != isa::inst::Opcode::PARAM);
 
         std::unique_ptr<InstBase> inst = InstBase::NewInst<OPCODE>(std::forward<Args>(args)...);
 
-        assert(inst != nullptr);
+        ASSERT(inst != nullptr);
         auto id = inst->GetId();
 
         cur_inst_ = inst.get();
@@ -50,12 +50,12 @@ class GraphBuilder
     template <typename T>
     IdType NewConst(T value)
     {
-        assert(graph_ != nullptr);
-        assert(graph_->GetStartBasicBlock() != nullptr);
+        ASSERT(graph_ != nullptr);
+        ASSERT(graph_->GetStartBasicBlock() != nullptr);
 
         auto inst = InstBase::NewInst<isa::inst::Opcode::CONST>(value);
 
-        assert(inst != nullptr);
+        ASSERT(inst != nullptr);
         auto id = inst->GetId();
 
         cur_inst_ = inst.get();
@@ -74,8 +74,8 @@ class GraphBuilder
     template <typename... Args>
     void SetInputs(IdType id, Args... inputs_id)
     {
-        assert(inst_map_.find(id) != inst_map_.end());
-        assert(!inst_map_.at(id)->IsPhi());
+        ASSERT(inst_map_.find(id) != inst_map_.end());
+        ASSERT(!inst_map_.at(id)->IsPhi());
 
         if constexpr (sizeof...(inputs_id)) {
             AddInput(id, inputs_id...);

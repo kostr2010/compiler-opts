@@ -9,181 +9,190 @@
 namespace type_sequence {
 template <typename... Ts>
 struct TypeSequence
-{
-};
+{};
 
 using EmptySequence = TypeSequence<>;
 
 // Trio of functions that allow to create aggregate types
 // Borrowed from LISP
 template <typename Seq>
-struct Head;
+struct head;
 
 template <typename T, typename... Ts>
-struct Head<TypeSequence<T, Ts...> >
+struct head<TypeSequence<T, Ts...> >
 {
     using type = T;
 };
 
 template <typename Seq>
-using Head_t = typename Head<Seq>::type;
+using head_t = typename head<Seq>::type;
 
 template <typename Seq>
-struct Tail;
+struct tail;
 
 template <typename T, typename... Ts>
-struct Tail<TypeSequence<T, Ts...> >
+struct tail<TypeSequence<T, Ts...> >
 {
     using type = TypeSequence<Ts...>;
 };
 
 template <typename Seq>
-using Tail_t = typename Tail<Seq>::type;
+using tail_t = typename tail<Seq>::type;
 
-template <typename T, typename Seq>
-struct Prepend;
+template <typename Seq, typename T>
+struct prepend;
 
 template <typename T, typename... Ts>
-struct Prepend<T, TypeSequence<Ts...> >
+struct prepend<TypeSequence<Ts...>, T>
 {
     using type = TypeSequence<T, Ts...>;
 };
 
-template <typename T, typename Seq>
-using Prepend_t = typename Prepend<T, Seq>::type;
+template <typename Seq, typename T>
+using prepend_t = typename prepend<Seq, T>::type;
 
-template <typename T, typename Seq>
-struct Append;
+template <typename Seq, typename T>
+struct append;
 
 template <typename T, typename... Ts>
-struct Append<T, TypeSequence<Ts...> >
+struct append<TypeSequence<Ts...>, T>
 {
     using type = TypeSequence<Ts..., T>;
 };
 
-template <typename T, typename Seq>
-using Append_t = typename Append<T, Seq>::type;
+template <typename Seq, typename T>
+using append_t = typename append<Seq, T>::type;
 
 template <typename Seq1, typename Seq2>
-struct Concat;
+struct cat;
 
 template <typename... Ts1, typename... Ts2>
-struct Concat<TypeSequence<Ts1...>, TypeSequence<Ts2...> >
+struct cat<TypeSequence<Ts1...>, TypeSequence<Ts2...> >
 {
     using type = TypeSequence<Ts1..., Ts2...>;
 };
 
 template <typename Seq1, typename Seq2>
-using Concat_t = typename Concat<Seq1, Seq2>::type;
+using cat_t = typename cat<Seq1, Seq2>::type;
 
 template <typename Seq>
-struct Length;
+struct len;
 
 template <>
-struct Length<EmptySequence> : std::integral_constant<size_t, 0>
-{
-};
+struct len<EmptySequence> : std::integral_constant<size_t, 0>
+{};
 
 template <typename... Ts>
-struct Length<TypeSequence<Ts...> >
-    : std::integral_constant<size_t, Length<Tail_t<TypeSequence<Ts...> > >::value + 1>
-{
-};
+struct len<TypeSequence<Ts...> >
+    : std::integral_constant<size_t, len<tail_t<TypeSequence<Ts...> > >::value + 1>
+{};
 
-template <typename T, typename Seq>
-struct Find;
-
-template <typename T, typename... Ts>
-struct Find<T, TypeSequence<Ts...> > : Find<T, Tail_t<TypeSequence<Ts...> > >
-{
-};
+template <typename Seq, typename T>
+struct find;
 
 template <typename T, typename... Ts>
-struct Find<T, TypeSequence<T, Ts...> > : std::true_type
+struct find<TypeSequence<Ts...>, T> : find<tail_t<TypeSequence<Ts...> >, T>
+{};
+
+template <typename T, typename... Ts>
+struct find<TypeSequence<T, Ts...>, T>
 {
+    static constexpr decltype(true) value = true;
+    using type = T;
 };
 
 template <typename T>
-struct Find<T, EmptySequence> : std::false_type
+struct find<EmptySequence, T>
 {
+    static constexpr decltype(false) value = false;
 };
 
-template <typename From, typename To, typename Seq>
-struct Replace;
+namespace {
+template <bool RES, typename Cur, typename Tail, template <typename> typename Predicate>
+struct _find_if;
 
-template <typename From, typename To, typename... Ts>
-struct Replace<From, To, TypeSequence<Ts...> >
-    : Replace<TypeSequence<From>, To, TypeSequence<Ts...> >
+template <typename T, typename... Ts, template <typename> typename Predicate>
+struct _find_if<true, T, TypeSequence<Ts...>, Predicate>
 {
-    static_assert(Find<From, TypeSequence<Ts...> >::value);
+    static constexpr decltype(true) value = true;
+    using type = T;
 };
 
-template <typename To, typename... Ts1, typename... Ts2>
-struct Replace<TypeSequence<Ts1...>, To, TypeSequence<Ts2...> >
-    : Replace<Append_t<Head_t<TypeSequence<Ts2...> >, TypeSequence<Ts1...> >, To,
-              Tail_t<TypeSequence<Ts2...> > >
+template <typename T, template <typename> typename Predicate>
+struct _find_if<false, T, EmptySequence, Predicate>
 {
+    static constexpr decltype(false) value = false;
 };
 
-template <typename T, typename To, typename... Ts1, typename... Ts2>
-struct Replace<TypeSequence<T, Ts1...>, To, TypeSequence<T, Ts2...> >
-{
-    using type = TypeSequence<Ts1..., To, Ts2...>;
+template <typename T, typename... Ts, template <typename> typename Predicate>
+struct _find_if<false, T, TypeSequence<Ts...>, Predicate>
+    : _find_if<Predicate<head_t<TypeSequence<Ts...> > >::value, head_t<TypeSequence<Ts...> >,
+               tail_t<TypeSequence<Ts...> >, Predicate>
+{};
 };
 
-template <typename From, typename To, typename Seq>
-using Replace_t = typename Replace<From, To, Seq>::type;
+template <typename Seq, template <typename> typename Predicate>
+using find_if = _find_if<false, void, Seq, Predicate>;
 
-template <size_t IDX, typename Seq>
-struct Get;
+template <typename Seq, template <typename> typename Predicate>
+using find_if_t = typename find_if<Seq, Predicate>::type;
 
-template <size_t IDX, typename... Ts>
-struct Get<IDX, TypeSequence<Ts...> > : Get<IDX - 1, Tail_t<TypeSequence<Ts...> > >
+namespace {
+
+template <typename Seq, typename Acc, typename From, typename To>
+struct _replace;
+
+template <typename... TsSeq, typename... TsAcc, typename From, typename To>
+struct _replace<TypeSequence<TsSeq...>, TypeSequence<TsAcc...>, From, To>
+    : _replace<tail_t<TypeSequence<TsSeq...> >,
+               append_t<TypeSequence<TsAcc...>, head_t<TypeSequence<TsSeq...> > >, From, To>
+{};
+
+template <typename... TsSeq, typename... TsAcc, typename From, typename To>
+struct _replace<TypeSequence<From, TsSeq...>, TypeSequence<TsAcc...>, From, To>
 {
-    static_assert(IDX < Length<TypeSequence<Ts...> >::value);
+    using type = TypeSequence<TsAcc..., To, TsSeq...>;
+};
+
+};
+
+template <typename Seq, typename From, typename To>
+using replace = _replace<Seq, EmptySequence, From, To>;
+
+template <typename Seq, typename From, typename To>
+using replace_t = typename replace<Seq, From, To>::type;
+
+template <typename Seq, size_t IDX>
+struct get;
+
+template <typename... Ts, size_t IDX>
+struct get<TypeSequence<Ts...>, IDX> : get<tail_t<TypeSequence<Ts...> >, IDX - 1>
+{
+    STATIC_ASSERT(IDX < len<TypeSequence<Ts...> >::value);
 };
 
 template <typename... Ts>
-struct Get<0, TypeSequence<Ts...> >
+struct get<TypeSequence<Ts...>, 0>
 {
-    using Seq = TypeSequence<Ts...>;
-    static_assert(Length<Seq>::value != Length<EmptySequence>::value);
-    using type = Head_t<Seq>;
+    STATIC_ASSERT(len<TypeSequence<Ts...> >::value != len<EmptySequence>::value);
+    using type = head_t<TypeSequence<Ts...> >;
 };
 
-template <size_t IDX, typename Seq>
-using Get_t = typename Get<IDX, Seq>::type;
-
-template <typename Seq, template <typename> typename Predicate>
-struct GetIf;
-
-template <typename... Ts, template <typename> typename Predicate>
-struct GetIf<TypeSequence<Ts...>, Predicate>
-    : std::conditional_t<Predicate<Head_t<TypeSequence<Ts...> > >::value,
-                         Head_t<TypeSequence<Ts...> >,
-                         GetIf<Tail_t<TypeSequence<Ts...> >, Predicate> >
-{
-};
+template <typename Seq, size_t IDX>
+using get_t = typename get<Seq, IDX>::type;
 
 template <typename Seq, template <typename...> typename Accumulator, typename Start>
-struct Accumulate;
+struct accumulate;
 
 template <template <typename...> typename Accumulator, typename Res>
-struct Accumulate<EmptySequence, Accumulator, Res> : Res
-{
-};
-
-template <typename T, template <typename...> typename Accumulator, typename Res>
-struct Accumulate<TypeSequence<T>, Accumulator, Res> : Accumulator<T, Res>
-{
-};
+struct accumulate<EmptySequence, Accumulator, Res> : Res
+{};
 
 template <typename... Ts, template <typename...> typename Accumulator, typename Res>
-struct Accumulate<TypeSequence<Ts...>, Accumulator, Res>
-    : Accumulate<Tail_t<TypeSequence<Ts...> >, Accumulator,
-                 Accumulator<Head_t<TypeSequence<Ts...> >, Res> >
-{
-};
+struct accumulate<TypeSequence<Ts...>, Accumulator, Res>
+    : accumulate<tail_t<TypeSequence<Ts...> >, Accumulator,
+                 Accumulator<head_t<TypeSequence<Ts...> >, Res> >
+{};
 
 };
 

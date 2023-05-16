@@ -45,8 +45,8 @@ ISA_FLAG_LIST(GEN_FLAG_STRUCT_DEF)
 template <Type FLAG, typename Flag<FLAG>::Value VALUE>
 struct Value : std::integral_constant<ValueT, VALUE>
 {
-    static_assert(Flag<FLAG>::HasValue::value);
-    static_assert(VALUE < Flag<FLAG>::Value::NUM_VALUES);
+    STATIC_ASSERT(Flag<FLAG>::HasValue::value);
+    STATIC_ASSERT(VALUE < Flag<FLAG>::Value::NUM_VALUES);
     static constexpr Type type = FLAG;
 };
 

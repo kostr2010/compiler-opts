@@ -24,9 +24,8 @@ class Pass
     template <typename T>
     struct PassTraits : public PassTraitsBase
     {
-        static_assert(Pass::is_pass<T>());
-        using is_cfg_sensitive =
-            type_helpers::detected_or_t<std::false_type, __is_cfg_sensitive, T>;
+        STATIC_ASSERT(Pass::is_pass<T>());
+        using is_cfg_sensitive = type_helpers::valid_or_t<std::false_type, __is_cfg_sensitive, T>;
     };
 
     Pass(Graph* g) : graph_{ g }

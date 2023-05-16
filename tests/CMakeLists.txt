@@ -16,6 +16,8 @@ set(TESTS
 
     # utils
     range_test.cpp
+    type_sequence_test.cpp
+    type_helpers_test.cpp
 )
 
 add_executable(gtests ${TESTS})

@@ -45,7 +45,7 @@ class Inst;
         /* produces code like                                                                     \
          * type_sequence::TypeSequence<Flag<flag::Type::FLAG1>, Flag<flag::Type::FLAG2>, ...> */  \
         using Flags = type_sequence::TypeSequence<CHAIN_COMMA(CHAIN_PREFIX_SUFFIX(FLAGS))>;       \
-        using BitMask = type_sequence::Accumulate<Flags, BitMaskAccumulator, flag::EmptyBitMask>; \
+        using BitMask = type_sequence::accumulate<Flags, BitMaskAccumulator, flag::EmptyBitMask>; \
         using FlagValues = type_sequence::TypeSequence<CHAIN_OPERATOR(FLAGS)>;                    \
         using Type = inst_type::INST_TYPE;                                                        \
         static constexpr Opcode opcode = Opcode::OPCODE;                                          \

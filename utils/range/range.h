@@ -11,7 +11,7 @@ class Range
   public:
     Range(size_t from, size_t to) : start_{ from }, end_{ to }
     {
-        assert(from <= to);
+        ASSERT(from <= to);
     }
     DEFAULT_COPY_SEMANTIC(Range);
     DEFAULT_MOVE_SEMANTIC(Range);

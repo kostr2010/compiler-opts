@@ -13,7 +13,7 @@ size_t BasicBlock::GetNumPredecessors() const
 
 BasicBlock* BasicBlock::GetPredecessor(size_t idx)
 {
-    assert(idx < preds_.size());
+    ASSERT(idx < preds_.size());
     return preds_[idx];
 }
 
@@ -37,13 +37,12 @@ size_t BasicBlock::GetNumSuccessors() const
 
 BasicBlock* BasicBlock::GetSuccessor(size_t idx)
 {
-    assert(idx < GetNumSuccessors());
+    ASSERT(idx < GetNumSuccessors());
     return succs_[idx];
 }
 
 void BasicBlock::SetLoop(Loop* loop, bool is_header /* = false */)
 {
-    // assert(loop != nullptr);
     is_loop_header_ = is_header;
     loop_ = loop;
 }
@@ -70,7 +69,7 @@ void BasicBlock::ClearImmDominator()
 
 bool BasicBlock::Dominates(BasicBlock* bb) const
 {
-    assert(bb != nullptr);
+    ASSERT(bb != nullptr);
 
     if (bb->GetId() == GetId()) {
         return true;
@@ -88,8 +87,8 @@ bool BasicBlock::Dominates(BasicBlock* bb) const
 
 void BasicBlock::SetSuccsessor(size_t pos, BasicBlock* bb)
 {
-    assert(bb != nullptr);
-    assert(pos < GetNumSuccessors());
+    ASSERT(bb != nullptr);
+    ASSERT(pos < GetNumSuccessors());
 
     succs_[pos] = bb;
 }
@@ -97,7 +96,7 @@ void BasicBlock::SetSuccsessor(size_t pos, BasicBlock* bb)
 bool BasicBlock::Precedes(IdType bb_id) const
 {
     for (size_t i = 0; i < GetNumSuccessors(); ++i) {
-        assert(succs_[i] != nullptr);
+        ASSERT(succs_[i] != nullptr);
         if (bb_id == succs_[i]->GetId()) {
             return true;
         }
@@ -107,15 +106,15 @@ bool BasicBlock::Precedes(IdType bb_id) const
 
 bool BasicBlock::Precedes(BasicBlock* bb) const
 {
-    assert(bb != nullptr);
+    ASSERT(bb != nullptr);
 
     return Precedes(bb->GetId());
 }
 
 void BasicBlock::AddPredecessor(BasicBlock* bb)
 {
-    assert(bb != nullptr);
-    assert(!Succeeds(bb));
+    ASSERT(bb != nullptr);
+    ASSERT(!Succeeds(bb));
 
     preds_.emplace_back(bb);
 }
@@ -128,25 +127,25 @@ bool BasicBlock::Succeeds(IdType bb_id) const
 
 bool BasicBlock::Succeeds(BasicBlock* bb) const
 {
-    assert(bb != nullptr);
+    ASSERT(bb != nullptr);
     return std::find_if(preds_.begin(), preds_.end(),
                         [bb](BasicBlock* s) { return bb->GetId() == s->GetId(); }) != preds_.end();
 }
 
 void BasicBlock::RemovePredecessor(BasicBlock* bb)
 {
-    assert(bb != nullptr);
-    assert(Succeeds(bb));
+    ASSERT(bb != nullptr);
+    ASSERT(Succeeds(bb));
 
     std::erase_if(preds_, [bb](BasicBlock* p) { return bb->GetId() == p->GetId(); });
 }
 
 void BasicBlock::ReplaceSuccessor(BasicBlock* bb_old, BasicBlock* bb_new)
 {
-    assert(bb_old != nullptr);
+    ASSERT(bb_old != nullptr);
 
     for (size_t i = 0; i < GetNumSuccessors(); ++i) {
-        assert(succs_[i] != nullptr);
+        ASSERT(succs_[i] != nullptr);
 
         if (succs_[i]->GetId() == bb_old->GetId()) {
             succs_[i] = bb_new;
@@ -160,7 +159,7 @@ void BasicBlock::ReplaceSuccessor(BasicBlock* bb_old, BasicBlock* bb_new)
 void BasicBlock::ReplacePredecessor(BasicBlock* bb_old, BasicBlock* bb_new)
 {
     for (size_t i = 0; i < GetNumPredecessors(); ++i) {
-        assert(preds_[i] != nullptr);
+        ASSERT(preds_[i] != nullptr);
 
         if (preds_[i]->GetId() == bb_old->GetId()) {
             preds_[i] = bb_new;
@@ -173,8 +172,8 @@ void BasicBlock::ReplacePredecessor(BasicBlock* bb_old, BasicBlock* bb_new)
 
 void BasicBlock::PushBackInst(std::unique_ptr<InstBase> inst)
 {
-    assert(inst != nullptr);
-    assert(!inst->IsPhi());
+    ASSERT(inst != nullptr);
+    ASSERT(!inst->IsPhi());
 
     inst->SetBasicBlock(this);
     if (last_inst_ == nullptr) {
@@ -188,8 +187,8 @@ void BasicBlock::PushBackInst(std::unique_ptr<InstBase> inst)
 
 void BasicBlock::PushFrontInst(std::unique_ptr<InstBase> inst)
 {
-    assert(inst != nullptr);
-    assert(!inst->IsPhi());
+    ASSERT(inst != nullptr);
+    ASSERT(!inst->IsPhi());
 
     inst->SetBasicBlock(this);
     if (first_inst_ == nullptr) {
@@ -203,14 +202,14 @@ void BasicBlock::PushFrontInst(std::unique_ptr<InstBase> inst)
 
 void BasicBlock::InsertInst(std::unique_ptr<InstBase> inst, InstBase* left, InstBase* right)
 {
-    assert(right != nullptr);
-    assert(left != nullptr);
-    assert(inst != nullptr);
-    assert(!left->IsPhi());
-    assert(!right->IsPhi());
-    assert(!inst->IsPhi());
-    assert(left->GetNext()->GetId() == right->GetId());
-    assert(right->GetPrev()->GetId() == left->GetId());
+    ASSERT(right != nullptr);
+    ASSERT(left != nullptr);
+    ASSERT(inst != nullptr);
+    ASSERT(!left->IsPhi());
+    ASSERT(!right->IsPhi());
+    ASSERT(!inst->IsPhi());
+    ASSERT(left->GetNext()->GetId() == right->GetId());
+    ASSERT(right->GetPrev()->GetId() == left->GetId());
 
     inst->SetBasicBlock(this);
     inst->SetNext(left->ReleaseNext());
@@ -221,7 +220,7 @@ void BasicBlock::InsertInst(std::unique_ptr<InstBase> inst, InstBase* left, Inst
 
 void BasicBlock::InsertInstAfter(std::unique_ptr<InstBase> inst, InstBase* after)
 {
-    assert(after != nullptr);
+    ASSERT(after != nullptr);
     auto next = after->GetNext();
 
     if (next == nullptr) {
@@ -233,7 +232,7 @@ void BasicBlock::InsertInstAfter(std::unique_ptr<InstBase> inst, InstBase* after
 
 void BasicBlock::InsertInstBefore(std::unique_ptr<InstBase> inst, InstBase* before)
 {
-    assert(before != nullptr);
+    ASSERT(before != nullptr);
     auto prev = before->GetPrev();
 
     if (prev == nullptr) {
@@ -245,8 +244,8 @@ void BasicBlock::InsertInstBefore(std::unique_ptr<InstBase> inst, InstBase* befo
 
 void BasicBlock::PushBackPhi(std::unique_ptr<InstBase> inst)
 {
-    assert(inst != nullptr);
-    assert(inst->IsPhi());
+    ASSERT(inst != nullptr);
+    ASSERT(inst->IsPhi());
 
     inst->SetBasicBlock(this);
     if (first_phi_ == nullptr) {
@@ -261,8 +260,8 @@ void BasicBlock::PushBackPhi(std::unique_ptr<InstBase> inst)
 
 void BasicBlock::PushBackPhi(InstBase* inst)
 {
-    assert(inst != nullptr);
-    assert(inst->IsPhi());
+    ASSERT(inst != nullptr);
+    ASSERT(inst->IsPhi());
 
     inst->SetBasicBlock(this);
     if (first_phi_ == nullptr) {
@@ -277,50 +276,50 @@ void BasicBlock::PushBackPhi(InstBase* inst)
 
 void BasicBlock::UnlinkInst(InstBase* inst)
 {
-    assert(inst != nullptr);
+    ASSERT(inst != nullptr);
 
     auto prev = inst->GetPrev();
     auto next = inst->GetNext();
 
     if (prev != nullptr && next != nullptr) {
-        assert(prev != nullptr);
-        assert(next != nullptr);
+        ASSERT(prev != nullptr);
+        ASSERT(next != nullptr);
 
         next->SetPrev(prev);
         prev->SetNext(inst->ReleaseNext());
     } else if (prev == nullptr && next != nullptr) {
-        assert(prev == nullptr);
-        assert(next != nullptr);
+        ASSERT(prev == nullptr);
+        ASSERT(next != nullptr);
 
         if (inst->IsPhi()) {
-            assert(first_phi_ != nullptr);
-            assert(first_phi_->GetId() == inst->GetId());
+            ASSERT(first_phi_ != nullptr);
+            ASSERT(first_phi_->GetId() == inst->GetId());
             first_phi_.reset(inst->ReleaseNext());
         } else {
-            assert(first_inst_ != nullptr);
-            assert(first_inst_->GetId() == inst->GetId());
+            ASSERT(first_inst_ != nullptr);
+            ASSERT(first_inst_->GetId() == inst->GetId());
             first_inst_.reset(inst->ReleaseNext());
         }
 
         next->SetPrev(nullptr);
     } else if (prev != nullptr && next == nullptr) {
-        assert(prev != nullptr);
-        assert(next == nullptr);
+        ASSERT(prev != nullptr);
+        ASSERT(next == nullptr);
 
         if (inst->IsPhi()) {
-            assert(last_phi_ != nullptr);
-            assert(last_phi_->GetId() == inst->GetId());
+            ASSERT(last_phi_ != nullptr);
+            ASSERT(last_phi_->GetId() == inst->GetId());
             last_phi_ = prev;
         } else {
-            assert(last_inst_ != nullptr);
-            assert(last_inst_->GetId() == inst->GetId());
+            ASSERT(last_inst_ != nullptr);
+            ASSERT(last_inst_->GetId() == inst->GetId());
             last_inst_ = prev;
         }
 
         prev->SetNext(nullptr);
     } else {
-        assert(prev == nullptr);
-        assert(next == nullptr);
+        ASSERT(prev == nullptr);
+        ASSERT(next == nullptr);
 
         if (inst->IsPhi()) {
             first_phi_.reset();
@@ -411,9 +410,9 @@ void BasicBlock::Dump() const
 
 void BasicBlock::SetFirstInst(std::unique_ptr<InstBase> inst)
 {
-    assert(inst != nullptr);
-    assert(first_inst_ == nullptr);
-    assert(last_inst_ == nullptr);
+    ASSERT(inst != nullptr);
+    ASSERT(first_inst_ == nullptr);
+    ASSERT(last_inst_ == nullptr);
 
     first_inst_ = std::move(inst);
     last_inst_ = first_inst_.get();

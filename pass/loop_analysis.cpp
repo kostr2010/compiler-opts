@@ -77,17 +77,8 @@ void LoopAnalysis::PopulateLoop(Loop* loop)
             RunLoopSearch(loop, bck, markers);
         }
     } else {
-        assert(loop->GetHeader() != nullptr);
-        // assert(loop->GetOuterLoop() != nullptr);
-        // auto header = loop->GetHeader();
+        ASSERT(loop->GetHeader() != nullptr);
         loop->GetHeader()->SetLoop(loop->GetOuterLoop());
-        // for (const auto& bck : loop->GetBackEdges()) {
-        //     if (bck->GetLoop() == nullptr) {
-        //         bck->SetLoop(loop);
-        //     }
-
-        //     loop->AddBlock(bck);
-        // }
     }
 }
 
@@ -131,8 +122,8 @@ void LoopAnalysis::SplitBackEdge(Loop* loop)
     auto back_edges = loop->GetBackEdges();
 
     std::sort(back_edges.begin(), back_edges.end(), [this](BasicBlock* lhs, BasicBlock* rhs) {
-        assert(lhs != nullptr);
-        assert(rhs != nullptr);
+        ASSERT(lhs != nullptr);
+        ASSERT(rhs != nullptr);
         return id_to_dfs_idx_.at(lhs->GetId()) < id_to_dfs_idx_.at(rhs->GetId());
     });
 
@@ -170,9 +161,9 @@ void LoopAnalysis::AddPreHeaders()
 
 void LoopAnalysis::AddPreHeader(Loop* loop)
 {
-    assert(loop != nullptr);
+    ASSERT(loop != nullptr);
     auto head = loop->GetHeader();
-    assert(head != nullptr);
+    ASSERT(head != nullptr);
 
     std::vector<BasicBlock*> pred{};
 
@@ -183,7 +174,7 @@ void LoopAnalysis::AddPreHeader(Loop* loop)
         }
     }
 
-    assert(!pred.empty());
+    ASSERT(!pred.empty());
 
     auto preheader = graph_->NewBasicBlock();
     loop->SetPreHeader(preheader);
@@ -196,18 +187,18 @@ void LoopAnalysis::AddPreHeader(Loop* loop)
 
 void LoopAnalysis::PropagatePhis(BasicBlock* bb, BasicBlock* pred)
 {
-    assert(bb != nullptr);
-    assert(pred != nullptr);
-    assert(bb->GetLoop() != nullptr);
-    assert(bb->GetLoop()->GetBackEdges().size() == 1);
-    assert(bb->Succeeds(pred));
-    assert(pred->Precedes(bb));
+    ASSERT(bb != nullptr);
+    ASSERT(pred != nullptr);
+    ASSERT(bb->GetLoop() != nullptr);
+    ASSERT(bb->GetLoop()->GetBackEdges().size() == 1);
+    ASSERT(bb->Succeeds(pred));
+    ASSERT(pred->Precedes(bb));
 
     auto loop = bb->GetLoop();
     auto bck = loop->GetBackEdges().front();
 
     for (auto i = bb->GetFirstPhi(); i != nullptr; i = i->GetNext()) {
-        assert(i->IsPhi());
+        ASSERT(i->IsPhi());
         auto phi = static_cast<isa::inst::Inst<isa::inst::Opcode::PHI>::Type*>(i);
         auto inputs = phi->GetInputs();
         auto it = std::find_if(inputs.begin(), inputs.end(), [bck](const Input& in) {
@@ -273,7 +264,7 @@ void LoopAnalysis::ResetState()
 
 void LoopAnalysis::InitStartLoop()
 {
-    assert(loops_.empty());
+    ASSERT(loops_.empty());
 
     loops_.emplace_back(new Loop(ROOT_LOOP_ID));
 }
@@ -303,23 +294,23 @@ void LoopAnalysis::Check()
         }
 
         if (!loop->IsRoot()) {
-            assert(!bbs.contains(loop->GetHeader()->GetId()));
-            assert(loop->GetId() == loop->GetHeader()->GetLoop()->GetId());
+            ASSERT(!bbs.contains(loop->GetHeader()->GetId()));
+            ASSERT(loop->GetId() == loop->GetHeader()->GetLoop()->GetId());
             bbs.insert(loop->GetHeader()->GetId());
         }
 
         for (const auto& bb : loop->GetBlocks()) {
-            assert(!bbs.contains(bb->GetId()));
-            assert(bb->GetLoop()->GetId() == loop->GetId());
+            ASSERT(!bbs.contains(bb->GetId()));
+            ASSERT(bb->GetLoop()->GetId() == loop->GetId());
             bbs.insert(bb->GetId());
         }
     }
 
     auto rpo = graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks();
-    assert(bbs.size() == rpo.size());
+    ASSERT(bbs.size() == rpo.size());
 
     for (const auto& bb : rpo) {
-        assert(bb->GetLoop() != nullptr);
-        assert(bb->GetLoop()->IsReducible());
+        ASSERT(bb->GetLoop() != nullptr);
+        ASSERT(bb->GetLoop()->IsReducible());
     }
 }
