@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 
-static size_t GetInstLiveNumber(const LivenessAnalysis* pass, IdType id)
+static unsigned GetInstLiveNumber(const LivenessAnalysis* pass, IdType id)
 {
     for (const auto& elem : pass->GetInstLiveNumbers()) {
         if (elem.first->GetId() == id) {

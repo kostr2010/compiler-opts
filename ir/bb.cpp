@@ -1,5 +1,12 @@
 #include "bb.h"
 #include "graph.h"
+#include "inst.h"
+
+BasicBlock::BasicBlock(const IdType& id) : id_(id)
+{
+}
+
+BasicBlock::~BasicBlock() = default;
 
 bool BasicBlock::HasNoPredecessors() const
 {
@@ -11,7 +18,7 @@ size_t BasicBlock::GetNumPredecessors() const
     return preds_.size();
 }
 
-BasicBlock* BasicBlock::GetPredecessor(size_t idx)
+BasicBlock* BasicBlock::GetPredecessor(unsigned idx)
 {
     ASSERT(idx < preds_.size());
     return preds_[idx];
@@ -19,7 +26,7 @@ BasicBlock* BasicBlock::GetPredecessor(size_t idx)
 
 bool BasicBlock::HasNoSuccessors() const
 {
-    for (size_t i = 0; i < GetNumSuccessors(); ++i) {
+    for (unsigned i = 0; i < GetNumSuccessors(); ++i) {
         if (succs_[i] != nullptr) {
             return false;
         }
@@ -35,7 +42,7 @@ size_t BasicBlock::GetNumSuccessors() const
     return isa::EvaluatePredicate<GetNumBranches>(last_inst_->GetOpcode());
 }
 
-BasicBlock* BasicBlock::GetSuccessor(size_t idx)
+BasicBlock* BasicBlock::GetSuccessor(unsigned idx)
 {
     ASSERT(idx < GetNumSuccessors());
     return succs_[idx];
@@ -85,7 +92,7 @@ bool BasicBlock::Dominates(BasicBlock* bb) const
     return false;
 }
 
-void BasicBlock::SetSuccsessor(size_t pos, BasicBlock* bb)
+void BasicBlock::SetSuccsessor(unsigned pos, BasicBlock* bb)
 {
     ASSERT(bb != nullptr);
     ASSERT(pos < GetNumSuccessors());
@@ -95,7 +102,7 @@ void BasicBlock::SetSuccsessor(size_t pos, BasicBlock* bb)
 
 bool BasicBlock::Precedes(IdType bb_id) const
 {
-    for (size_t i = 0; i < GetNumSuccessors(); ++i) {
+    for (unsigned i = 0; i < GetNumSuccessors(); ++i) {
         ASSERT(succs_[i] != nullptr);
         if (bb_id == succs_[i]->GetId()) {
             return true;
@@ -132,19 +139,19 @@ bool BasicBlock::Succeeds(BasicBlock* bb) const
                         [bb](BasicBlock* s) { return bb->GetId() == s->GetId(); }) != preds_.end();
 }
 
-void BasicBlock::RemovePredecessor(BasicBlock* bb)
+void BasicBlock::RemovePredecessor(BasicBlock* bb) noexcept
 {
     ASSERT(bb != nullptr);
     ASSERT(Succeeds(bb));
 
-    std::erase_if(preds_, [bb](BasicBlock* p) { return bb->GetId() == p->GetId(); });
+    std::erase_if(preds_, [bb](BasicBlock* p) noexcept { return bb->GetId() == p->GetId(); });
 }
 
 void BasicBlock::ReplaceSuccessor(BasicBlock* bb_old, BasicBlock* bb_new)
 {
     ASSERT(bb_old != nullptr);
 
-    for (size_t i = 0; i < GetNumSuccessors(); ++i) {
+    for (unsigned i = 0; i < GetNumSuccessors(); ++i) {
         ASSERT(succs_[i] != nullptr);
 
         if (succs_[i]->GetId() == bb_old->GetId()) {
@@ -158,7 +165,7 @@ void BasicBlock::ReplaceSuccessor(BasicBlock* bb_old, BasicBlock* bb_new)
 
 void BasicBlock::ReplacePredecessor(BasicBlock* bb_old, BasicBlock* bb_new)
 {
-    for (size_t i = 0; i < GetNumPredecessors(); ++i) {
+    for (unsigned i = 0; i < GetNumPredecessors(); ++i) {
         ASSERT(preds_[i] != nullptr);
 
         if (preds_[i]->GetId() == bb_old->GetId()) {

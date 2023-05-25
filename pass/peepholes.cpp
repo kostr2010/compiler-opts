@@ -65,7 +65,8 @@ static bool FoldBinOpToBinImmOp(InstBase* i)
     i->GetBasicBlock()->InsertInstAfter(InstBase::NewInst<OPCODE_TO>(), i);
     auto new_inst = i->GetNext();
     new_inst->SetInput(0, input_param);
-    static_cast<isa::inst_type::BIN_IMM*>(new_inst)->SetImmediate(0, const_op->GetValInt());
+    static_cast<isa::inst_type::BIN_IMM*>(new_inst)->SetImmediate(
+        0, static_cast<double>(const_op->GetValInt()));
     TransferUsers(i, new_inst);
 
     return true;
@@ -436,8 +437,10 @@ bool Peepholes::MatchXOR_zero(InstBase* i)
 
     bool input_1_is_const = inputs[1]->IsConst();
     if (inputs[0]->IsConst() || input_1_is_const) {
+        ASSERT(inputs[0]->IsConst() || inputs[1]->IsConst());
+
         auto input_const = static_cast<isa::inst_type::CONST*>(inputs[input_1_is_const]);
-        auto input_param = static_cast<isa::inst_type::CONST*>(inputs[!input_1_is_const]);
+        auto input_param = inputs[!input_1_is_const];
 
         if (input_const->IsZero()) {
             TransferUsers(i, input_param);

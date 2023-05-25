@@ -8,7 +8,7 @@
 
 #include "utils/macros.h"
 
-template <typename Holder, size_t BIT_NUM = 0>
+template <typename Holder, unsigned BIT_NUM = 0>
 struct BitFlag : std::integral_constant<Holder, 1 << BIT_NUM>
 {
     STATIC_ASSERT(std::is_same<uint8_t, Holder>::value || std::is_same<uint16_t, Holder>::value ||

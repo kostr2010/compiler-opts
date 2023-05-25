@@ -15,6 +15,9 @@ class Inlining : public Pass, public GraphVisitor
   public:
     Inlining(Graph* graph);
 
+    NO_COPY_SEMANTIC(Inlining);
+    NO_MOVE_SEMANTIC(Inlining);
+
     bool Run() override;
 
   private:

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "ir/typedefs.h"
 #include "pass.h"
@@ -22,9 +23,12 @@ class DomTree : public Pass
   private:
     struct Node
     {
-        Node(BasicBlock* block) : bb(block)
+        Node(BasicBlock* block) noexcept : bb(block)
         {
         }
+
+        NO_COPY_SEMANTIC(Node);
+        DEFAULT_MOVE_SEMANTIC(Node);
 
         Node* ancestor = nullptr;
         Node* parent = nullptr;
@@ -35,7 +39,7 @@ class DomTree : public Pass
         std::vector<Node*> bucket{};
         std::vector<Node*> pred{};
 
-        size_t dfs_idx{};
+        unsigned dfs_idx{};
 
         BasicBlock* bb;
     };
@@ -49,7 +53,7 @@ class DomTree : public Pass
     void Compress(Node* v);
     void ResetState();
 
-    std::unordered_map<IdType, size_t> id_to_dfs_idx_{};
+    std::unordered_map<IdType, unsigned> id_to_dfs_idx_{};
     std::vector<Node> tree_{};
 };
 

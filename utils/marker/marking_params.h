@@ -5,7 +5,7 @@
 #include <type_traits>
 
 namespace marker {
-using NumConcurrentMarkers = std::integral_constant<size_t, 4>;
+using NumConcurrentMarkers = std::integral_constant<unsigned, 4>;
 };
 
 #endif

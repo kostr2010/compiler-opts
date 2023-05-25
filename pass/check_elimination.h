@@ -26,7 +26,7 @@ class CheckElimination : public Pass, public GraphVisitor
     static void VisitCHECK_NULL(GraphVisitor* v, InstBase* inst);
     static void VisitCHECK_SIZE([[maybe_unused]] GraphVisitor* v, InstBase* inst);
 
-    std::vector<InstBase*> redundant_checks_;
+    std::vector<InstBase*> redundant_checks_{};
 
 #include "ir/graph_visitor.inc"
 };

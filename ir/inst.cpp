@@ -7,7 +7,7 @@
 // ====================
 // Location
 
-Location::Location(Location::Where l, size_t s) : loc{ l }, slot{ s }
+Location::Location(Location::Where l, unsigned s) : loc{ l }, slot{ s }
 {
 }
 
@@ -55,14 +55,14 @@ std::ostream& operator<<(std::ostream& os, const Location& l)
 // ====================
 // InstBase
 
-Input InstBase::GetInput(size_t idx) const
+Input InstBase::GetInput(unsigned idx) const
 {
     ASSERT(idx < GetNumInputs());
 
     return inputs_[idx];
 }
 
-void InstBase::SetInput(size_t idx, InstBase* inst)
+void InstBase::SetInput(unsigned idx, InstBase* inst)
 {
     ASSERT(!IsDynamic());
     ASSERT(inst != nullptr);
@@ -72,7 +72,7 @@ void InstBase::SetInput(size_t idx, InstBase* inst)
     inputs_[idx] = Input(inst, inst->GetBasicBlock());
 }
 
-void InstBase::SetInput(size_t idx, InstBase* inst, BasicBlock* bb)
+void InstBase::SetInput(unsigned idx, InstBase* inst, BasicBlock* bb)
 {
     ASSERT(IsDynamic());
     ASSERT(inst != nullptr);
@@ -159,11 +159,11 @@ void InstBase::ClearInputs()
     inputs_.clear();
 }
 
-void InstBase::RemoveInput(const Input& input)
+void InstBase::RemoveInput(const Input& input) noexcept
 {
     ASSERT(IsDynamic());
 
-    std::erase_if(inputs_, [input](const Input& i) {
+    std::erase_if(inputs_, [input](const Input& i) noexcept {
         return (i.GetSourceBB()->GetId() == input.GetSourceBB()->GetId() &&
                 i.GetInst()->GetId() == input.GetInst()->GetId());
     });
@@ -185,7 +185,7 @@ void InstBase::ReplaceInput(InstBase* old_inst, InstBase* new_inst)
     }
 }
 
-void InstBase::SetLocation(Location::Where loc, size_t slot)
+void InstBase::SetLocation(Location::Where loc, unsigned slot)
 {
     ASSERT(!HasFlag<isa::flag::Type::NO_USE>());
 
@@ -223,7 +223,7 @@ void InstBase::AddUser(InstBase* inst)
     users_.emplace_back(inst);
 }
 
-void InstBase::AddUser(InstBase* inst, size_t idx)
+void InstBase::AddUser(InstBase* inst, unsigned idx)
 {
     ASSERT(!HasFlag<isa::flag::Type::NO_USE>());
     ASSERT(!inst->IsDynamic());
@@ -550,13 +550,13 @@ int64_t isa::inst_type::CONST::GetValInt() const
     return static_cast<int64_t>(val_);
 }
 
-double isa::inst_type::CONST::GetValDouble() const
+float isa::inst_type::CONST::GetValFloat() const
 {
     ASSERT(GetDataType() == InstBase::DataType::DOUBLE);
     return std::bit_cast<float, uint32_t>(static_cast<uint32_t>(val_));
 }
 
-float isa::inst_type::CONST::GetValFloat() const
+double isa::inst_type::CONST::GetValDouble() const
 {
     ASSERT(GetDataType() == InstBase::DataType::FLOAT);
     return std::bit_cast<double, uint64_t>(val_);

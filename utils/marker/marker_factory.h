@@ -26,7 +26,7 @@ class MarkerFactory
     static Marker::MarkerGenT NewGen();
 
     using MarkerSlotsTracker = std::bitset<NumConcurrentMarkers::value>;
-    MarkerSlotsTracker slot_tracker_;
+    MarkerSlotsTracker slot_tracker_{};
 };
 
 }; // namespace marker

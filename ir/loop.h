@@ -16,6 +16,9 @@ class Loop
     {
     }
 
+    NO_COPY_SEMANTIC(Loop);
+    NO_MOVE_SEMANTIC(Loop);
+
     GETTER(Id, id_);
     GETTER(Header, header_);
     GETTER(Blocks, blocks_);

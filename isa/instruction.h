@@ -39,7 +39,7 @@ class Inst;
       private:                                                                                    \
         template <typename T, typename ACC>                                                       \
         using BitMaskAccumulator =                                                                \
-            std::integral_constant<size_t, ACC::value | T::BitMask::value>;                       \
+            std::integral_constant<unsigned, ACC::value | T::BitMask::value>;                       \
                                                                                                   \
       public:                                                                                     \
         /* produces code like                                                                     \

@@ -3,6 +3,13 @@
 
 using BranchFlag = isa::flag::Flag<isa::flag::BRANCH>;
 
+Graph::Graph() : pass_mgr_{ this }
+{
+    InitStartBlock();
+}
+
+Graph::~Graph() = default;
+
 BasicBlock* Graph::GetStartBasicBlock() const
 {
     return bb_vector_[BB_START_ID].get();
@@ -67,7 +74,7 @@ void Graph::ClearLoops()
     }
 }
 
-void Graph::AddEdge(BasicBlock* from, BasicBlock* to, size_t slot)
+void Graph::AddEdge(BasicBlock* from, BasicBlock* to, unsigned slot)
 {
     ASSERT(to != nullptr);
     ASSERT(from != nullptr);

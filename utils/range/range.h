@@ -9,7 +9,7 @@
 class Range
 {
   public:
-    Range(size_t from, size_t to) : start_{ from }, end_{ to }
+    Range(unsigned from, unsigned to) : start_{ from }, end_{ to }
     {
         ASSERT(from <= to);
     }
@@ -17,11 +17,11 @@ class Range
     DEFAULT_MOVE_SEMANTIC(Range);
     DEFAULT_DTOR(Range);
 
-    GETTER_SETTER(Start, size_t, start_);
-    GETTER_SETTER(End, size_t, end_);
+    GETTER_SETTER(Start, unsigned, start_);
+    GETTER_SETTER(End, unsigned, end_);
 
-    bool Contains(size_t pt);
-    size_t Length();
+    bool Contains(unsigned pt);
+    unsigned Length();
     bool IsEmpty();
 
     static bool IfIntersect(const Range& l, const Range& r);
@@ -34,8 +34,8 @@ class Range
     }
 
   private:
-    size_t start_;
-    size_t end_;
+    unsigned start_;
+    unsigned end_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Range& r)

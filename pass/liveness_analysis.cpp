@@ -92,10 +92,10 @@ void LivenessAnalysis::CheckLinearOrder()
 
     ASSERT(rpo.size() == linear_blocks_.size());
 
-    std::vector<size_t> bb_to_lin_number{};
+    std::vector<unsigned> bb_to_lin_number{};
     bb_to_lin_number.resize(linear_blocks_.size());
 
-    for (size_t i = 0; i < linear_blocks_.size(); ++i) {
+    for (unsigned i = 0; i < linear_blocks_.size(); ++i) {
         bb_to_lin_number[linear_blocks_[i]->GetId()] = i;
     }
 
@@ -109,11 +109,11 @@ void LivenessAnalysis::CheckLinearOrder()
 
 void LivenessAnalysis::Init()
 {
-    size_t cur_live_number = 0;
-    size_t cur_linear_number = 0;
+    unsigned cur_live_number = 0;
+    unsigned cur_linear_number = 0;
 
     for (const auto& bb : linear_blocks_) {
-        size_t bb_start = cur_live_number;
+        unsigned bb_start = cur_live_number;
 
         for (auto phi = bb->GetFirstPhi(); phi != nullptr; phi = phi->GetNext()) {
             inst_linear_numbers_[phi] = cur_linear_number;
@@ -132,7 +132,7 @@ void LivenessAnalysis::Init()
             cur_live_number += LIVE_NUMBER_STEP;
         }
 
-        size_t bb_end = cur_live_number;
+        unsigned bb_end = cur_live_number;
         bb_live_ranges_.emplace(bb, Range(bb_start, bb_end));
     }
 }

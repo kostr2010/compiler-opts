@@ -41,10 +41,10 @@ class Input
 class User
 {
   public:
-    explicit User(InstBase* inst) : inst_(inst)
+    explicit User(InstBase* inst) noexcept : inst_(inst)
     {
     }
-    explicit User(InstBase* inst, int idx) : inst_(inst), idx_(idx)
+    explicit User(InstBase* inst, int idx) noexcept : inst_(inst), idx_(idx)
     {
     }
 
@@ -65,7 +65,7 @@ struct Location
         STACK,
     };
 
-    Location(Where l, size_t s);
+    Location(Where l, unsigned s);
     DEFAULT_COPY_SEMANTIC(Location);
     DEFAULT_MOVE_SEMANTIC(Location);
     DEFAULT_CTOR(Location);
@@ -78,7 +78,7 @@ struct Location
     bool operator==(const Location& other) const;
 
     Where loc{ Where::UNSET };
-    size_t slot{ 0 };
+    unsigned slot{ 0 };
 };
 
 std::ostream& operator<<(std::ostream& os, const Location& l);
@@ -99,6 +99,9 @@ class InstBase : public marker::Markable
     static std::unique_ptr<InstBase> NewInst(Args&&... args);
     virtual ~InstBase() = default;
 
+    NO_COPY_SEMANTIC(InstBase);
+    NO_MOVE_SEMANTIC(InstBase);
+
     GETTER_SETTER(Prev, InstBase*, prev_);
     GETTER_SETTER(BasicBlock, BasicBlock*, bb_);
     GETTER_SETTER(DataType, DataType, data_type_);
@@ -114,24 +117,24 @@ class InstBase : public marker::Markable
     InstBase* ReleaseNext();
 
     size_t GetNumInputs() const;
-    Input GetInput(size_t idx) const;
-    void SetInput(size_t idx, InstBase* inst);
-    void SetInput(size_t idx, InstBase* inst, BasicBlock* bb);
+    Input GetInput(unsigned idx) const;
+    void SetInput(unsigned idx, InstBase* inst);
+    void SetInput(unsigned idx, InstBase* inst, BasicBlock* bb);
     void ReplaceInput(InstBase* old_inst, InstBase* new_inst);
     void ClearInputs();
-    void RemoveInput(const Input& input);
+    void RemoveInput(const Input& input) noexcept;
     void AddInput(InstBase* inst, BasicBlock* bb);
     void AddInput(const Input& input);
 
     size_t GetNumUsers() const;
     void AddUser(InstBase* inst);
-    void AddUser(InstBase* inst, size_t idx);
+    void AddUser(InstBase* inst, unsigned idx);
     void AddUser(const User& user);
     void RemoveUser(const User& user);
     void RemoveUser(InstBase* user);
     void ReplaceUser(const User& user_old, const User& user_new);
 
-    void SetLocation(Location::Where loc, size_t slot);
+    void SetLocation(Location::Where loc, unsigned slot);
 
     template <isa::flag::Type FLAG>
     struct FlagPredicate
@@ -229,6 +232,7 @@ class Conditional
     Conditional(Type cond) : cond_{ cond }
     {
     }
+    virtual ~Conditional() = default;
     DEFAULT_CTOR(Conditional);
 
     GETTER_SETTER(Condition, Type, cond_);
@@ -241,22 +245,23 @@ class Conditional
     Type cond_{ Type::UNSET };
 };
 
-template <size_t N>
+template <unsigned N>
 class WithImm
 {
   public:
     WithImm()
     {
     }
+    virtual ~WithImm() = default;
     GETTER(Imms, imms_);
 
-    ImmType GetImm(size_t idx) const
+    ImmType GetImm(unsigned idx) const
     {
         ASSERT(idx < N);
         return imms_[idx];
     }
 
-    void SetImmediate(size_t idx, ImmType imm)
+    void SetImmediate(unsigned idx, ImmType imm)
     {
         ASSERT(idx < N);
         imms_[idx] = imm;
@@ -405,6 +410,10 @@ class isa::inst_type::CALL : public InstBase
         ASSERT(ValueImm::value == GetNumImms());
         ASSERT(ValueCond::value == IsConditional());
     }
+
+    NO_COPY_SEMANTIC(CALL);
+    NO_MOVE_SEMANTIC(CALL);
+
     GETTER_SETTER(Callee, Graph*, callee_);
 
   private:

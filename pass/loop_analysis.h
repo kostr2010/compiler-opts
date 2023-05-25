@@ -61,9 +61,9 @@ class LoopAnalysis : public Pass
     void RecalculateLoopsReducibility();
     void Check();
 
-    std::unordered_map<IdType, size_t> id_to_dfs_idx_;
+    std::unordered_map<IdType, size_t> id_to_dfs_idx_{};
 
-    static constexpr size_t ROOT_LOOP_ID = 0;
+    static constexpr unsigned ROOT_LOOP_ID = 0;
     std::vector<std::unique_ptr<Loop> > loops_{};
 };
 

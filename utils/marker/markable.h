@@ -13,6 +13,7 @@ class Markable
 {
   public:
     Markable();
+    virtual ~Markable() = default;
 
     bool ProbeMark(const Marker* marker);
     // true if mark was set, false otherwise
@@ -22,7 +23,7 @@ class Markable
 
   private:
     using Markers = std::array<Marker::MarkerGenT, NumConcurrentMarkers::value>;
-    Markers markers_;
+    Markers markers_{};
 };
 }; // namespace marker
 

@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "inst.h"
 #include "loop.h"
 #include "typedefs.h"
 #include "utils/macros.h"
@@ -18,13 +17,16 @@
 #include "isa/isa.h"
 
 class Graph;
+class InstBase;
 
 class BasicBlock : public marker::Markable
 {
   public:
-    BasicBlock(const IdType& id) : id_(id)
-    {
-    }
+    BasicBlock(const IdType& id);
+    ~BasicBlock();
+
+    NO_COPY_SEMANTIC(BasicBlock);
+    NO_MOVE_SEMANTIC(BasicBlock);
 
     GETTER(Predecessors, preds_);
 
@@ -49,11 +51,11 @@ class BasicBlock : public marker::Markable
 
     bool HasNoPredecessors() const;
     size_t GetNumPredecessors() const;
-    BasicBlock* GetPredecessor(size_t idx);
+    BasicBlock* GetPredecessor(unsigned idx);
 
     bool HasNoSuccessors() const;
     size_t GetNumSuccessors() const;
-    BasicBlock* GetSuccessor(size_t idx);
+    BasicBlock* GetSuccessor(unsigned idx);
 
     bool Precedes(IdType bb_id) const;
     bool Precedes(BasicBlock* bb) const;
@@ -91,10 +93,10 @@ class BasicBlock : public marker::Markable
   private:
     // only graph can manipulate CFG
     friend Graph;
-    void SetSuccsessor(size_t pos, BasicBlock* bb);
+    void SetSuccsessor(unsigned pos, BasicBlock* bb);
 
     void AddPredecessor(BasicBlock* bb);
-    void RemovePredecessor(BasicBlock* bb);
+    void RemovePredecessor(BasicBlock* bb) noexcept;
 
     void ReplaceSuccessor(BasicBlock* bb_old, BasicBlock* bb_new);
     void ReplacePredecessor(BasicBlock* bb_old, BasicBlock* bb_new);

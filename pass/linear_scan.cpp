@@ -60,7 +60,7 @@ static bool IsCriticalEdge(BasicBlock* from, BasicBlock* to)
     return (from->GetNumSuccessors() > 1) && (to->GetNumPredecessors() > 1);
 }
 
-static BasicBlock* FixCriticalEdge(Graph* g, InstBase* phi, size_t input_idx)
+static BasicBlock* FixCriticalEdge(Graph* g, InstBase* phi, unsigned input_idx)
 {
     auto input = phi->GetInput(input_idx);
 
@@ -86,7 +86,7 @@ void LinearScan::InsertConnectingSpillFills()
 
         auto phi = r.inst;
 
-        size_t input_idx = 0;
+        unsigned input_idx = 0;
         for (const auto& in : phi->GetInputs()) {
             auto input = in.GetInst();
             auto bb_input = in.GetSourceBB();
@@ -138,7 +138,7 @@ void LinearScan::SpillAtInterval(LiveRange* r)
     }
 }
 
-size_t LinearScan::AssignStackSlot(LiveRange* r)
+unsigned LinearScan::AssignStackSlot(LiveRange* r)
 {
     ASSERT(r != nullptr);
 
@@ -152,7 +152,7 @@ void LinearScan::AssignRegister(LiveRange* r)
     ASSERT(r != nullptr);
     ASSERT(!IsRegMapEmpty());
 
-    for (size_t i = 0; i < reg_map_.size(); ++i) {
+    for (unsigned i = 0; i < reg_map_.size(); ++i) {
         if (reg_map_[i] == false) {
             reg_map_[i] = true;
             r->inst->SetLocation(Location::Where::REGISTER, i);
@@ -181,7 +181,7 @@ bool LinearScan::IsRegMapEmpty() const
     return active_.size() == reg_map_.size();
 }
 
-size_t LinearScan::GetStackSlot()
+unsigned LinearScan::GetStackSlot()
 {
     return current_stack_slot++;
 }

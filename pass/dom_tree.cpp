@@ -86,7 +86,7 @@ void DomTree::FillTree()
 {
     auto dfs_bb = graph_->GetPassManager()->GetValidPass<DFS>()->GetBlocks();
     tree_.reserve(dfs_bb.size());
-    for (size_t i = 0; i < dfs_bb.size(); ++i) {
+    for (unsigned i = 0; i < dfs_bb.size(); ++i) {
         auto bb = dfs_bb.at(i);
         id_to_dfs_idx_[bb->GetId()] = i;
         tree_.emplace_back(bb);

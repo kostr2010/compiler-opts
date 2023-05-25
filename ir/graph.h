@@ -13,15 +13,14 @@
 #include "typedefs.h"
 
 class InstBase;
+class BasicBlock;
 
 class Graph
 {
   public:
     static constexpr IdType BB_START_ID = 0;
-    Graph() : pass_mgr_{ this }
-    {
-        InitStartBlock();
-    }
+    Graph();
+    ~Graph();
 
     BasicBlock* GetStartBasicBlock() const;
     BasicBlock* GetBasicBlock(IdType bb_id) const;
@@ -29,7 +28,7 @@ class Graph
     void ClearDominators();
     void ClearLoops();
 
-    void AddEdge(BasicBlock* from, BasicBlock* to, size_t slot);
+    void AddEdge(BasicBlock* from, BasicBlock* to, unsigned slot);
 
     void InsertBasicBlock(BasicBlock* bb, BasicBlock* from, BasicBlock* to);
     void InsertBasicBlockBefore(BasicBlock* bb, BasicBlock* before);
@@ -57,7 +56,7 @@ class Graph
   private:
     void InitStartBlock();
 
-    std::vector<std::unique_ptr<BasicBlock> > bb_vector_;
+    std::vector<std::unique_ptr<BasicBlock> > bb_vector_{};
 
     IdType bb_id_counter_{};
 

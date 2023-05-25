@@ -123,7 +123,7 @@ static bool DefaultEquivalenceCheck(const InstBase* i1, const InstBase* i2)
         return true;
     }
 
-    for (size_t i = 1; i < i1->GetNumInputs(); ++i) {
+    for (unsigned i = 1; i < i1->GetNumInputs(); ++i) {
         auto in1 = i1->GetInput(i).GetInst();
         auto in2 = i2->GetInput(i).GetInst();
         if (!AreSameOrSameVal(in1, in2)) {

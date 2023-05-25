@@ -32,6 +32,9 @@ class Pass
     {
     }
     virtual ~Pass() = default;
+    NO_COPY_SEMANTIC(Pass);
+    NO_MOVE_SEMANTIC(Pass);
+
     GETTER_SETTER(Valid, bool, is_valid_);
 
     virtual bool Run() = 0;

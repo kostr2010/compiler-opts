@@ -15,7 +15,7 @@ class Marker
     friend class MarkerFactory;
 
   public:
-    using MarkerGenT = uint16_t;
+    using MarkerGenT = uint32_t;
     static constexpr MarkerGenT GEN_UNSET = 0;
 
     Marker();
@@ -29,11 +29,11 @@ class Marker
     bool IsUnset() const;
 
   private:
-    size_t slot_{};
+    unsigned slot_{};
     MarkerGenT gen_{};
 };
 
-template <size_t N>
+template <unsigned N>
 using Markers = Marker[N];
 
 }; // namespace marker

@@ -19,6 +19,9 @@ class GraphBuilder
   public:
     GraphBuilder(Graph* g);
 
+    NO_COPY_SEMANTIC(GraphBuilder);
+    NO_MOVE_SEMANTIC(GraphBuilder);
+
     template <isa::inst::Opcode OPCODE, typename... Args>
     IdType NewInst(Args&&... args)
     {
@@ -83,7 +86,7 @@ class GraphBuilder
     }
 
     void SetType(IdType id, InstBase::DataType t);
-    void SetImmediate(IdType id, size_t pos, ImmType imm);
+    void SetImmediate(IdType id, unsigned pos, ImmType imm);
     void SetCondition(IdType id, Conditional::Type c);
 
     void ConstructCFG();
@@ -108,14 +111,14 @@ class GraphBuilder
 
     Graph* graph_{ nullptr };
     BasicBlock* cur_bb_{ nullptr };
-    IdType cur_bb_id_;
+    IdType cur_bb_id_{ 0 };
     InstBase* cur_inst_{ nullptr };
 
-    std::unordered_map<IdType, BasicBlock*> bb_map_;
-    std::unordered_map<IdType, std::vector<IdType> > bb_succ_map_;
-    std::unordered_map<IdType, InstBase*> inst_map_;
-    std::unordered_map<IdType, std::vector<IdType> > inst_inputs_map_;
-    std::unordered_map<IdType, std::vector<std::pair<IdType, IdType> > > phi_inputs_map_;
+    std::unordered_map<IdType, BasicBlock*> bb_map_{};
+    std::unordered_map<IdType, std::vector<IdType> > bb_succ_map_{};
+    std::unordered_map<IdType, InstBase*> inst_map_{};
+    std::unordered_map<IdType, std::vector<IdType> > inst_inputs_map_{};
+    std::unordered_map<IdType, std::vector<std::pair<IdType, IdType> > > phi_inputs_map_{};
 };
 
 #endif

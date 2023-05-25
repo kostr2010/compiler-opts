@@ -158,10 +158,10 @@ void LinearOrder::Check()
     auto sz = linear_bb_.size();
     ASSERT(sz == graph_->GetPassManager()->GetValidPass<RPO>()->GetBlocks().size());
 
-    for (size_t i = 0; i < sz; ++i) {
+    for (unsigned i = 0; i < sz; ++i) {
         auto bb = linear_bb_[i];
         if (bb->GetNumSuccessors() > BranchFlag::Value::ONE_SUCCESSOR) {
-            for (size_t s = 0; s < bb->GetNumSuccessors(); ++s) {
+            for (unsigned s = 0; s < bb->GetNumSuccessors(); ++s) {
                 if (s == Conditional::Branch::FALLTHROUGH) {
                     ASSERT(i + 1 < sz);
                     ASSERT(bb->GetSuccessor(s)->GetId() == linear_bb_[i + 1]->GetId());

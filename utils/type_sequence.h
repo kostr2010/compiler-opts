@@ -80,13 +80,13 @@ template <typename Seq>
 struct len;
 
 template <>
-struct len<EmptySequence> : std::integral_constant<size_t, 0>
+struct len<EmptySequence> : std::integral_constant<unsigned, 0>
 {
 };
 
 template <typename... Ts>
 struct len<TypeSequence<Ts...> >
-    : std::integral_constant<size_t, len<tail_t<TypeSequence<Ts...> > >::value + 1>
+    : std::integral_constant<unsigned, len<tail_t<TypeSequence<Ts...> > >::value + 1>
 {
 };
 
@@ -168,10 +168,10 @@ using replace = _replace<Seq, EmptySequence, From, To>;
 template <typename Seq, typename From, typename To>
 using replace_t = typename replace<Seq, From, To>::type;
 
-template <typename Seq, size_t IDX>
+template <typename Seq, unsigned IDX>
 struct get;
 
-template <typename... Ts, size_t IDX>
+template <typename... Ts, unsigned IDX>
 struct get<TypeSequence<Ts...>, IDX> : get<tail_t<TypeSequence<Ts...> >, IDX - 1>
 {
     STATIC_ASSERT(IDX < len<TypeSequence<Ts...> >::value);
@@ -184,7 +184,7 @@ struct get<TypeSequence<Ts...>, 0>
     using type = head_t<TypeSequence<Ts...> >;
 };
 
-template <typename Seq, size_t IDX>
+template <typename Seq, unsigned IDX>
 using get_t = typename get<Seq, IDX>::type;
 
 template <typename Seq, template <typename...> typename Accumulator, typename Start>

@@ -80,7 +80,7 @@ void GraphBuilder::SetType(IdType id, InstBase::DataType t)
 }
 
 template <typename ImmT>
-static void SetImmediateT(InstBase* i, size_t pos, ImmType imm)
+static void SetImmediateT(InstBase* i, unsigned pos, ImmType imm)
 {
     using NumImm = isa::InputValue<ImmT, isa::input::Type::IMM>;
     STATIC_ASSERT(NumImm::value > 0);
@@ -89,7 +89,7 @@ static void SetImmediateT(InstBase* i, size_t pos, ImmType imm)
     static_cast<ImmT*>(i)->SetImmediate(pos, imm);
 }
 
-void GraphBuilder::SetImmediate(IdType id, size_t pos, ImmType imm)
+void GraphBuilder::SetImmediate(IdType id, unsigned pos, ImmType imm)
 {
     auto inst = inst_map_[id];
     ASSERT(inst != nullptr);
@@ -161,7 +161,7 @@ void GraphBuilder::ConstructCFG()
     for (auto& [bb_id, succs] : bb_succ_map_) {
         ASSERT(succs.size() <= MaxBranchNum::value);
         auto bb = bb_map_.at(bb_id);
-        for (size_t i = 0; i < succs.size(); ++i) {
+        for (unsigned i = 0; i < succs.size(); ++i) {
             auto succ = bb_map_.at(succs[i]);
             graph_->AddEdge(bb, succ, i);
         }
@@ -177,7 +177,7 @@ void GraphBuilder::ConstructDFG()
         auto inst = inst_map_.at(inst_id);
         ASSERT(!inst->IsPhi());
 
-        size_t input_idx = 0;
+        unsigned input_idx = 0;
         for (auto input_id : inputs) {
             if (inst->IsTypeSensitive()) {
                 inst->CheckInputType();
@@ -224,7 +224,7 @@ bool GraphBuilder::RunChecks()
     auto analyser = graph_->GetPassManager();
     auto rpo = analyser->GetValidPass<RPO>()->GetBlocks();
     for (auto bb : rpo) {
-        for (size_t i = 0; i < bb->GetNumSuccessors(); ++i) {
+        for (unsigned i = 0; i < bb->GetNumSuccessors(); ++i) {
             if (bb->GetSuccessor(i) == nullptr) {
                 LOG_ERROR("BB: " << bb->GetId()
                                  << ", number of successors inferred from the last instruction is "
@@ -235,7 +235,7 @@ bool GraphBuilder::RunChecks()
         }
 
         for (auto inst = bb->GetFirstInst(); inst != nullptr; inst = inst->GetNext()) {
-            for (size_t i = 0; i < inst->GetNumInputs(); ++i) {
+            for (unsigned i = 0; i < inst->GetNumInputs(); ++i) {
                 auto input = inst->GetInput(i);
                 if (input.GetInst() == nullptr) {
                     if (inst->IsDynamic()) {

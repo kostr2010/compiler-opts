@@ -25,8 +25,8 @@ class LivenessAnalysis : public Pass
     };
     using Markers = marker::Markers<Marks::N_MARKS>;
 
-    static constexpr size_t LIVE_NUMBER_STEP = 2;
-    static constexpr size_t LINEAR_NUMBER_STEP = 1;
+    static constexpr unsigned LIVE_NUMBER_STEP = 2;
+    static constexpr unsigned LINEAR_NUMBER_STEP = 1;
 
     LivenessAnalysis(Graph* graph) : Pass(graph)
     {
@@ -65,8 +65,8 @@ class LivenessAnalysis : public Pass
     void ResetState();
 
     std::vector<BasicBlock*> linear_blocks_{};
-    std::unordered_map<InstBase*, size_t> inst_linear_numbers_{};
-    std::unordered_map<InstBase*, size_t> inst_live_numbers_{};
+    std::unordered_map<InstBase*, unsigned> inst_linear_numbers_{};
+    std::unordered_map<InstBase*, unsigned> inst_live_numbers_{};
     std::unordered_map<InstBase*, Range> inst_live_ranges_{};
     std::unordered_map<BasicBlock*, Range> bb_live_ranges_{};
     std::unordered_map<BasicBlock*, LiveSet> bb_live_sets_{};

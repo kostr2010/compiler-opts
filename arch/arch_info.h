@@ -19,7 +19,7 @@ struct ArchInfo;
 template <>
 struct ArchInfo<Arch::X86_64>
 {
-    static constexpr size_t NUM_REGISTERS = 16;
+    static constexpr unsigned NUM_REGISTERS = 16;
 };
 
 }; // namespace arch

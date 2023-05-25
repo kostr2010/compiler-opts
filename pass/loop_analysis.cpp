@@ -140,7 +140,7 @@ void LoopAnalysis::SplitBackEdge(Loop* loop)
     loop->AddBackEdge(back_edges.at(0));
 
     auto prev_head = header;
-    for (size_t i = 0; i < new_headers.size(); ++i) {
+    for (unsigned i = 0; i < new_headers.size(); ++i) {
         graph_->InsertBasicBlockBefore(new_headers.at(i), prev_head);
         graph_->ReplaceSuccessor(back_edges.at(i), new_headers.at(i), prev_head);
         PropagatePhis(prev_head, new_headers.at(i));

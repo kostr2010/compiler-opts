@@ -14,6 +14,10 @@ class GraphVisitor
 {
   public:
     DEFAULT_CTOR(GraphVisitor);
+    virtual ~GraphVisitor() = default;
+
+    NO_MOVE_SEMANTIC(GraphVisitor);
+    NO_COPY_SEMANTIC(GraphVisitor);
 
     virtual std::vector<BasicBlock*> BlockOrder() const = 0;
 

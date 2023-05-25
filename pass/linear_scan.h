@@ -16,7 +16,7 @@ class LinearScan : public Pass
   public:
     struct LiveRange
     {
-        LiveRange(InstBase* i, const Range& r) : range(r), inst(i){};
+        LiveRange(InstBase* i, const Range& r) noexcept : range(r), inst(i){};
         LiveRange(InstBase* i, Range&& r) : range(std::move(r)), inst(i){};
 
         DEFAULT_COPY_SEMANTIC(LiveRange);
@@ -51,12 +51,12 @@ class LinearScan : public Pass
     void InsertConnectingSpillFills();
     void ExpireOldIntervals(LiveRange* range);
     void SpillAtInterval(LiveRange* r);
-    size_t AssignStackSlot(LiveRange* r);
+    unsigned AssignStackSlot(LiveRange* r);
     void AssignRegister(LiveRange* r);
     void ReleaseRegister(LiveRange* r);
     void AddToActive(LiveRange* r);
     bool IsRegMapEmpty() const;
-    size_t GetStackSlot();
+    unsigned GetStackSlot();
     void Init();
     void Check() const;
 
@@ -68,7 +68,7 @@ class LinearScan : public Pass
     std::list<LiveRange*> active_{};
     std::vector<bool> reg_map_{};
 
-    size_t current_stack_slot{ 0 };
+    unsigned current_stack_slot{ 0 };
 };
 
 #endif

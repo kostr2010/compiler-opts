@@ -68,7 +68,7 @@ class PassManager
         (passes_.emplace_back(new typename DefaultPasses::GetPass<IDS>::type(graph)), ...);
     }
 
-    std::vector<std::unique_ptr<Pass> > passes_;
+    std::vector<std::unique_ptr<Pass> > passes_{};
 };
 
 #endif

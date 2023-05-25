@@ -7,7 +7,7 @@
 template <>
 struct arch::ArchInfo<arch::Arch::UNSET>
 {
-    static constexpr size_t NUM_REGISTERS = 3;
+    static constexpr unsigned NUM_REGISTERS = 3;
 };
 
 static constexpr const char* OP_TO_STR[] = {
@@ -27,7 +27,7 @@ static constexpr const char* OP_TO_STR[] = {
 #define CHECK_REGALLOC(ID, LOC, SLOT)                                                             \
     do {                                                                                          \
         auto ranges = pass->GetLiveRanges();                                                      \
-        for (size_t i = 0; i < ranges.size(); ++i) {                                              \
+        for (unsigned i = 0; i < ranges.size(); ++i) {                                              \
             if (ranges[i].inst->GetId() == ID) {                                                  \
                 ASSERT_EQ(ranges[i].inst->GetLocation(), Location(Location::Where::LOC, SLOT));   \
                 break;                                                                            \

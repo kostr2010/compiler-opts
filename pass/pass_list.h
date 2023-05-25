@@ -30,16 +30,16 @@ class PassList
     {
     };
 
-    template <typename Type, size_t IDX, typename... Pack>
+    template <typename Type, unsigned IDX, typename... Pack>
     struct get_pass_idx;
 
-    template <typename Type, size_t IDX, typename T, typename... Pack>
+    template <typename Type, unsigned IDX, typename T, typename... Pack>
     struct get_pass_idx<Type, IDX, T, Pack...> : get_pass_idx<Type, IDX + 1, Pack...>
     {
     };
 
-    template <typename Type, size_t IDX, typename... Pack>
-    struct get_pass_idx<Type, IDX, Type, Pack...> : std::integral_constant<size_t, IDX>
+    template <typename Type, unsigned IDX, typename... Pack>
+    struct get_pass_idx<Type, IDX, Type, Pack...> : std::integral_constant<unsigned, IDX>
     {
     };
 
@@ -53,7 +53,7 @@ class PassList
     template <typename Type>
     using GetPassIdx = get_pass_idx<Type, 0, Types...>;
 
-    template <size_t IDX>
+    template <unsigned IDX>
     using GetPass = std::tuple_element<IDX, Passes>;
 };
 

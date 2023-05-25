@@ -105,13 +105,13 @@
     DEFAULT_COPY_OPERATOR(class_name)
 
 #define GETTER(func_name, field_name)                                                             \
-    auto Get##func_name() const                                                                   \
+    auto Get##func_name() const noexcept                                                          \
     {                                                                                             \
         return field_name;                                                                        \
     }
 
 #define SETTER(func_name, field_type, field_name)                                                 \
-    void Set##func_name(field_type f_##field_name)                                                \
+    void Set##func_name(field_type f_##field_name) noexcept                                       \
     {                                                                                             \
         field_name = f_##field_name;                                                              \
     }
