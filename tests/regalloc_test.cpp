@@ -10,24 +10,10 @@ struct arch::ArchInfo<arch::Arch::UNSET>
     static constexpr unsigned NUM_REGISTERS = 3;
 };
 
-static constexpr const char* OP_TO_STR[] = {
-#define CREATE(OPCODE, ...) #OPCODE,
-    ISA_INSTRUCTION_LIST(CREATE)
-#undef CREATE
-};
-
-#define DUMP_LIVE_RANGES(pass)                                                                    \
-    for (const auto& r : pass->GetLiveRanges()) {                                                 \
-        std::cout << "inst: " << r.inst->GetId() << "(" << OP_TO_STR[r.inst->GetOpcode()] << ")"  \
-                  << ", range: " << r.range << ", location: "                                     \
-                  << ((r.inst->GetLocation().loc == Location::Where::STACK) ? ('S') : ('R'))      \
-                  << r.inst->GetLocation().slot << "\n";                                          \
-    }
-
 #define CHECK_REGALLOC(ID, LOC, SLOT)                                                             \
     do {                                                                                          \
         auto ranges = pass->GetLiveRanges();                                                      \
-        for (unsigned i = 0; i < ranges.size(); ++i) {                                              \
+        for (unsigned i = 0; i < ranges.size(); ++i) {                                            \
             if (ranges[i].inst->GetId() == ID) {                                                  \
                 ASSERT_EQ(ranges[i].inst->GetLocation(), Location(Location::Where::LOC, SLOT));   \
                 break;                                                                            \

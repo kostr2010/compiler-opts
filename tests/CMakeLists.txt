@@ -1,3 +1,5 @@
+find_package(GTest REQUIRED)
+
 set(TESTS
 
     # passes
@@ -21,5 +23,5 @@ set(TESTS
 )
 
 add_executable(gtests ${TESTS})
-target_link_libraries(gtests ir gtest gtest_main pthread)
+target_link_libraries(gtests ir GTest::gtest GTest::gtest_main pthread)
 target_include_directories(gtests PRIVATE ${PROJECT_SOURCE_DIR}/ir ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})

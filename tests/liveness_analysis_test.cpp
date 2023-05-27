@@ -37,32 +37,6 @@ static Range GetBasicBlockLiveRange(const LivenessAnalysis* pass, IdType id)
     UNREACHABLE("fail");
 }
 
-static constexpr const char* OP_TO_STR[] = {
-#define CREATE(OPCODE, ...) #OPCODE,
-    ISA_INSTRUCTION_LIST(CREATE)
-#undef CREATE
-};
-
-#define DUMP_LIVE_NUMBERS()                                                                       \
-    for (const auto& elem : pass->GetInstLiveNumbers()) {                                         \
-        LOG(OP_TO_STR[elem.first->GetOpcode()] << " " << elem.second);                            \
-    }
-
-#define DUMP_BB_RANGES()                                                                          \
-    for (const auto& elem : pass->GetBasicBlockLiveRanges()) {                                    \
-        LOG(elem.first->GetId() << " " << elem.second);                                           \
-    }
-
-#define DUMP_INST_RANGES()                                                                        \
-    for (const auto& elem : pass->GetInstLiveRanges()) {                                          \
-        LOG(OP_TO_STR[elem.first->GetOpcode()] << " " << elem.second);                            \
-    }
-
-#define DUMP_LIVENESS()                                                                           \
-    DUMP_LIVE_NUMBERS();                                                                          \
-    DUMP_BB_RANGES();                                                                             \
-    DUMP_INST_RANGES();
-
 TEST(TestLiveness, Example0)
 {
     /*
